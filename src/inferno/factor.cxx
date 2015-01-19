@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "inferno/factor.hxx"
+#include "inferno/small_vector.hxx"
 
 namespace inferno{
 
@@ -40,14 +41,12 @@ void DiscreteFactor::bounds(size_t d, MixedLabelBounds & bounds) const{
     bounds = dbounds;
 }
 FunctionValueType DiscreteFactor::eval(MixedLabelInitList conf) const {
-    DiscreteLabel buffer[20] ;
-    std::copy(conf.begin(), conf.end(), buffer);
-    return this->eval(buffer);
+    SmallVector<DiscreteLabel> buffer(conf.begin(), conf.end());
+    return this->eval(buffer.begin());
 }
 FunctionValueType DiscreteFactor::eval(const MixedLabel * conf) const {
-    DiscreteLabel buffer[20] ;
-    std::copy(conf, conf + this->arity(), buffer);
-    return this->eval(buffer);
+    SmallVector<DiscreteLabel> buffer(conf, conf+this->arity());
+    return this->eval(buffer.begin());
 }
 
 
@@ -57,14 +56,12 @@ void ContinousFactor::bounds(size_t d, MixedLabelBounds & bounds) const{
     bounds = cbounds;
 }
 FunctionValueType ContinousFactor::eval(MixedLabelInitList conf) const {
-    ContinousLabel buffer[20] ;
-    std::copy(conf.begin(), conf.end(), buffer);
-    return this->eval(buffer);
+    SmallVector<ContinousLabel> buffer(conf.begin(), conf.end());
+    return this->eval(buffer.begin());
 }
 FunctionValueType ContinousFactor::eval(const MixedLabel * conf) const {
-    ContinousLabel buffer[20] ;
-    std::copy(conf, conf + this->arity(), buffer);
-    return this->eval(buffer);
+    SmallVector<ContinousLabel> buffer(conf, conf+this->arity());
+    return this->eval(buffer.begin());
 }
 
 
