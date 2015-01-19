@@ -66,8 +66,13 @@ FunctionValueType ContinousFactor::eval(const MixedLabel * conf) const {
 
 
 
-TwoClassUnary::TwoClassUnary(const FunctionValueType v0, const FunctionValueType v1)
-:   v0_(v0),
+TwoClassUnary::TwoClassUnary(
+    const int64_t vi,
+    const FunctionValueType v0, 
+    const FunctionValueType v1
+)
+:   vi_(vi),
+    v0_(v0),
     v1_(v1){
 }
 
@@ -87,10 +92,22 @@ inline FunctionValueType   TwoClassUnary::eval(const DiscreteLabel * conf) const
     return *conf == 0 ? v0_ : v1_;
 }
 
+inline int64_t 
+TwoClassUnary::vi(const size_t d) const {
+    return vi_;
+}
 
 
-TwoClassPottsBinary::TwoClassPottsBinary(const FunctionValueType v)
-:   v_(v){
+
+
+TwoClassPottsBinary::TwoClassPottsBinary(
+    const int64_t vi0,
+    const int64_t vi1,
+    const FunctionValueType v
+)
+:   vi0_(vi0),
+    vi1_(vi1),
+    v_(v){
 }
 
 inline size_t TwoClassPottsBinary::arity() const {
@@ -110,6 +127,10 @@ inline FunctionValueType   TwoClassPottsBinary::eval(const DiscreteLabel * conf)
     return conf[0]!=conf[1] ? v_ : 0.0;
 }
 
+inline int64_t 
+TwoClassPottsBinary::vi(const size_t d) const {
+    return d==0 ? vi0_ : vi1_;
+}
 
 } 
 

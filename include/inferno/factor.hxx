@@ -53,6 +53,7 @@ public:
     virtual FunctionValueType   eval(const MixedLabel * conf) const = 0 ;
 
     virtual size_t arity() const = 0 ;
+    virtual int64_t vi(const size_t d)const = 0;
 };
 
 
@@ -110,12 +111,18 @@ public:
 class TwoClassUnary : public DiscreteFactor{
 
 public:
-    TwoClassUnary(const FunctionValueType v0, const FunctionValueType v1);
+    TwoClassUnary(
+        const int64_t vi,
+        const FunctionValueType v0, 
+        const FunctionValueType v1
+    );
     virtual size_t arity() const ;
     virtual void bounds(size_t d , DiscreteLabelBounds & b) const ;
     virtual FunctionValueType   eval(DiscreteLabelInitList conf) const ;
     virtual FunctionValueType   eval(const DiscreteLabel * conf) const ;
+    virtual int64_t vi(const size_t d)const;
 private:
+    int64_t vi_;
     FunctionValueType v0_,v1_;
 };
 
@@ -124,12 +131,14 @@ private:
 class TwoClassPottsBinary : public DiscreteFactor{
 
 public:
-    TwoClassPottsBinary(const FunctionValueType v);
+    TwoClassPottsBinary(const int64_t vi0, const int64_t vi1,const FunctionValueType v);
     virtual size_t arity() const ;
     virtual void bounds(size_t d , DiscreteLabelBounds & b) const ;
     virtual FunctionValueType   eval(DiscreteLabelInitList conf) const ;
     virtual FunctionValueType   eval(const DiscreteLabel * conf) const ;
+    virtual int64_t vi(const size_t d)const;
 private:
+    int64_t vi0_,vi1_;
     FunctionValueType v_;
 };
 

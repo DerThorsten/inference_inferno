@@ -2,17 +2,9 @@
 #define INFERNO_INFERNO_HXX
 
 #include <cstdint>
-
-
-
-
-
-
 #include <stdexcept>
 #include <sstream>
-
-#include "opengm/config.hxx"
-#include "opengm/utilities/metaprogramming.hxx"
+#include <vector>
 
 
 
@@ -110,7 +102,10 @@ const static int USUAL_MAX_FACTOR_ORDER = 10;
 typedef int64_t DiscreteLabel;
 typedef double  ContinousLabel;
 typedef double  FunctionValueType;
+typedef double  FactorValueType;
 
+typedef std::vector<DiscreteLabel > DiscreteLabelVec;
+typedef std::vector<ContinousLabel > ContinousLabelVec;
 
 struct RuntimeError
 : public std::runtime_error

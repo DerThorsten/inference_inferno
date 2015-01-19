@@ -51,6 +51,7 @@ private:
     bool isDiscrete_;
     int64_t data_;
 };
+typedef std::vector<MixedLabel> MixedLabelVec;
 
 MixedLabel operator "" _cl(const long double val);
 MixedLabel operator "" _cl(const unsigned long long val);

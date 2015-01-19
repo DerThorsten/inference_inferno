@@ -13,19 +13,53 @@
 
 namespace inferno{
 
-    struct VarInfo{
+    class VariablesInfo{
+    public:
+        VariablesInfo(
+            const int64_t  minVariableId=0,
+            const int64_t  maxVariableId=0,
+            const uint64_t numVariables=0
+        );
 
-
-        
-        int64_t minVarId_;
-        int64_t maxVarId_;
-        uint64_t numVar_;
+        int64_t  minVariableId()const;
+        int64_t  maxVariableId()const;
+        uint64_t numVariables()const;
+        bool isDense() const ;
+    private:
+        int64_t  minVariableId_;
+        int64_t  maxVariableId_;
+        uint64_t numVariables_;
     };
+
+    class FactorsInfo{
+    public:
+        FactorsInfo(
+            const int64_t  minFactorId=0,
+            const int64_t  maxFactorId=0,
+            const uint64_t numFactors=0
+        );
+        int64_t  minFactorId()const;
+        int64_t  maxFactorId()const;
+        uint64_t numFactors()const;
+        bool isDense() const ;
+    private:
+        int64_t  minFactorId_;
+        int64_t  maxFactorId_;
+        uint64_t numFactors_;
+    };
+
 
 
     class Model{
     public:
         virtual SharedFactorPtr getFactor(const size_t fi) const = 0;
+        virtual VariablesInfo variablesInfo()const = 0;
+        virtual FactorsInfo factorsInfo()const = 0;
+
+        virtual bool isVariableId(const int64_t id) const = 0;
+        virtual bool isFactorId(const int64_t id) const = 0;
+
+        
     };
 
 
@@ -33,6 +67,7 @@ namespace inferno{
     class DiscreteModel : public Model{
     public:
         virtual void varBounds(const size_t vi, DiscreteLabelBounds & bounds)const = 0;
+        virtual FactorValueType evaluateSum(const DiscreteLabel * conf) const;
     };
 
     class ContinousModel : public Model{
@@ -55,8 +90,15 @@ namespace inferno{
     public:
         ExplicitDiscreteModel(const size_t nVar = 0, const DiscreteLabelBounds & bounds = DiscreteLabelBounds());
         void addFactor(SharedDiscreteFactorPtr factor);
+
         virtual SharedFactorPtr getFactor(const size_t fi)const;
+        virtual VariablesInfo variablesInfo()const;
+        virtual FactorsInfo factorsInfo()const;
+        virtual bool isVariableId(const int64_t id) const;
+        virtual bool isFactorId(const int64_t id) const;
+
         virtual void varBounds(const size_t vi, DiscreteLabelBounds & bounds)const;
+
     private:
         size_t nVar_;
         std::vector< DiscreteLabelBounds > varBounds_;
