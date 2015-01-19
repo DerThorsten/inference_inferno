@@ -22,6 +22,12 @@ template<class T>
 class Bounds{
 public:
     Bounds(const T lowerBound = T(), const T upperBound = T());
+    template<class U>
+    Bounds(const Bounds<U> & other)
+    : lowerBound_(other.lowerBound()),
+      upperBound_(other.upperBound()){
+
+    }
     T lowerBound()const;
     T upperBound()const;
 
@@ -37,10 +43,15 @@ typedef Bounds<MixedLabel>     MixedLabelBounds;
 
 typedef std::initializer_list<DiscreteLabel>  DiscreteLabelInitList;
 typedef std::initializer_list<ContinousLabel> ContinousLabelInitList;
-typedef std::initializer_list<DiscreteLabel>  MixedLabelInitList;
+typedef std::initializer_list<MixedLabel>  MixedLabelInitList;
 
 class Factor{
 public:
+
+    virtual void bounds(size_t d, MixedLabelBounds & bounds) const =0;
+    virtual FunctionValueType   eval(MixedLabelInitList conf) const = 0 ;
+    virtual FunctionValueType   eval(const MixedLabel * conf) const = 0 ;
+
     virtual size_t arity() const = 0 ;
 };
 
@@ -48,7 +59,14 @@ public:
 
 class DiscreteFactor : public Factor{
 public:
-    virtual DiscreteLabelBounds bounds(size_t d) const = 0;
+    // default impl for factor api
+    virtual void bounds(size_t d, MixedLabelBounds & bounds) const  ;
+    virtual FunctionValueType   eval(MixedLabelInitList conf) const ;
+    virtual FunctionValueType   eval(const MixedLabel * conf) const ;
+
+
+    // extra api for discrete factor
+    virtual void bounds(size_t d, DiscreteLabelBounds & bounds) const =0;
     virtual FunctionValueType   eval(DiscreteLabelInitList conf) const = 0 ;
     virtual FunctionValueType   eval(const DiscreteLabel * conf) const = 0 ;
 
@@ -56,17 +74,26 @@ public:
 
 class ContinousFactor : public Factor{
 public:
-    virtual ContinousLabelBounds bounds(size_t d) const = 0;
+
+    // default impl for factor api
+    virtual void bounds(size_t d, MixedLabelBounds & bounds) const  ;
+    virtual FunctionValueType   eval(MixedLabelInitList conf) const ;
+    virtual FunctionValueType   eval(const MixedLabel * conf) const ;
+
+    virtual void bounds(size_t d, ContinousLabelBounds & bounds) const =0;
     virtual FunctionValueType   eval(ContinousLabelInitList conf) const = 0 ;
     virtual FunctionValueType   eval(const ContinousLabel * conf) const = 0 ;
 };
 
 class MixedFactor : public Factor{
 public:
-    virtual MixedLabelBounds    bounds(size_t d) const =0;
-    virtual FunctionValueType   eval(MixedLabelInitList conf) const = 0 ;
-    virtual FunctionValueType   eval(const MixedLabel * conf) const = 0 ;
+    // no extra api
 };
+
+typedef std::shared_ptr<Factor>             SharedFactorPtr;
+typedef std::shared_ptr<DiscreteFactor>     SharedDiscreteFactorPtr;
+typedef std::shared_ptr<ContinousFactor>    SharedContinousFactorPtr;
+typedef std::shared_ptr<MixedFactor>        SharedMixedFactorPtr;
 
 
 
@@ -85,7 +112,7 @@ class TwoClassUnary : public DiscreteFactor{
 public:
     TwoClassUnary(const FunctionValueType v0, const FunctionValueType v1);
     virtual size_t arity() const ;
-    virtual DiscreteLabelBounds bounds(size_t d) const ;
+    virtual void bounds(size_t d , DiscreteLabelBounds & b) const ;
     virtual FunctionValueType   eval(DiscreteLabelInitList conf) const ;
     virtual FunctionValueType   eval(const DiscreteLabel * conf) const ;
 private:
@@ -99,7 +126,7 @@ class TwoClassPottsBinary : public DiscreteFactor{
 public:
     TwoClassPottsBinary(const FunctionValueType v);
     virtual size_t arity() const ;
-    virtual DiscreteLabelBounds bounds(size_t d) const ;
+    virtual void bounds(size_t d , DiscreteLabelBounds & b) const ;
     virtual FunctionValueType   eval(DiscreteLabelInitList conf) const ;
     virtual FunctionValueType   eval(const DiscreteLabel * conf) const ;
 private:

@@ -7,5 +7,5 @@ add_library(inferno SHARED
     #mixed_label_vec.cxx
     #variable_space.cxx
     factor.cxx
-    #model.cxx
+    model.cxx
 )

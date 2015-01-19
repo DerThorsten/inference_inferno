@@ -8,72 +8,60 @@
 #include <vector>
 #include <memory>
 
-#include "inferno/mixed_label.hxx"
-#include "inferno/mixed_label_vec.hxx"
-#include "inferno/variable_space.hxx"
 #include "inferno/factor.hxx"
-#include "inferno/function.hxx"
 
 
 namespace inferno{
 
+    struct VarInfo{
+
+
+        
+        int64_t minVarId_;
+        int64_t maxVarId_;
+        uint64_t numVar_;
+    };
+
+
+    class Model{
+    public:
+        virtual SharedFactorPtr getFactor(const size_t fi) const = 0;
+    };
 
 
 
+    class DiscreteModel : public Model{
+    public:
+        virtual void varBounds(const size_t vi, DiscreteLabelBounds & bounds)const = 0;
+    };
 
-class ModelBase{
-    
+    class ContinousModel : public Model{
+    public:
+       
+    };
 
-    // number of variables
-    virtual int64_t minFactorId()const = 0;
-    virtual int64_t maxFactorId()const = 0;
-    virtual bool isFactorId(const int64_t var)const = 0;
-    virtual int64_t nFactors()const = 0;
+    class MixedModel : public Model{
+    public:
+       
+    };
 
-
-
-    // number of factors
-    virtual int64_t minVariableId()const = 0;
-    virtual int64_t maxVariableId()const = 0;
-    virtual bool isVariableId(const int64_t var)const = 0;
-    virtual int64_t nVariables()const = 0;
-
-
-    virtual std::shared_ptr<FactorBase>  getFactor(const int64_t) = 0 ;
-
-
-    virtual VarSpace  varSpace(const int64_t vi)const = 0 ;
+    typedef std::shared_ptr<Model> SharedModelPtr;
+    typedef std::shared_ptr<MixedModel> SharedMixedModelPtr;
+    typedef std::shared_ptr<ContinousModel> SharedContinousModelPtr;
+    typedef std::shared_ptr<DiscreteModel> SharedDiscreteModelPtr;
 
 
-
-
-};
-
-
-
-
-class ExplicitModel : public ModelBase{
-public:
-    ExplicitModel(const int64_t nVar = 0, const VarSpace & space = VarSpace());
-    void addFactor( std::shared_ptr<FactorBase> factor);
-
-    virtual int64_t minFactorId()const;
-    virtual int64_t maxFactorId()const;
-    virtual int64_t nFactors()const;
-    virtual bool isFactorId(const int64_t id)const;
-    virtual int64_t minVariableId()const;
-    virtual int64_t maxVariableId()const;
-    virtual int64_t nVariables()const;
-    virtual bool isVariableId(const int64_t id)const;
-    virtual std::shared_ptr<FactorBase>  getFactor(const int64_t fi);
-    virtual VarSpace  varSpace(const int64_t vi)const;
-private:
-    int64_t nVar_;
-    std::vector< std::shared_ptr<FactorBase> > factors_;
-    std::vector<VarSpace> space_;
-
-};
-
+    class ExplicitDiscreteModel : public DiscreteModel{
+    public:
+        ExplicitDiscreteModel(const size_t nVar = 0, const DiscreteLabelBounds & bounds = DiscreteLabelBounds());
+        void addFactor(SharedDiscreteFactorPtr factor);
+        virtual SharedFactorPtr getFactor(const size_t fi)const;
+        virtual void varBounds(const size_t vi, DiscreteLabelBounds & bounds)const;
+    private:
+        size_t nVar_;
+        std::vector< DiscreteLabelBounds > varBounds_;
+        std::vector<SharedDiscreteFactorPtr> factors_;
+    };
 
 }
 

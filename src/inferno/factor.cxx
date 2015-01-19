@@ -11,6 +11,9 @@ namespace inferno{
 
 
 
+
+
+
 template<class T>
 Bounds<T>::Bounds(const T lowerBound , const T upperBound){
 
@@ -28,6 +31,44 @@ inline T Bounds<T>::lowerBound()const{
 
 
 
+
+
+
+void DiscreteFactor::bounds(size_t d, MixedLabelBounds & bounds) const{
+    DiscreteLabelBounds dbounds;
+    this->bounds(d, dbounds);
+    bounds = dbounds;
+}
+FunctionValueType DiscreteFactor::eval(MixedLabelInitList conf) const {
+    DiscreteLabel buffer[20] ;
+    std::copy(conf.begin(), conf.end(), buffer);
+    return this->eval(buffer);
+}
+FunctionValueType DiscreteFactor::eval(const MixedLabel * conf) const {
+    DiscreteLabel buffer[20] ;
+    std::copy(conf, conf + this->arity(), buffer);
+    return this->eval(buffer);
+}
+
+
+void ContinousFactor::bounds(size_t d, MixedLabelBounds & bounds) const{
+    ContinousLabelBounds cbounds;
+    this->bounds(d, cbounds);
+    bounds = cbounds;
+}
+FunctionValueType ContinousFactor::eval(MixedLabelInitList conf) const {
+    ContinousLabel buffer[20] ;
+    std::copy(conf.begin(), conf.end(), buffer);
+    return this->eval(buffer);
+}
+FunctionValueType ContinousFactor::eval(const MixedLabel * conf) const {
+    ContinousLabel buffer[20] ;
+    std::copy(conf, conf + this->arity(), buffer);
+    return this->eval(buffer);
+}
+
+
+
 TwoClassUnary::TwoClassUnary(const FunctionValueType v0, const FunctionValueType v1)
 :   v0_(v0),
     v1_(v1){
@@ -37,8 +78,8 @@ inline size_t TwoClassUnary::arity() const {
     return 1;
 }
 
-inline DiscreteLabelBounds TwoClassUnary::bounds(size_t d) const {
-    return DiscreteLabelBounds(0,1);
+inline void TwoClassUnary::bounds(size_t d, DiscreteLabelBounds & bounds) const {
+    bounds = DiscreteLabelBounds(0,1);
 }
 
 inline FunctionValueType   TwoClassUnary::eval(DiscreteLabelInitList conf) const {
@@ -59,9 +100,10 @@ inline size_t TwoClassPottsBinary::arity() const {
     return 1;
 }
 
-inline DiscreteLabelBounds TwoClassPottsBinary::bounds(size_t d) const {
-    return DiscreteLabelBounds(0,1);
+inline void TwoClassPottsBinary::bounds(size_t d, DiscreteLabelBounds & bounds) const {
+    bounds = DiscreteLabelBounds(0,1);
 }
+
 
 inline FunctionValueType   TwoClassPottsBinary::eval(DiscreteLabelInitList conf) const {
     return conf.begin()[0]!=conf.begin()[1] ? v_ : 0.0;
