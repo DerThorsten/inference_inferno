@@ -99,10 +99,10 @@ public:
     virtual ~MixedFactor()  = default;
 };
 
-typedef std::shared_ptr<Factor>             SharedFactorPtr;
-typedef std::shared_ptr<DiscreteFactor>     SharedDiscreteFactorPtr;
-typedef std::shared_ptr<ContinousFactor>    SharedContinousFactorPtr;
-typedef std::shared_ptr<MixedFactor>        SharedMixedFactorPtr;
+typedef std::shared_ptr<Factor>             FactorSharedPtr;
+typedef std::shared_ptr<DiscreteFactor>     DiscreteFactorSharedPtr;
+typedef std::shared_ptr<ContinousFactor>    ContinousFactorSharedPtr;
+typedef std::shared_ptr<MixedFactor>        MixedFactorSharedPtr;
 
 
 

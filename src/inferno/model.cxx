@@ -72,17 +72,17 @@ FactorsInfo::isDense() const {
         == numFactors_;
 }
 
-SharedDiscreteFactorPtr 
+DiscreteFactorSharedPtr 
 Model::getFactor(const size_t fi, const DiscreteTag tag) const {
     return std::dynamic_pointer_cast<DiscreteFactor>(this->getFactor(fi));
 }
 
-SharedContinousFactorPtr 
+ContinousFactorSharedPtr 
 Model::getFactor(const size_t fi, const ContinousTag tag) const {
     return std::dynamic_pointer_cast<ContinousFactor>(this->getFactor(fi));
 }
 
-SharedMixedFactorPtr 
+MixedFactorSharedPtr 
 Model::getFactor(const size_t fi, const MixedTag tag) const {
     return std::dynamic_pointer_cast<MixedFactor>(this->getFactor(fi));
 }
@@ -101,7 +101,7 @@ DiscreteModel::evaluateSum(
 
     for(int64_t fi=facInfo.minFactorId(); fi<= facInfo.maxFactorId(); ++fi){
         if(isDense || this->isFactorId(fi)){
-            SharedFactorPtr factor = this->getFactor(fi);
+            FactorSharedPtr factor = this->getFactor(fi);
             const size_t arity = factor->arity();
             if(arity>fconf.size())
                 fconf.resize(arity);
@@ -129,12 +129,12 @@ ExplicitDiscreteModel::ExplicitDiscreteModel(
 
 void 
 ExplicitDiscreteModel::addFactor(
-    SharedDiscreteFactorPtr factor
+    DiscreteFactorSharedPtr factor
 ){
     factors_.push_back(factor);
 }
 
-SharedFactorPtr 
+FactorSharedPtr 
 ExplicitDiscreteModel::getFactor(
     const size_t fi
 ) const {

@@ -13,25 +13,20 @@ ENDIF()
 #-------------------------------------------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 2.6)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
-project(opengm2)
+project(inferos)
 set (INFERNO_VERSION_MAJOR 0)
 set (INFERNO_VERSION_MINOR 1)
 set (INFERNO_VERSION_PATCH 0)
 
 #-------------------------------------------------------------------------------------------------------------------
-# c++ 12
+# c++ 11
 #-------------------------------------------------------------------------------------------------------------------
-ADD_DEFINITIONS(
-    -std=c++11 # Or -std=c++0x
-    # Other flags
-)
-
+ADD_DEFINITIONS(-std=c++11)
 
 #-------------------------------------------------------------------------------------------------------------------
 # enable_testing
 #-------------------------------------------------------------------------------------------------------------------
 enable_testing()
-
 
 
 
@@ -85,6 +80,7 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
 elseif(MSVC)
    add_definitions(-D_SCL_SECURE_NO_WARNINGS)
 endif()
+
 
 
 

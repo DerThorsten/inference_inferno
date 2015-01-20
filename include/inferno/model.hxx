@@ -52,7 +52,8 @@ namespace inferno{
 
     class Model{
     public:
-        virtual SharedFactorPtr getFactor(const size_t fi) const = 0;
+        virtual FactorSharedPtr getFactor(const size_t fi) const = 0;
+        
         virtual VariablesInfo variablesInfo()const = 0;
         virtual FactorsInfo factorsInfo()const = 0;
 
@@ -62,9 +63,9 @@ namespace inferno{
 
 
 
-        virtual SharedDiscreteFactorPtr getFactor(const size_t fi, const DiscreteTag) const ;
-        virtual SharedContinousFactorPtr getFactor(const size_t fi, const ContinousTag) const ;
-        virtual SharedMixedFactorPtr getFactor(const size_t fi, const MixedTag) const ;
+        virtual DiscreteFactorSharedPtr getFactor(const size_t fi, const DiscreteTag) const ;
+        virtual ContinousFactorSharedPtr getFactor(const size_t fi, const ContinousTag) const ;
+        virtual MixedFactorSharedPtr getFactor(const size_t fi, const MixedTag) const ;
         
     };
 
@@ -99,9 +100,9 @@ namespace inferno{
     class ExplicitDiscreteModel : public DiscreteModel{
     public:
         ExplicitDiscreteModel(const size_t nVar = 0, const DiscreteLabelBounds & bounds = DiscreteLabelBounds());
-        void addFactor(SharedDiscreteFactorPtr factor);
+        void addFactor(DiscreteFactorSharedPtr factor);
 
-        virtual SharedFactorPtr getFactor(const size_t fi)const;
+        virtual FactorSharedPtr getFactor(const size_t fi)const;
         virtual VariablesInfo variablesInfo()const;
         virtual FactorsInfo factorsInfo()const;
         virtual bool isVariableId(const int64_t id) const;
@@ -112,7 +113,7 @@ namespace inferno{
     private:
         size_t nVar_;
         std::vector< DiscreteLabelBounds > varBounds_;
-        std::vector<SharedDiscreteFactorPtr> factors_;
+        std::vector<DiscreteFactorSharedPtr> factors_;
     };
 
 }

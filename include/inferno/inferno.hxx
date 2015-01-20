@@ -115,11 +115,11 @@ typedef double  FactorValueType;
 typedef std::vector<DiscreteLabel > DiscreteLabelVec;
 typedef std::vector<ContinousLabel > ContinousLabelVec;
 
-struct RuntimeError
-: public std::runtime_error
-{
-   typedef std::runtime_error base;
-   RuntimeError(const std::string& message = std::string());
+class RuntimeError
+: public std::runtime_error{
+public:
+  typedef std::runtime_error base;
+  RuntimeError(const std::string& message = std::string());
 };
 
 }
