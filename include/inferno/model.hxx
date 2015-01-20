@@ -59,6 +59,12 @@ namespace inferno{
         virtual bool isVariableId(const int64_t id) const = 0;
         virtual bool isFactorId(const int64_t id) const = 0;
 
+
+
+
+        virtual SharedDiscreteFactorPtr getFactor(const size_t fi, const DiscreteTag) const ;
+        virtual SharedContinousFactorPtr getFactor(const size_t fi, const ContinousTag) const ;
+        virtual SharedMixedFactorPtr getFactor(const size_t fi, const MixedTag) const ;
         
     };
 
@@ -66,6 +72,10 @@ namespace inferno{
 
     class DiscreteModel : public Model{
     public:
+        DiscreteModel()
+        : Model(){
+
+        }
         virtual void varBounds(const size_t vi, DiscreteLabelBounds & bounds)const = 0;
         virtual FactorValueType evaluateSum(const DiscreteLabel * conf) const;
     };

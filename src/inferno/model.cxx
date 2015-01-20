@@ -72,6 +72,22 @@ FactorsInfo::isDense() const {
         == numFactors_;
 }
 
+SharedDiscreteFactorPtr 
+Model::getFactor(const size_t fi, const DiscreteTag tag) const {
+    return std::dynamic_pointer_cast<DiscreteFactor>(this->getFactor(fi));
+}
+
+SharedContinousFactorPtr 
+Model::getFactor(const size_t fi, const ContinousTag tag) const {
+    return std::dynamic_pointer_cast<ContinousFactor>(this->getFactor(fi));
+}
+
+SharedMixedFactorPtr 
+Model::getFactor(const size_t fi, const MixedTag tag) const {
+    return std::dynamic_pointer_cast<MixedFactor>(this->getFactor(fi));
+}
+
+
 FactorValueType 
 DiscreteModel::evaluateSum(
     const DiscreteLabel * conf

@@ -47,7 +47,8 @@ typedef std::initializer_list<MixedLabel>  MixedLabelInitList;
 
 class Factor{
 public:
-
+    
+    virtual ~Factor() = default;
     virtual void bounds(size_t d, MixedLabelBounds & bounds) const =0;
     virtual FunctionValueType   eval(MixedLabelInitList conf) const = 0 ;
     virtual FunctionValueType   eval(const MixedLabel * conf) const = 0 ;
@@ -60,6 +61,9 @@ public:
 
 class DiscreteFactor : public Factor{
 public:
+    DiscreteFactor():Factor(){
+    }
+    virtual ~DiscreteFactor() { }
     // default impl for factor api
     virtual void bounds(size_t d, MixedLabelBounds & bounds) const  ;
     virtual FunctionValueType   eval(MixedLabelInitList conf) const ;
@@ -75,7 +79,9 @@ public:
 
 class ContinousFactor : public Factor{
 public:
-
+    ContinousFactor():Factor(){
+    }
+    virtual ~ContinousFactor() = default;
     // default impl for factor api
     virtual void bounds(size_t d, MixedLabelBounds & bounds) const  ;
     virtual FunctionValueType   eval(MixedLabelInitList conf) const ;
@@ -88,7 +94,9 @@ public:
 
 class MixedFactor : public Factor{
 public:
-    // no extra api
+    MixedFactor():Factor(){
+    }
+    virtual ~MixedFactor()  = default;
 };
 
 typedef std::shared_ptr<Factor>             SharedFactorPtr;
@@ -111,6 +119,7 @@ public:
 class TwoClassUnary : public DiscreteFactor{
 
 public:
+    virtual ~TwoClassUnary()  = default;
     TwoClassUnary(
         const int64_t vi,
         const FunctionValueType v0, 
@@ -131,6 +140,7 @@ private:
 class TwoClassPottsBinary : public DiscreteFactor{
 
 public:
+    virtual ~TwoClassPottsBinary()  = default;
     TwoClassPottsBinary(const int64_t vi0, const int64_t vi1,const FunctionValueType v);
     virtual size_t arity() const ;
     virtual void bounds(size_t d , DiscreteLabelBounds & b) const ;

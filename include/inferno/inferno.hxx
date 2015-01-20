@@ -99,6 +99,14 @@ namespace inferno{
 
 
 const static int USUAL_MAX_FACTOR_ORDER = 10;
+
+struct DiscreteTag{
+};
+struct ContinousTag{
+};
+struct MixedTag{
+};
+
 typedef int64_t DiscreteLabel;
 typedef double  ContinousLabel;
 typedef double  FunctionValueType;

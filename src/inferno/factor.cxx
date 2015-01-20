@@ -71,7 +71,8 @@ TwoClassUnary::TwoClassUnary(
     const FunctionValueType v0, 
     const FunctionValueType v1
 )
-:   vi_(vi),
+:   DiscreteFactor(),
+    vi_(vi),
     v0_(v0),
     v1_(v1){
 }
@@ -105,7 +106,8 @@ TwoClassPottsBinary::TwoClassPottsBinary(
     const int64_t vi1,
     const FunctionValueType v
 )
-:   vi0_(vi0),
+:   DiscreteFactor(),
+    vi0_(vi0),
     vi1_(vi1),
     v_(v){
 }
