@@ -36,6 +36,8 @@ private:
     T upperBound_;
 };
 
+
+
 typedef Bounds<DiscreteLabel>   DiscreteLabelBounds;
 typedef Bounds<ContinousLabel> ContinousLabelBounds;
 typedef Bounds<MixedLabel>     MixedLabelBounds;
@@ -49,9 +51,14 @@ class Factor{
 public:
     
     virtual ~Factor() = default;
+
     virtual void bounds(size_t d, MixedLabelBounds & bounds) const =0;
-    virtual FunctionValueType   eval(MixedLabelInitList conf) const = 0 ;
+    virtual void bounds(size_t d, DiscreteLabelBounds & bounds) const =0;
+    virtual void bounds(size_t d, ContinousLabelBounds & bounds) const =0;
+
     virtual FunctionValueType   eval(const MixedLabel * conf) const = 0 ;
+    virtual FunctionValueType   eval(const DiscreteLabel * conf) const = 0 ;
+    virtual FunctionValueType   eval(const ContinousLabel * conf) const = 0 ;
 
     virtual size_t arity() const = 0 ;
     virtual int64_t vi(const size_t d)const = 0;
@@ -63,18 +70,17 @@ class DiscreteFactor : public Factor{
 public:
     DiscreteFactor():Factor(){
     }
-    virtual ~DiscreteFactor() { }
-    // default impl for factor api
-    virtual void bounds(size_t d, MixedLabelBounds & bounds) const  ;
-    virtual FunctionValueType   eval(MixedLabelInitList conf) const ;
-    virtual FunctionValueType   eval(const MixedLabel * conf) const ;
+    virtual ~DiscreteFactor() = default;
 
-
-    // extra api for discrete factor
-    virtual void bounds(size_t d, DiscreteLabelBounds & bounds) const =0;
-    virtual FunctionValueType   eval(DiscreteLabelInitList conf) const = 0 ;
-    virtual FunctionValueType   eval(const DiscreteLabel * conf) const = 0 ;
-
+    virtual uint64_t nConf()const {
+        const size_t arity = this->arity();
+        uint64_t nConf = 1;
+        for(size_t i=0; i<arity; ++i){
+            DiscreteLabelBounds bounds;
+            this->bounds(i,bounds);
+            nConf*=(bounds.upperBound()-bounds.lowerBound())+1;
+        }
+    }
 };
 
 class ContinousFactor : public Factor{
@@ -82,14 +88,6 @@ public:
     ContinousFactor():Factor(){
     }
     virtual ~ContinousFactor() = default;
-    // default impl for factor api
-    virtual void bounds(size_t d, MixedLabelBounds & bounds) const  ;
-    virtual FunctionValueType   eval(MixedLabelInitList conf) const ;
-    virtual FunctionValueType   eval(const MixedLabel * conf) const ;
-
-    virtual void bounds(size_t d, ContinousLabelBounds & bounds) const =0;
-    virtual FunctionValueType   eval(ContinousLabelInitList conf) const = 0 ;
-    virtual FunctionValueType   eval(const ContinousLabel * conf) const = 0 ;
 };
 
 class MixedFactor : public Factor{
@@ -108,8 +106,9 @@ typedef std::shared_ptr<MixedFactor>        MixedFactorSharedPtr;
 
 class DiscreteConstraint : public DiscreteFactor{
 public:
-    virtual bool feasible(DiscreteLabelInitList conf) const = 0 ;
+    virtual bool feasible(const MixedLabel * conf) const = 0 ;
     virtual bool feasible(const DiscreteLabel * conf) const = 0 ;
+    virtual bool feasible(const ContinousLabel * conf) const = 0 ;
 };
 
 
@@ -125,11 +124,18 @@ public:
         const FunctionValueType v0, 
         const FunctionValueType v1
     );
+
+    virtual void bounds(size_t d, MixedLabelBounds & bounds) const;
+    virtual void bounds(size_t d, DiscreteLabelBounds & bounds) const;
+    virtual void bounds(size_t d, ContinousLabelBounds & bounds) const;
+
+    virtual FunctionValueType eval(const MixedLabel * conf) const ;
+    virtual FunctionValueType eval(const DiscreteLabel * conf) const ;
+    virtual FunctionValueType eval(const ContinousLabel * conf) const ;
+
     virtual size_t arity() const ;
-    virtual void bounds(size_t d , DiscreteLabelBounds & b) const ;
-    virtual FunctionValueType   eval(DiscreteLabelInitList conf) const ;
-    virtual FunctionValueType   eval(const DiscreteLabel * conf) const ;
     virtual int64_t vi(const size_t d)const;
+
 private:
     int64_t vi_;
     FunctionValueType v0_,v1_;
@@ -142,11 +148,18 @@ class TwoClassPottsBinary : public DiscreteFactor{
 public:
     virtual ~TwoClassPottsBinary()  = default;
     TwoClassPottsBinary(const int64_t vi0, const int64_t vi1,const FunctionValueType v);
+
+    virtual void bounds(size_t d, MixedLabelBounds & bounds) const;
+    virtual void bounds(size_t d, DiscreteLabelBounds & bounds) const;
+    virtual void bounds(size_t d, ContinousLabelBounds & bounds) const;
+
+    virtual FunctionValueType eval(const MixedLabel * conf) const ;
+    virtual FunctionValueType eval(const DiscreteLabel * conf) const ;
+    virtual FunctionValueType eval(const ContinousLabel * conf) const ;
+
     virtual size_t arity() const ;
-    virtual void bounds(size_t d , DiscreteLabelBounds & b) const ;
-    virtual FunctionValueType   eval(DiscreteLabelInitList conf) const ;
-    virtual FunctionValueType   eval(const DiscreteLabel * conf) const ;
     virtual int64_t vi(const size_t d)const;
+
 private:
     int64_t vi0_,vi1_;
     FunctionValueType v_;

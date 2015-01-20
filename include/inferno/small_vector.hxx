@@ -17,43 +17,128 @@ namespace inferno {
 /// capacity of the vector.
 ///
 /// \ingroup datastructures
+
+
+namespace detail_small_vector{
+
+    template<class TAG>
+    struct AssignmentHelper{
+
+        template<class SV,class ITERATOR>
+        static void assign(
+            SV & vec,
+            ITERATOR begin, 
+            ITERATOR end
+        ){
+            vec.resize(std::distance(begin, end));
+            std::copy(begin, end, vec.begin());
+        }
+    };
+
+    template<>
+    struct AssignmentHelper<std::input_iterator_tag>{
+
+        template<class SV,class ITERATOR>
+        static void assign(
+            SV & vec,
+            ITERATOR begin, 
+            ITERATOR end
+        ){
+            std::vector<typename SV::value_type> tmp(begin,end);
+            vec.resize(tmp.size());
+            for(size_t i=0; i<tmp.size(); ++i)
+                vec[i] = tmp[i];
+        }
+    };
+
+
+}
+
 template<class T, size_t MAX_STACK=inferno::USUAL_MAX_FACTOR_ORDER>
 class SmallVector{
 public:
-   typedef T ValueType;
-   typedef T value_type;
-   typedef T const * ConstIteratorType;
-   typedef T const * const_iterator;
-   typedef T* IteratorType;
-   typedef T* iterator;
+    typedef T ValueType;
+    typedef T value_type;
+    typedef T const * ConstIteratorType;
+    typedef T const * const_iterator;
+    typedef T* IteratorType;
+    typedef T* iterator;
+    typedef size_t size_type;
+    typedef std::ptrdiff_t difference_type;
 
-   SmallVector( );
-   SmallVector(const size_t );
-   SmallVector(const size_t , const T & );
-   SmallVector(const SmallVector<T, MAX_STACK> &);
-   template<class ITER>
-   SmallVector(ITER begin, ITER end);
+    SmallVector( );
+    SmallVector(const size_t );
+    SmallVector(const size_t , const T & );
+    SmallVector(const SmallVector<T, MAX_STACK> &);
+    template<class ITER>
+    SmallVector(ITER begin, ITER end);
 
-   ~SmallVector( );
-   SmallVector<T, MAX_STACK>& operator=(const SmallVector<T, MAX_STACK> &);
-   template<class ITERATOR> void assign(ITERATOR , ITERATOR);
+    ~SmallVector( );
+    SmallVector<T, MAX_STACK>& operator=(const SmallVector<T, MAX_STACK> &);
+    template<class ITERATOR> void assign(ITERATOR , ITERATOR);
 
-   size_t size() const ;
-   T const * begin() const;
-   T const * end() const;
-   T* const begin();
-   T* const end();
-   T const & operator[](const size_t) const;
-   T& operator[](const size_t);
-   void push_back(const T &);
-   void resize(const size_t );
-   void reserve(const size_t );
-   void clear();
-   bool empty() const;
-   const T& front() const;
-   const T& back() const;
-   T& front();
-   T& back();
+    size_t size() const ;
+    T const * begin() const;
+    T const * end() const;
+    T* const begin();
+    T* const end();
+    T const & operator[](const size_t) const;
+    T& operator[](const size_t);
+    void push_back(const T &);
+    void resize(const size_t );
+    void reserve(const size_t );
+    void clear();
+    bool empty() const;
+    const T& front() const;
+    const T& back() const;
+    T& front();
+    T& back();
+
+    iterator erase(iterator pos){
+        const difference_type index = std::distance(begin(), pos);
+        if(index == size_ - 1){
+            --size_;
+            // now pointing to end
+            return pointerToSequence_ + index;
+        }
+        else{ //(index != size_ - 1){
+            for(size_t i=index+1 ; i<size_; ++i){
+                pointerToSequence_[index-1] = pointerToSequence_[index];
+            }
+            --size_;
+            // now pointing to the address
+            // the erased element has been
+            return pointerToSequence_ + index;
+        }
+        
+        
+    }
+
+    iterator erase (iterator first, iterator last){
+        const difference_type nErase = std::distance(first, last);
+        const difference_type index = std::distance(begin(), first);
+
+        if(index + nErase >= size_){
+            size_ -= nErase;
+            // now pointing to end
+            return pointerToSequence_ + size_;
+        }
+        else{
+            for(size_t i=index+nErase ; i<size_; ++i){
+                pointerToSequence_[i-nErase] = pointerToSequence_[i];
+            }
+            size_ -= nErase;
+            // now pointing to the address
+            // the erased element has been
+            return pointerToSequence_ + index;
+        }
+    }
+
+
+    iterator insert (iterator position, const value_type& val);
+    void insert (iterator position, size_type n, const value_type& val);
+    template <class InputIterator>
+    void insert (iterator position, InputIterator first, InputIterator last);
 
     const T * data()const{
         return pointerToSequence_;
@@ -63,6 +148,7 @@ public:
     }
 
 private:
+
    size_t size_;
    size_t capacity_;
    T stackSequence_[MAX_STACK];
@@ -127,19 +213,13 @@ SmallVector<T, MAX_STACK>::SmallVector
     ITER begin,
     ITER end
 )
-:   size_(std::distance(begin,end)),
+:   size_(),
     capacity_() 
 {
-    capacity_ = size_  > MAX_STACK ? size_ : MAX_STACK;
-    INFERNO_ASSERT(size_<=capacity_);
-    INFERNO_ASSERT(capacity_>=MAX_STACK);
-    if(size_>MAX_STACK) {
-        pointerToSequence_ = new T[size_];
-    }
-    else{
-        pointerToSequence_=stackSequence_;
-    }
-    std::copy(begin, end, pointerToSequence_);
+    typedef std::iterator_traits<ITER> IterTraits;
+    typedef typename IterTraits::iterator_category  IteratorTag;
+    typedef detail_small_vector::AssignmentHelper<IteratorTag> Helper;
+    Helper::assign(*this, begin, end);
 }
 
 
@@ -374,9 +454,79 @@ template<class T, size_t MAX_STACK>
 template<class ITERATOR>
 inline void
 SmallVector<T, MAX_STACK>::assign(ITERATOR begin, ITERATOR end) {
-   this->resize(std::distance(begin, end));
-   std::copy(begin, end, pointerToSequence_);
+    typedef std::iterator_traits<ITERATOR> IterTraits;
+    typedef typename IterTraits::iterator_category  IteratorTag;
+    typedef detail_small_vector::AssignmentHelper<IteratorTag> Helper;
+    Helper::assign(*this, begin, end);
 }
+
+template<class T, size_t MAX_STACK>
+typename SmallVector<T, MAX_STACK>::iterator 
+SmallVector<T, MAX_STACK>::insert 
+(
+    iterator position, 
+    const value_type& val
+){
+    if(position==end()){
+        resize(size_+1);
+        back() = val; 
+        return pointerToSequence_ + (size_ -1);
+    }
+    else{
+        resize(size_+1);
+        const difference_type index = std::distance(begin(),position);
+        for(difference_type i=size_ -2; i>index; --i){
+            pointerToSequence_[i+1] = pointerToSequence_[i]; 
+        }
+        pointerToSequence_ + index;
+    }
+}
+
+template<class T, size_t MAX_STACK>
+void 
+SmallVector<T, MAX_STACK>::insert 
+(
+    iterator position, 
+    size_type n, 
+    const value_type& val
+){
+    if(position==end()){
+        const difference_type index = std::distance(begin(),position);
+        resize(size_+n);
+        for(difference_type i=index; i<size_; ++i)
+            pointerToSequence_[i] = val;
+    }
+    else{
+        const size_t oldSize = size_;
+        const difference_type index = std::distance(begin(),position);
+        resize(size_+n);
+        for(difference_type i=size_ - 1; i>index; --i){
+            pointerToSequence_[i] = pointerToSequence_[i-n]; 
+        }
+        for(difference_type i=0; i<n; ++i){
+            pointerToSequence_[index + i]  = val;
+        }
+        pointerToSequence_ + index;
+    }
+}
+
+template<class T, size_t MAX_STACK>
+template <class InputIterator>
+void 
+SmallVector<T, MAX_STACK>::insert 
+(
+    iterator position, 
+    InputIterator first, 
+    InputIterator last
+){
+    // DO THIS ONLY IF IT IS AN TRUE INPUT ITERATOR!!!
+    const difference_type index = std::distance(begin(), position);
+    std::vector<T> tmp(begin(),end());
+    tmp.insert(tmp.begin()+index, first,last);
+    resize(tmp.size());
+    std::copy(tmp.begin(), tmp.end(), begin());
+}
+
 
 /// reference to the last entry
 template<class T, size_t MAX_STACK>

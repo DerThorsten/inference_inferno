@@ -35,12 +35,13 @@ namespace inferno{
     }
 
     void exportFactor();
-
+    void exportSmallVector();
 
     void exportCore(){
 
         bp::register_exception_translator<RuntimeError>(&translateStdRuntimeError);
         
+        exportSmallVector();
         exportFactor();
     }
 
@@ -51,7 +52,7 @@ namespace inferno{
 
 
 // export my module
-BOOST_PYTHON_MODULE_INIT(_core) {
+BOOST_PYTHON_MODULE_INIT(core) {
 
     namespace bp = boost::python;
     // Do not change next 4 lines

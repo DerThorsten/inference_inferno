@@ -31,41 +31,6 @@ inline T Bounds<T>::lowerBound()const{
 }
 
 
-
-
-
-
-void DiscreteFactor::bounds(size_t d, MixedLabelBounds & bounds) const{
-    DiscreteLabelBounds dbounds;
-    this->bounds(d, dbounds);
-    bounds = dbounds;
-}
-FunctionValueType DiscreteFactor::eval(MixedLabelInitList conf) const {
-    SmallVector<DiscreteLabel> buffer(conf.begin(), conf.end());
-    return this->eval(buffer.begin());
-}
-FunctionValueType DiscreteFactor::eval(const MixedLabel * conf) const {
-    SmallVector<DiscreteLabel> buffer(conf, conf+this->arity());
-    return this->eval(buffer.begin());
-}
-
-
-void ContinousFactor::bounds(size_t d, MixedLabelBounds & bounds) const{
-    ContinousLabelBounds cbounds;
-    this->bounds(d, cbounds);
-    bounds = cbounds;
-}
-FunctionValueType ContinousFactor::eval(MixedLabelInitList conf) const {
-    SmallVector<ContinousLabel> buffer(conf.begin(), conf.end());
-    return this->eval(buffer.begin());
-}
-FunctionValueType ContinousFactor::eval(const MixedLabel * conf) const {
-    SmallVector<ContinousLabel> buffer(conf, conf+this->arity());
-    return this->eval(buffer.begin());
-}
-
-
-
 TwoClassUnary::TwoClassUnary(
     const int64_t vi,
     const FunctionValueType v0, 
@@ -81,17 +46,31 @@ inline size_t TwoClassUnary::arity() const {
     return 1;
 }
 
+inline void TwoClassUnary::bounds(size_t d, MixedLabelBounds & bounds) const {
+    bounds = MixedLabelBounds(0,1);
+}
+
+inline void TwoClassUnary::bounds(size_t d, ContinousLabelBounds & bounds) const {
+    bounds = ContinousLabelBounds(0.0,1.0);
+}
+
 inline void TwoClassUnary::bounds(size_t d, DiscreteLabelBounds & bounds) const {
     bounds = DiscreteLabelBounds(0,1);
 }
 
-inline FunctionValueType   TwoClassUnary::eval(DiscreteLabelInitList conf) const {
-    return *conf.begin() == 0 ? v0_ : v1_;
+inline FunctionValueType   TwoClassUnary::eval(const MixedLabel * conf) const {
+    return DiscreteLabel(*conf) == 0 ? v0_ : v1_;
 }
 
 inline FunctionValueType   TwoClassUnary::eval(const DiscreteLabel * conf) const {
     return *conf == 0 ? v0_ : v1_;
 }
+
+inline FunctionValueType   TwoClassUnary::eval(const ContinousLabel * conf) const {
+    return DiscreteLabel(std::round(*conf)) == 0 ? v0_ : v1_;
+}
+
+
 
 inline int64_t 
 TwoClassUnary::vi(const size_t d) const {
@@ -116,17 +95,28 @@ inline size_t TwoClassPottsBinary::arity() const {
     return 1;
 }
 
+inline void TwoClassPottsBinary::bounds(size_t d, MixedLabelBounds & bounds) const {
+    bounds = MixedLabelBounds(0,1);
+}
+
+inline void TwoClassPottsBinary::bounds(size_t d, ContinousLabelBounds & bounds) const {
+    bounds = ContinousLabelBounds(0.0,1.0);
+}
+
 inline void TwoClassPottsBinary::bounds(size_t d, DiscreteLabelBounds & bounds) const {
     bounds = DiscreteLabelBounds(0,1);
 }
 
-
-inline FunctionValueType   TwoClassPottsBinary::eval(DiscreteLabelInitList conf) const {
-    return conf.begin()[0]!=conf.begin()[1] ? v_ : 0.0;
+inline FunctionValueType   TwoClassPottsBinary::eval(const MixedLabel * conf) const {
+    return DiscreteLabel(conf[0]) != DiscreteLabel(conf[1]) ? 
+            v_ : 0.0;
 }
-
 inline FunctionValueType   TwoClassPottsBinary::eval(const DiscreteLabel * conf) const {
     return conf[0]!=conf[1] ? v_ : 0.0;
+}
+inline FunctionValueType   TwoClassPottsBinary::eval(const ContinousLabel * conf) const {
+    return DiscreteLabel(std::round(conf[0])) != DiscreteLabel(std::round(conf[1])) ? 
+            v_ : 0.0;
 }
 
 inline int64_t 

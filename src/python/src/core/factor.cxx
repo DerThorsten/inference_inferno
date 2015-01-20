@@ -8,6 +8,7 @@
 #include <boost/python/module.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/exception_translator.hpp>
+#include <boost/python/def_visitor.hpp>
 
 // vigra numpy array converters
 #include <vigra/numpy_array.hxx>
@@ -20,22 +21,137 @@
 
 // inferno relatex
 #include "inferno/inferno.hxx"
-
-
-
+#include "inferno/factor.hxx"
+#include "inferno/small_vector.hxx"
 
 
 
 namespace inferno{
 
-    void foo(){
-        throw RuntimeError("test");
+
+   namespace bp = boost::python;
+
+
+    class FactorDefVisitor : public bp::def_visitor<FactorDefVisitor>
+    {
+        friend class bp::def_visitor_access;
+
+        template <class classT>
+        void visit(classT& c) const
+        {
+            c
+                .def("__getitem__",&evalFromSmallVec< SmallVector<DiscreteLabel> >)
+            ;
+        }
+
+
+        template<class VEC>
+        static FunctionValueType evalFromSmallVec(Factor * factor, const VEC & vec){
+            return factor->eval(vec.data());
+        }
+    
+    };
+
+    struct FactorWrap : Factor, bp::wrapper<Factor>
+    {
+        int f()
+        {
+            return this->get_override("f")();
+        }
+
+
+        void bounds(size_t d, MixedLabelBounds & bounds) const{
+            this->get_override("bounds")(bounds);
+        }
+        void bounds(size_t d, DiscreteLabelBounds & bounds) const{
+            this->get_override("bounds")(bounds);
+        }
+        void bounds(size_t d, ContinousLabelBounds & bounds) const{
+            this->get_override("bounds")(bounds);
+        }
+        FunctionValueType   eval(const MixedLabel * conf) const{
+            return this->get_override("eval")(conf);
+        }
+        FunctionValueType   eval(const DiscreteLabel * conf) const{
+            return this->get_override("eval")(conf);
+        }
+        FunctionValueType   eval(const ContinousLabel * conf) const{
+            return this->get_override("eval")(conf);
+        }
+
+        size_t arity() const{
+            return this->get_override("arity")();
+        }
+        int64_t vi(const size_t d)const{
+            return this->get_override("vi")(d);
+        }
+    };
+
+    struct DiscreteFactorWrap : DiscreteFactor, bp::wrapper<DiscreteFactor>
+    {
+        int f()
+        {
+            return this->get_override("f")();
+        }
+
+
+        void bounds(size_t d, MixedLabelBounds & bounds) const{
+            this->get_override("bounds")(bounds);
+        }
+        void bounds(size_t d, DiscreteLabelBounds & bounds) const{
+            this->get_override("bounds")(bounds);
+        }
+        void bounds(size_t d, ContinousLabelBounds & bounds) const{
+            this->get_override("bounds")(bounds);
+        }
+        FunctionValueType   eval(const MixedLabel * conf) const{
+            return this->get_override("eval")(conf);
+        }
+        FunctionValueType   eval(const DiscreteLabel * conf) const{
+            return this->get_override("eval")(conf);
+        }
+        FunctionValueType   eval(const ContinousLabel * conf) const{
+            return this->get_override("eval")(conf);
+        }
+
+        size_t arity() const{
+            return this->get_override("arity")();
+        }
+        int64_t vi(const size_t d)const{
+            return this->get_override("vi")(d);
+        }
+    };
+
+
+
+
+    TwoClassUnary * twoClassUnaryFactory(const int64_t vi , const FunctionValueType v0, const FunctionValueType v1){
+        return new TwoClassUnary(vi, v0, v1);
     }
-
-
-    namespace bp = boost::python;
     void exportFactor(){
-        bp::def("foo",&foo);
+
+        //FunctionValueType    (Factor::*eval_ml_ptr)(const MixedLabel * conf) const = &Factor::eval;
+
+
+        bp::class_<FactorWrap, boost::noncopyable>("Factor")
+            .def("arity", bp::pure_virtual(&Factor::arity))
+            .def("vi", bp::pure_virtual(&Factor::vi))
+            .def(FactorDefVisitor())
+        ;
+
+        bp::class_<DiscreteFactorWrap,bp::bases<Factor>, boost::noncopyable>("DiscreteFactor")
+            //.def("eval", bp::pure_virtual(eval_ml_ptr))
+        ;
+
+        bp::class_<TwoClassUnary,bp::bases<DiscreteFactor>, boost::noncopyable>
+            ("TwoClassUnary",bp::no_init)
+            //.def(FactorDefVisitor())
+        ;
+
+        // factory
+        bp::def("twoClassUnary",&twoClassUnaryFactory, bp::return_value_policy< bp::manage_new_object>())
+        ;
+
     }
 }
 
