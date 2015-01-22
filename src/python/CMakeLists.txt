@@ -28,7 +28,7 @@ include_directories(
 
 file(GLOB_RECURSE headers py_include/*.hxx)
 include_directories(py_include)
-include_directories(${headers})
+#include_directories(${headers})
 
 
 #--------------------------------------------------------------
@@ -61,7 +61,6 @@ file(MAKE_DIRECTORY ${inferno_python_tmp_dir})
 add_custom_target(inferno_python ALL)
 
 file(GLOB_RECURSE PYTHON_PY_FILES RELATIVE ${inferno_python_src_dir}/ *.py)
-
 
 
 

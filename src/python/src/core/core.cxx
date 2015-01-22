@@ -38,7 +38,7 @@ namespace inferno{
     void exportSmallVector();
     void exportModel();
     void exportFactor();
-    
+        
 
     void exportTags(){
         bp::class_<MixedTag>("MixedTag",bp::init<>());
@@ -51,8 +51,8 @@ namespace inferno{
         bp::register_exception_translator<RuntimeError>(&translateStdRuntimeError);
         
         exportSmallVector();
-        exportModel();
         exportFactor();
+        exportModel();
     }
 
     
