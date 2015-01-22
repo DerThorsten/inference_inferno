@@ -34,14 +34,18 @@ namespace inferno{
         PyErr_SetString(PyExc_RuntimeError, e.what());
     }
 
-    void exportFactor();
+    
     void exportSmallVector();
+    void exportModel();
+    void exportFactor();
+    
 
     void exportCore(){
 
         bp::register_exception_translator<RuntimeError>(&translateStdRuntimeError);
         
         exportSmallVector();
+        exportModel();
         exportFactor();
     }
 

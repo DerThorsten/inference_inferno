@@ -2,6 +2,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "inferno/factor.hxx"
+#include "inferno/model.hxx"
+#include "inferno/model_fac_info.hxx"
+#include "inferno/model_var_info.hxx"
 
 #define TEST_EPS 0.00001
 
@@ -37,3 +40,4 @@ BOOST_AUTO_TEST_CASE(TestCasting3)
     ContinousFactor * f  = dynamic_cast<ContinousFactor *>(df);
     BOOST_CHECK_EQUAL(f==NULL,true);
 }
+

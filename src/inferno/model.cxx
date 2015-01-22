@@ -7,83 +7,25 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/model.hxx"
+#include "inferno/model_fac_info.hxx"
 #include "inferno/small_vector.hxx"
 
 namespace inferno{
 
 
-inline VariablesInfo::VariablesInfo(
-    const int64_t  minVariableId,
-    const int64_t  maxVariableId,
-    const uint64_t numVariables
-)
-:   minVariableId_(minVariableId),
-    maxVariableId_(maxVariableId),
-    numVariables_(numVariables){
-}
-
-inline int64_t  
-VariablesInfo::minVariableId()const{
-    return minVariableId_;
-}
-
-inline int64_t  
-VariablesInfo::maxVariableId()const{
-    return maxVariableId_;
-}
-inline uint64_t
-VariablesInfo::numVariables()const{
-    return numVariables_;
-}
-
-inline bool 
-VariablesInfo::isDense() const {
-    return (maxVariableId_ - minVariableId_)+1 
-        == numVariables_;
-}
-
-inline FactorsInfo::FactorsInfo(
-    const int64_t  minFactorId,
-    const int64_t  maxFactorId,
-    const uint64_t numFactors
-)
-:   minFactorId_(minFactorId),
-    maxFactorId_(maxFactorId),
-    numFactors_(numFactors){
-}
-
-inline int64_t  
-FactorsInfo::minFactorId()const{
-    return minFactorId_;
-}
-
-inline int64_t  
-FactorsInfo::maxFactorId()const{
-    return maxFactorId_;
-}
-inline uint64_t
-FactorsInfo::numFactors()const{
-    return numFactors_;
-}
-
-inline bool 
-FactorsInfo::isDense() const {
-    return (maxFactorId_ - minFactorId_)+1 
-        == numFactors_;
-}
 
 DiscreteFactorSharedPtr 
-Model::getFactor(const size_t fi, const DiscreteTag tag) const {
+Model::getFactor(const int64_t fi, const DiscreteTag tag) const {
     return std::dynamic_pointer_cast<DiscreteFactor>(this->getFactor(fi));
 }
 
 ContinousFactorSharedPtr 
-Model::getFactor(const size_t fi, const ContinousTag tag) const {
+Model::getFactor(const int64_t fi, const ContinousTag tag) const {
     return std::dynamic_pointer_cast<ContinousFactor>(this->getFactor(fi));
 }
 
 MixedFactorSharedPtr 
-Model::getFactor(const size_t fi, const MixedTag tag) const {
+Model::getFactor(const int64_t fi, const MixedTag tag) const {
     return std::dynamic_pointer_cast<MixedFactor>(this->getFactor(fi));
 }
 
@@ -136,14 +78,14 @@ ExplicitDiscreteModel::addFactor(
 
 FactorSharedPtr 
 ExplicitDiscreteModel::getFactor(
-    const size_t fi
+    const int64_t fi
 ) const {
     return factors_[fi];
 }
 
 void 
 ExplicitDiscreteModel::varBounds(
-    const size_t vi,
+    const int64_t vi,
     DiscreteLabelBounds & bounds
 ) const {
     bounds = vi < varBounds_.size() ? 

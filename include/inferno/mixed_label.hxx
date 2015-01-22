@@ -1,5 +1,5 @@
-#ifndef INFERNOS_MIXED_LABEL_HXX
-#define INFERNOS_MIXED_LABEL_HXX
+#ifndef INFERNO_MIXED_LABEL_HXX
+#define INFERNO_MIXED_LABEL_HXX
 #include <cstdint>
 #include <iostream>
 #include <limits>

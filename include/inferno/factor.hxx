@@ -1,5 +1,5 @@
-#ifndef INFERNOS_FACTOR_HXX
-#define INFERNOS_FACTOR_HXX
+#ifndef INFERNO_FACTOR_HXX
+#define INFERNO_FACTOR_HXX
 
 #include <cstdint>
 #include <iostream>
@@ -93,7 +93,7 @@ public:
 class MixedFactor : public Factor{
 public:
     MixedFactor():Factor(){
-    }
+    };
     virtual ~MixedFactor()  = default;
 };
 

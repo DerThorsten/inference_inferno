@@ -54,11 +54,6 @@ namespace inferno{
 
     struct FactorWrap : Factor, bp::wrapper<Factor>
     {
-        int f()
-        {
-            return this->get_override("f")();
-        }
-
 
         void bounds(size_t d, MixedLabelBounds & bounds) const{
             this->get_override("bounds")(bounds);
@@ -125,8 +120,8 @@ namespace inferno{
 
 
 
-    TwoClassUnary * twoClassUnaryFactory(const int64_t vi , const FunctionValueType v0, const FunctionValueType v1){
-        return new TwoClassUnary(vi, v0, v1);
+    std::shared_ptr<TwoClassUnary>  twoClassUnaryFactory(const int64_t vi , const FunctionValueType v0, const FunctionValueType v1){
+        return std::shared_ptr<TwoClassUnary>(new TwoClassUnary(vi, v0, v1));
     }
     void exportFactor(){
 
@@ -139,6 +134,10 @@ namespace inferno{
             .def(FactorDefVisitor())
         ;
 
+
+
+
+
         bp::class_<DiscreteFactorWrap,bp::bases<Factor>, boost::noncopyable>("DiscreteFactor")
             //.def("eval", bp::pure_virtual(eval_ml_ptr))
         ;
@@ -149,9 +148,18 @@ namespace inferno{
         ;
 
         // factory
-        bp::def("twoClassUnary",&twoClassUnaryFactory, bp::return_value_policy< bp::manage_new_object>())
+        bp::def("twoClassUnary",&twoClassUnaryFactory)
         ;
 
+
+        // SHARED PTRS TO ABSTRACT BASE CLASES
+        bp::register_ptr_to_python<  std::shared_ptr<Factor> >();
+        bp::register_ptr_to_python<  std::shared_ptr<DiscreteFactor> >();
+        bp::register_ptr_to_python<  std::shared_ptr<ContinousFactor> >();
+        bp::register_ptr_to_python<  std::shared_ptr<MixedFactor> >();
+
+        // SHARED PTRS TO CONCRETE CLASSES
+        bp::register_ptr_to_python<  std::shared_ptr<TwoClassUnary> >();
     }
 }
 
