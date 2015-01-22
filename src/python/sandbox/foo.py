@@ -13,14 +13,9 @@ for x in range(shape[0]):
 
 
 		unaries = numpy.random.random([2])
-		f = inferno.twoClassUnary(vi, unaries[0], unaries[1])
-
+		f = inferno.twoClassUnary(vi, float(unaries[0]), float(unaries[1]))
+		model.addFactor(f)
 	vi+=1
 
 
-
-
-conf = inferno.SmallVecDiscreteLabel()
-conf.append(0)
-print f.arity()
-print f[conf]
+minF,maxF,nF,denseF =  model.factorsInfo()

@@ -83,7 +83,7 @@ namespace inferno{
     class ExplicitDiscreteModel : public DiscreteModel{
     public:
         ExplicitDiscreteModel(const size_t nVar = 0, const DiscreteLabelBounds & bounds = DiscreteLabelBounds());
-        void addFactor(DiscreteFactorSharedPtr factor);
+        void addFactor(FactorSharedPtr factor);
 
         virtual FactorSharedPtr getFactor(const int64_t fi)const;
         virtual VariablesInfo variablesInfo()const;
@@ -96,7 +96,7 @@ namespace inferno{
     private:
         size_t nVar_;
         std::vector< DiscreteLabelBounds > varBounds_;
-        std::vector<DiscreteFactorSharedPtr> factors_;
+        std::vector<FactorSharedPtr> factors_;
     };
 
 }

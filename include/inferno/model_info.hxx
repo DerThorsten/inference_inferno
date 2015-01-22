@@ -22,7 +22,7 @@ namespace inferno{
         int64_t  maxVariableId()const{return maxVariableId_;}
         uint64_t numVariables()const {return numVariables_;}
         bool isDense() const {
-            return (maxVariableId_ - minVariableId_) == numVariables_;
+            return (maxVariableId_ - minVariableId_) +1  == numVariables_;
         }
     private:
         int64_t  minVariableId_;
@@ -45,7 +45,7 @@ namespace inferno{
         int64_t  maxFactorId()const{return maxFactorId_;}
         uint64_t numFactors()const {return numFactors_;}
         bool isDense() const {
-            return (maxFactorId_ - minFactorId_) == numFactors_;
+            return (maxFactorId_ - minFactorId_) +1== numFactors_;
         }
     private:
         int64_t  minFactorId_;

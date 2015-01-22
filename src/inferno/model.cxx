@@ -81,7 +81,7 @@ ExplicitDiscreteModel::ExplicitDiscreteModel(
 
 void 
 ExplicitDiscreteModel::addFactor(
-    DiscreteFactorSharedPtr factor
+    FactorSharedPtr factor
 ){
     factors_.push_back(factor);
 }

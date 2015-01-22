@@ -43,6 +43,10 @@ namespace inferno{
             .def("getFactor", bp::pure_virtual(getMixedFactor    ))
             .def("getFactor", bp::pure_virtual(getDiscreteFactor ))
             .def("getFactor", bp::pure_virtual(getContinousFactor))
+            // get var and fac info
+            .def("variablesInfo", bp::pure_virtual(&ModelWrap::variablesInfo))
+            .def("factorsInfo", bp::pure_virtual(&ModelWrap::variablesInfo))
+
             // get variable bounds
             .def("varBounds", bp::pure_virtual(varBoundsMixed     ))
             .def("varBounds", bp::pure_virtual(varBoundsDiscrete  ))
@@ -57,7 +61,7 @@ namespace inferno{
         ;
 
 
-        bp::class_<ExplicitDiscreteModel,bp::bases<DiscreteFactor>, boost::noncopyable>("ExplicitDiscreteModel",bp::no_init)
+        bp::class_<ExplicitDiscreteModel,bp::bases<DiscreteModel>, boost::noncopyable>("ExplicitDiscreteModel",bp::no_init)
             .def("addFactor",& ExplicitDiscreteModel::addFactor)
         ;
 

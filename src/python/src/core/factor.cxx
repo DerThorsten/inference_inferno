@@ -120,8 +120,8 @@ namespace inferno{
 
 
 
-    std::shared_ptr<TwoClassUnary>  twoClassUnaryFactory(const int64_t vi , const FunctionValueType v0, const FunctionValueType v1){
-        return std::shared_ptr<TwoClassUnary>(new TwoClassUnary(vi, v0, v1));
+    std::shared_ptr<Factor>  twoClassUnaryFactory(const int64_t vi , const FunctionValueType v0, const FunctionValueType v1){
+        return std::shared_ptr<Factor>(new TwoClassUnary(vi, v0, v1));
     }
     void exportFactor(){
 
