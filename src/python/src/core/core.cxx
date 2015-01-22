@@ -40,6 +40,12 @@ namespace inferno{
     void exportFactor();
     
 
+    void exportTags(){
+        bp::class_<MixedTag>("MixedTag",bp::init<>());
+        bp::class_<ContinousTag>("ContinousTag",bp::init<>());
+        bp::class_<DiscreteTag>("DiscreteTag",bp::init<>());
+    }
+
     void exportCore(){
 
         bp::register_exception_translator<RuntimeError>(&translateStdRuntimeError);

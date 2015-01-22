@@ -22,6 +22,15 @@ include_directories(
     ${Boost_PYTHON_INCLUDE_DIR}
 )
 
+
+
+
+
+file(GLOB_RECURSE headers py_include/*.hxx)
+include_directories(py_include)
+include_directories(${headers})
+
+
 #--------------------------------------------------------------
 # Python INSTALL PATH
 #--------------------------------------------------------------

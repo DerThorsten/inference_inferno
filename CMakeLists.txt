@@ -41,13 +41,6 @@ file(GLOB_RECURSE headers include/*.hxx)
 file(GLOB_RECURSE headers ${CMAKE_INSTALL_PREFIX}/include/*.hxx)
 include_directories(include)
 
-file(GLOB_RECURSE headers ${PROJECT_BINARY_DIR}/tmp_install/include/*.hxx)
-include_directories(${PROJECT_BINARY_DIR}/tmp_install/include)
-
-file(GLOB_RECURSE headers ${PROJECT_BINARY_DIR}/tmp_install/include/*.h)
-include_directories(${PROJECT_BINARY_DIR}/tmp_install/include)
-
-LINK_DIRECTORIES( ${LINK_DIRECTORIES} ${PROJECT_BINARY_DIR}/tmp_install/lib)
 
 #-------------------------------------------------------------------------------------------------------------------
 # debug info

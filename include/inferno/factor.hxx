@@ -25,8 +25,7 @@ public:
     template<class U>
     Bounds(const Bounds<U> & other)
     : lowerBound_(other.lowerBound()),
-      upperBound_(other.upperBound()){
-
+     upperBound_(other.upperBound()){
     }
     T lowerBound()const;
     T upperBound()const;

@@ -7,7 +7,7 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/model.hxx"
-#include "inferno/model_fac_info.hxx"
+#include "inferno/model_info.hxx"
 #include "inferno/small_vector.hxx"
 
 namespace inferno{
@@ -30,12 +30,10 @@ Model::getFactor(const int64_t fi, const MixedTag tag) const {
 }
 
 
-FactorValueType 
-DiscreteModel::evaluateSum(
-    const DiscreteLabel * conf
-) const{
 
-    SmallVector<MixedLabel> fconf;
+template<class LABEL_TYPE>
+FactorValueType Model::evaluateSumT(const LABEL_TYPE * conf) const{
+    SmallVector<LABEL_TYPE> fconf;
     const FactorsInfo facInfo = this->factorsInfo();
     const bool isDense = facInfo.isDense();
 
@@ -55,6 +53,18 @@ DiscreteModel::evaluateSum(
     }
     return totalValue;
 }
+
+FactorValueType Model::evaluateSum(const MixedLabel * conf) const{
+   return this->evaluateSumT(conf); 
+}
+FactorValueType Model::evaluateSum(const ContinousLabel * conf) const{
+   return this->evaluateSumT(conf); 
+}
+FactorValueType Model::evaluateSum(const DiscreteLabel * conf) const{
+   return this->evaluateSumT(conf); 
+}
+
+
 
 
 
@@ -85,11 +95,11 @@ ExplicitDiscreteModel::getFactor(
 
 void 
 ExplicitDiscreteModel::varBounds(
-    const int64_t vi,
-    DiscreteLabelBounds & bounds
+   const int64_t vi,
+   DiscreteLabelBounds & bounds
 ) const {
-    bounds = vi < varBounds_.size() ? 
-        varBounds_[vi] : varBounds_[0];
+   bounds = vi < varBounds_.size() ? 
+       varBounds_[vi] : varBounds_[0];
 }
 
 

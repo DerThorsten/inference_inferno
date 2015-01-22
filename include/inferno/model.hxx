@@ -9,9 +9,7 @@
 #include <memory>
 
 #include "inferno/factor.hxx"
-#include "inferno/model_var_info.hxx"
-#include "inferno/model_fac_info.hxx"
-
+#include "inferno/model_info.hxx"
 namespace inferno{
 
 
@@ -29,10 +27,18 @@ namespace inferno{
         virtual bool isFactorId(const int64_t id) const = 0;
 
 
+        virtual void varBounds(const int64_t, MixedLabelBounds & bounds)const = 0;
+        virtual void varBounds(const int64_t, ContinousLabelBounds & bounds)const = 0;
+        virtual void varBounds(const int64_t, DiscreteLabelBounds & bounds)const = 0;
 
 
+        virtual FactorValueType evaluateSum(const MixedLabel * conf) const;
+        virtual FactorValueType evaluateSum(const ContinousLabel * conf) const;
+        virtual FactorValueType evaluateSum(const DiscreteLabel * conf) const;
 
-        
+    private:
+        template<class LABEL_TYPE>
+        FactorValueType evaluateSumT(const LABEL_TYPE * conf)const;
     };
 
 
@@ -43,8 +49,19 @@ namespace inferno{
         : Model(){
 
         } //
+
         virtual void varBounds(const int64_t, DiscreteLabelBounds & bounds)const = 0;
-        virtual FactorValueType evaluateSum(const DiscreteLabel * conf) const;
+
+        virtual void varBounds(const int64_t vi, MixedLabelBounds & bounds)const {
+            DiscreteLabelBounds dbounds;
+            this->varBounds(vi, dbounds);
+            bounds = dbounds;
+        }
+        virtual void varBounds(const int64_t vi, ContinousLabelBounds & bounds)const {
+            DiscreteLabelBounds dbounds;
+            this->varBounds(vi, dbounds);
+            bounds = dbounds;
+        }
     };
 
     class ContinousModel : public Model{
@@ -74,7 +91,7 @@ namespace inferno{
         virtual bool isVariableId(const int64_t id) const;
         virtual bool isFactorId(const int64_t id) const;
 
-        virtual void varBounds(const int64_t, DiscreteLabelBounds & bounds)const;
+        virtual void varBounds(const int64_t vi, DiscreteLabelBounds & bounds)const;
 
     private:
         size_t nVar_;
