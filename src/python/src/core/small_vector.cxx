@@ -44,7 +44,7 @@ namespace inferno{
     void exportSmallVector(){
 
 
-        exportSmallVectorT<DiscreteLabel>("SmallVecDiscreteLabel");
+        //exportSmallVectorT<DiscreteLabel>("SmallVecDiscreteLabel");
         //exportSmallVectorT<ContinousLabel>("SmallVecContinousLabel");
         //exportSmallVectorT<MixedLabel>("SmallVecMixedLabel");
     }

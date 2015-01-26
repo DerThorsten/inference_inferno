@@ -30,9 +30,9 @@ namespace inferno{
 
     namespace bp = boost::python;
 
-    void translateStdRuntimeError(const RuntimeError & e){
-        PyErr_SetString(PyExc_RuntimeError, e.what());
-    }
+    //void translateStdRuntimeError(const RuntimeError & e){
+    //    PyErr_SetString(PyExc_RuntimeError, e.what());
+    //}
 
     
     void exportSmallVector();
@@ -40,15 +40,10 @@ namespace inferno{
     void exportFactor();
         
 
-    void exportTags(){
-        bp::class_<MixedTag>("MixedTag",bp::init<>());
-        bp::class_<ContinousTag>("ContinousTag",bp::init<>());
-        bp::class_<DiscreteTag>("DiscreteTag",bp::init<>());
-    }
-
+   
     void exportCore(){
 
-        bp::register_exception_translator<RuntimeError>(&translateStdRuntimeError);
+        //bp::register_exception_translator<RuntimeError>(&translateStdRuntimeError);
         
         exportSmallVector();
         exportFactor();

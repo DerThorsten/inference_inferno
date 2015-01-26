@@ -1,104 +1,181 @@
 #ifndef INFERNO_MODEL_HXX
 #define INFERNO_MODEL_HXX
 
-#include <cstdint>
-#include <iostream>
-#include <limits>
-#include <initializer_list>
-#include <vector>
-#include <memory>
-
-#include "inferno/factor.hxx"
-#include "inferno/model_info.hxx"
+#include "inferno/inferno.hxx"
+#include "inferno/discrete_value_table.hxx"
+#include "inferno/small_vector.hxx"
 namespace inferno{
 
 
-    class Model{
-    public:
-        virtual FactorSharedPtr          getFactor(const int64_t fi) const = 0;
-        virtual DiscreteFactorSharedPtr  getFactor(const int64_t fi, const DiscreteTag) const ;
-        virtual ContinousFactorSharedPtr getFactor(const int64_t fi, const ContinousTag) const ;
-        virtual MixedFactorSharedPtr     getFactor(const int64_t fi, const MixedTag) const ;
+template<class FACTOR >
+class DiscreteFactorBase{
+public:
+    ValueType operator()(const LabelType * conf)const{
+        return factor()->valueTable()->eval(conf);
+    }
+    ValueType operator()(const LabelType l0)const{
+        return factor()->valueTable()->eval(l0);
+    }
 
-        virtual VariablesInfo variablesInfo()const = 0;
-        virtual FactorsInfo factorsInfo()const = 0;
+    ValueType operator()(const LabelType l0, 
+                         const LabelType l1)const{
+        return factor()->valueTable()->eval(l0, l1);
+    }
 
-        virtual bool isVariableId(const int64_t id) const = 0;
-        virtual bool isFactorId(const int64_t id) const = 0;
+    ValueType operator()(const LabelType l0, 
+                         const LabelType l1, 
+                         const LabelType l2)const{
+        return factor()->valueTable()->eval(l0, l1, l2);
+    }
+
+    ValueType operator()(const LabelType l0, 
+                         const LabelType l1, 
+                         const LabelType l2, 
+                         const LabelType l3)const{
+        return factor()->valueTable()->eval(l0, l1, l2, l3);
+    }
+
+    ValueType operator()(const LabelType l0, 
+                         const LabelType l1, 
+                         const LabelType l2, 
+                         const LabelType l3,
+                         const LabelType l4)const{
+        return factor()->valueTable()->eval(l0, l1, l2, l3, l4);
+    }
+private:
+    const FACTOR * factor()const{
+        return static_cast<const FACTOR *>(this);
+    }
+    FACTOR * factor(){
+        return static_cast<FACTOR *>(this);
+    }
+};
+
+/*
+    
+*/
+
+class DiscreteFactor : public DiscreteFactorBase<DiscreteFactor> {
+public:
+
+    template<class VI_T>
+    DiscreteFactor(const DiscreteValueTable * vt,
+                   std::initializer_list<VI_T> list)
+    :   vis_(list),
+        vt_(vt){
+
+    }
+
+    template<class VI_ITER>
+    DiscreteFactor(const DiscreteValueTable * vt,
+                   const VI_ITER viBegin, 
+                   const VI_ITER viEnd)
+    :   vis_(viBegin, viEnd),
+        vt_(vt){
+
+    }
+    const DiscreteValueTable * valueTable()const{
+        return vt_;
+    }   
+    size_t arity()const{
+        return vis_.size();
+    }
+    LabelType shape(const size_t d)const{
+        return vt_->shape(d);
+    }
+    Vi vi(const size_t d)const{
+        return vis_[d];
+    }
 
 
-        virtual void varBounds(const int64_t, MixedLabelBounds & bounds)const = 0;
-        virtual void varBounds(const int64_t, ContinousLabelBounds & bounds)const = 0;
-        virtual void varBounds(const int64_t, DiscreteLabelBounds & bounds)const = 0;
+private:
+    const std::vector<Vi> vis_;
+    const DiscreteValueTable * vt_;
+
+};
 
 
-        virtual FactorValueType evaluateSum(const MixedLabel * conf) const;
-        virtual FactorValueType evaluateSum(const ContinousLabel * conf) const;
-        virtual FactorValueType evaluateSum(const DiscreteLabel * conf) const;
+
+template<class MODEL>
+class DiscreteGraphicalModelBase{
+public:
+
+private:
+    const MODEL * model()const{
+        return static_cast<const MODEL *>(this);
+    }
+    MODEL * model(){
+        return static_cast<MODEL *>(this);
+    }
+};
+
+
+class DiscreteGraphicalModel : 
+    public DiscreteGraphicalModelBase<DiscreteGraphicalModel>{
+
 
     private:
-        template<class LABEL_TYPE>
-        FactorValueType evaluateSumT(const LABEL_TYPE * conf)const;
-    };
+        typedef std::vector<DiscreteFactor>  FactorVector;
+        typedef typename FactorVector::const_iterator FactorIterator;
 
-
-
-    class DiscreteModel : public Model{
     public:
-        DiscreteModel()
-        : Model(){
-
-        } //
-
-        virtual void varBounds(const int64_t, DiscreteLabelBounds & bounds)const = 0;
-
-        virtual void varBounds(const int64_t vi, MixedLabelBounds & bounds)const {
-            DiscreteLabelBounds dbounds;
-            this->varBounds(vi, dbounds);
-            bounds = dbounds;
+        typedef const DiscreteFactor * ConstFactorPtr;
+        //
+        FactorIterator factorsBegin()const{
+            return factors_.begin();
         }
-        virtual void varBounds(const int64_t vi, ContinousLabelBounds & bounds)const {
-            DiscreteLabelBounds dbounds;
-            this->varBounds(vi, dbounds);
-            bounds = dbounds;
+
+        FactorIterator factorsEnd()const{
+            return factors_.end();
         }
-    };
 
-    class ContinousModel : public Model{
-    public:
-       
-    };
-
-    class MixedModel : public Model{
-    public:
-       
-    };
-
-    typedef std::shared_ptr<Model> SharedModelPtr;
-    typedef std::shared_ptr<MixedModel> SharedMixedModelPtr;
-    typedef std::shared_ptr<ContinousModel> SharedContinousModelPtr;
-    typedef std::shared_ptr<DiscreteModel> SharedDiscreteModelPtr;
-
-
-    class ExplicitDiscreteModel : public DiscreteModel{
-    public:
-        ExplicitDiscreteModel(const size_t nVar = 0, const DiscreteLabelBounds & bounds = DiscreteLabelBounds());
-        void addFactor(FactorSharedPtr factor);
-
-        virtual FactorSharedPtr getFactor(const int64_t fi)const;
-        virtual VariablesInfo variablesInfo()const;
-        virtual FactorsInfo factorsInfo()const;
-        virtual bool isVariableId(const int64_t id) const;
-        virtual bool isFactorId(const int64_t id) const;
-
-        virtual void varBounds(const int64_t vi, DiscreteLabelBounds & bounds)const;
-
+        DiscreteGraphicalModel(const uint64_t nVar, const LabelType nLabes)
+        :   nVar_(nVar),
+            nos_(1, nLabes),
+            valueTables_(),
+            factors_(){
+        }
+        const uint64_t addValueTable( DiscreteValueTable * vt){
+            valueTables_.push_back(vt);
+            return valueTables_.size()-1;
+        }   
+        template<class VI_ITER>
+        const uint64_t addFactor(const uint64_t vti , VI_ITER viBegin, VI_ITER viEnd){
+            factors_.push_back(DiscreteFactor(valueTables_[vti], viBegin, viEnd));
+            return factors_.size()-1;
+        }
+        template<class VI_T>
+        const uint64_t addFactor(const uint64_t vti , std::initializer_list<VI_T>  list){
+            factors_.push_back(DiscreteFactor(valueTables_[vti], list));
+            return factors_.size()-1;
+        }
     private:
-        size_t nVar_;
-        std::vector< DiscreteLabelBounds > varBounds_;
-        std::vector<FactorSharedPtr> factors_;
-    };
+        const uint64_t nVar_;
+        std::vector<LabelType>              nos_;
+        std::vector<DiscreteValueTable * >  valueTables_;
+        std::vector<DiscreteFactor>         factors_;
+        
+
+};
+
+
+
+template<class MODEL>
+class FactorsOfVariables{
+public:
+    typedef MODEL Model;
+    FactorsOfVariables(const Model & model)
+    : model_(model){
+
+        // 
+
+    }   
+private:
+    const Model & model_;
+    std::vector<SmallVector< > >
+};
+
 
 }
 
-#endif
+#endif 

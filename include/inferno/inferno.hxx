@@ -107,10 +107,14 @@ struct ContinousTag{
 struct MixedTag{
 };
 
-typedef int64_t DiscreteLabel;
+typedef int64_t LabelType;
+
+typedef int64_t Vi;
+typedef LabelType DiscreteLabel;
 typedef double  ContinousLabel;
 typedef double  FunctionValueType;
 typedef double  FactorValueType;
+typedef double ValueType;
 
 typedef std::vector<DiscreteLabel > DiscreteLabelVec;
 typedef std::vector<ContinousLabel > ContinousLabelVec;
