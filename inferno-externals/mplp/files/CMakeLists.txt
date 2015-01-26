@@ -14,12 +14,12 @@ SET(MPLP_SRC_FILES
 ADD_LIBRARY(inferno-external-mplp   ${MPLP_SRC_FILES})
 ADD_LIBRARY(inferno-external-mplp-shared   SHARED ${MPLP_SRC_FILES} )
 
-install (TARGETS inferno-external-mplp DESTINATION lib/inferno/externals/)
-install (TARGETS inferno-external-mplp-shared DESTINATION lib/inferno/externals/)
+install (TARGETS inferno-external-mplp DESTINATION lib/inferno_externals/)
+install (TARGETS inferno-external-mplp-shared DESTINATION lib/inferno_externals/)
 
 
 install(DIRECTORY "."
-    DESTINATION include/inferno/externals/mplp
+    DESTINATION include/inferno_externals/mplp
     FILES_MATCHING
     PATTERN "*.h"
     PATTERN ".svn" EXCLUDE

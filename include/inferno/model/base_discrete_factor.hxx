@@ -1,9 +1,8 @@
-#ifndef INFERNO_FACTOR_HXX
-#define INFERNO_FACTOR_HXX
+#ifndef INFERNO_MODEL_BASE_FACTOR_HXX
+#define INFERNO_MODEL_BASE_FACTOR_HXX
 
 #include "inferno/inferno.hxx"
-#include "inferno/discrete_value_table.hxx"
-#include "inferno/small_vector.hxx"
+#include "inferno/value_tables/base_discrete_value_table.hxx"
 namespace inferno{
 
 
@@ -49,6 +48,17 @@ public:
     }
     const FACTOR * operator ->()const{
         return static_cast<const FACTOR *>(this); 
+    }
+
+    template<class ITER_GM_CONF, class ITER_FACTOR_CONF>
+    void getFactorConf(
+        ITER_GM_CONF gmConf,
+        ITER_FACTOR_CONF factorConf     
+    )const{
+        const auto arity = factor()->arity();
+        for(auto a=0; a<arity; ++a){
+            factorConf[a] = gmConf[factor()->vi(a)];
+        }
     }
 private:
     const FACTOR * factor()const{
@@ -135,76 +145,6 @@ std::ostream& operator <<(std::ostream& stream, const io::FactorValueTableCout<F
     return stream;
 }
 
-
-/*
-    
-*/
-
-class DiscreteFactor : public DiscreteFactorBase<DiscreteFactor> {
-public:
-
-    template<class VI_T>
-    DiscreteFactor(const DiscreteValueTable * vt,
-                   std::initializer_list<VI_T> list)
-    :   vis_(list),
-        vt_(vt){
-
-    }
-
-    template<class VI_ITER>
-    DiscreteFactor(const DiscreteValueTable * vt,
-                   const VI_ITER viBegin, 
-                   const VI_ITER viEnd)
-    :   vis_(viBegin, viEnd),
-        vt_(vt){
-
-    }
-    const DiscreteValueTable * valueTable()const{
-        return vt_;
-    }   
-    size_t arity()const{
-        return vis_.size();
-    }
-    LabelType shape(const size_t d)const{
-        return vt_->shape(d);
-    }
-    Vi vi(const size_t d)const{
-        return vis_[d];
-    }
-
-
-private:
-    const std::vector<Vi> vis_;
-    const DiscreteValueTable * vt_;
-
-};
-
-
-
-class ImplicitMulticutModelFactor : public DiscreteFactorBase<ImplicitMulticutModelFactor>{
-public:
-    ImplicitMulticutModelFactor(const Vi nLabels = Vi(), const Vi u = Vi(), const Vi v=Vi(), const ValueType beta=ValueType())
-    :   u_(u),
-        v_(v),
-        pottsFunction_(nLabels, beta){
-    }
-
-    const DiscreteValueTable * valueTable()const{
-        return &pottsFunction_;
-    }   
-    size_t arity()const{
-        return 2;
-    }
-    LabelType shape(const size_t d)const{
-        return pottsFunction_.shape(d);
-    }
-    Vi vi(const size_t d)const{
-        return d==0? u_ : v_;
-    }
-private:
-    Vi u_,v_;
-    PottsValueTable pottsFunction_;
-};
 
 
 

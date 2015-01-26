@@ -15,19 +15,19 @@ include_directories( Eigen )
 ADD_LIBRARY(inferno-external-ad3   ${AD3_SRC_FILES})
 ADD_LIBRARY(inferno-external-ad3-shared   SHARED ${AD3_SRC_FILES} )
 
-install (TARGETS inferno-external-ad3 DESTINATION lib/inferno/externals/)
-install (TARGETS inferno-external-ad3-shared DESTINATION lib/inferno/externals/)
+install (TARGETS inferno-external-ad3 DESTINATION lib/inferno_externals/)
+install (TARGETS inferno-external-ad3-shared DESTINATION lib/inferno_externals/)
 
 
 install(DIRECTORY ad3
-    DESTINATION include/inferno/externals
+    DESTINATION include/inferno_externals
     FILES_MATCHING
     PATTERN "*.h"
     PATTERN ".svn" EXCLUDE
 )
 
 install(DIRECTORY Eigen
-    DESTINATION include/inferno/externals
+    DESTINATION include/inferno_externals
     PATTERN ".svn" EXCLUDE
 )
 

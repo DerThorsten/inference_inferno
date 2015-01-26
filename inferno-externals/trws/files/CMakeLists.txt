@@ -16,19 +16,19 @@ SET(TRWS_SRC_FILES
 ADD_LIBRARY(inferno-external-trws   ${TRWS_SRC_FILES})
 ADD_LIBRARY(inferno-external-trws-shared   SHARED ${TRWS_SRC_FILES} )
 
-install (TARGETS inferno-external-trws DESTINATION lib/inferno/externals/)
-install (TARGETS inferno-external-trws-shared DESTINATION lib/inferno/externals/)
+install (TARGETS inferno-external-trws DESTINATION lib/inferno_externals/)
+install (TARGETS inferno-external-trws-shared DESTINATION lib/inferno_externals/)
 
 
 install(DIRECTORY "."
-    DESTINATION include/inferno/externals/trws
+    DESTINATION include/inferno_externals/trws
     FILES_MATCHING
     PATTERN "*.h"
     PATTERN ".svn" EXCLUDE
 )
 #
 #install(DIRECTORY Eigen
-#    DESTINATION include/inferno/externals
+#    DESTINATION include/inferno_externals
 #    PATTERN ".svn" EXCLUDE
 #)
 

@@ -1,3 +1,12 @@
+/** \file inferno.hxx 
+    \brief Main header of inferno.
+    Any project using inferno should 
+    include this header.
+
+    This header has some fundamental typedefs.
+    Runtime error classes 
+    and useful macros for runtime checks.
+*/
 #ifndef INFERNO_INFERNO_HXX
 #define INFERNO_INFERNO_HXX
 
@@ -9,8 +18,26 @@
 
 
 
-// as runtime assertion but cefined even if NDEBUG
 
+/** \def INFERNO_CHECK_OP(a,op,b,message)
+    \brief macro for runtime checks
+    
+    \warning The check is done 
+        <B> even in Release mode </B> 
+        (therefore if NDEBUG <B>is</B> defined)
+
+    \param a : first argument (like a number )
+    \param op : operator (== )
+    \param b : second argument (like a number )
+    \param message : error message (as "my error")
+
+    <b>Usage:</b>
+    \code
+        int a = 1;
+        INFERNO_CHECK_OP(a, ==, 1, "this should never fail")
+        INFERNO_CHECK_OP(a, >=, 2, "this should fail")
+    \endcode
+*/
 #define INFERNO_CHECK_OP(a,op,b,message) \
     if(!  static_cast<bool>( a op b )   ) { \
        std::stringstream s; \
@@ -22,6 +49,23 @@
        throw std::runtime_error(s.str()); \
     }
 
+/** \def INFERNO_CHECK(expression,message)
+    \brief macro for runtime checks
+    
+    \warning The check is done 
+        <B> even in Release mode </B> 
+        (therefore if NDEBUG <B>is</B> defined)
+
+    \param expression : expression which can evaluate to bool
+    \param message : error message (as "my error")
+
+    <b>Usage:</b>
+    \code
+        int a = 1;
+        INFERNO_CHECK_OP(a==1, "this should never fail")
+        INFERNO_CHECK_OP(a>=2, "this should fail")
+    \endcode
+*/
 #define INFERNO_CHECK(expression,message) if(!(expression)) { \
    std::stringstream s; \
    s << message <<"\n";\
@@ -32,7 +76,24 @@
  }
 
 
-/// runtime assertion
+/** \def INFERNO_ASSERT_OP(a,op,b,message)
+    \brief macro for runtime checks
+    
+    \warning The check is <B>only</B> done in
+        in Debug mode (therefore if NDEBUG is <B>not</B> defined)
+
+    \param a : first argument (like a number )
+    \param op : operator (== )
+    \param b : second argument (like a number )
+    \param message : error message (as "my error")
+
+    <b>Usage:</b>
+    \code
+        int a = 1;
+        INFERNO_ASSERT_OP(a, ==, 1) // will not fail here
+        INFERNO_ASSERT_OP(a, >=, 2) // will fail here
+    \endcode
+*/
 #ifdef NDEBUG
    #ifndef INFERNO_DEBUG 
       #define INFERNO_ASSERT_OP(a,op,b) { }
@@ -59,6 +120,21 @@
    }
 #endif
 
+/** \def INFERNO_ASSERT(expression,message)
+    \brief macro for runtime checks
+    
+    \warning The check is <B>only</B> done in
+        in Debug mode (therefore if NDEBUG is <B>not</B> defined)
+
+    \param expression : expression which can evaluate to bool
+
+    <b>Usage:</b>
+    \code
+        int a = 1;
+        INFERNO_ASSERT(a == 1) // will not fail here 
+        INFERNO_ASSERT(a >= 2) // will fail here
+    \endcode
+*/
 #ifdef NDEBUG
    #ifndef INFERNO_DEBUG
       #define INFERNO_ASSERT(expression) {}
@@ -100,14 +176,23 @@ namespace inferno{
 
 const static int USUAL_MAX_FACTOR_ORDER = 10;
 
-struct DiscreteTag{
-};
-struct ContinousTag{
-};
-struct MixedTag{
-};
 
+/** \var typedef LabelType 
+    \brief LabelType encodes a single discrete label
+    
+    LabelType is a fundamental (signed) type but
+    labels currently start at zero.
+    An signed type has been selected,
+    since negative labels could encode
+    a ``invalid'' label.
+    This type is also used to encode
+    the number of labels for variables.
+    The number of labels of a single variable is currently 
+    always the maximum label + 1, the minimum label
+    is always 0.
+*/
 typedef int64_t LabelType;
+
 
 typedef int64_t Vi;
 typedef LabelType DiscreteLabel;
@@ -119,12 +204,22 @@ typedef double ValueType;
 typedef std::vector<DiscreteLabel > DiscreteLabelVec;
 typedef std::vector<ContinousLabel > ContinousLabelVec;
 
-class RuntimeError
-: public std::runtime_error{
-public:
-  typedef std::runtime_error base;
-  RuntimeError(const std::string& message = std::string());
+/// \brief The semi ring on which inference is performed
+enum SemiRing{
+    MinSum = 0,
+    MaxProd = 1,
+    SumProd = 2
 };
+
+struct RuntimeError
+: public std::runtime_error
+{
+   typedef std::runtime_error base;
+
+   RuntimeError(const std::string& message)
+   :  base(std::string("Inferno error: ") + message) {}
+};
+
 
 }
 

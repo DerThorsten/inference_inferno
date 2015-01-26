@@ -1,5 +1,5 @@
-#ifndef INFERNO_DISCRETE_VALUE_TYPE
-#define INFERNO_DISCRETE_VALUE_TYPE
+#ifndef INFERNO_VALUE_TABLES_BASE_DISCRETE_VALUE_TYPE
+#define INFERNO_VALUE_TABLES_BASE_DISCRETE_VALUE_TYPE
 
 #include <cstdint>
 #include <vector>
@@ -10,11 +10,20 @@
 namespace inferno{
 
 
+/// \brief DiscreteValueTable abstract base Class
+///
+/// \ingroup DiscreteValueTable
 class DiscreteValueTable{
 public:
     typedef LabelType L;
 
     // this should be enough as pure virtual interface
+
+    /// evaluate the value table for a given configuration
+    /// \param conf pointer to a sequence of LabelType 
+    ///     which must be as least as long as the the arity
+    ///     of this factor
+    /// \returns value at given conf
     virtual ValueType eval(const LabelType *conf)const=0;
     virtual LabelType shape(const uint32_t) const=0;
     virtual uint32_t  arity()const=0;
@@ -113,4 +122,4 @@ private:
 
 }
 
-#endif
+#endif /*INFERNO_VALUE_TABLES_BASE_DISCRETE_VALUE_TYPE*/

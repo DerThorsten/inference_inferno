@@ -1,6 +1,6 @@
 #pragma once
-#ifndef INFERNO_SMALL_VECTOR
-#define	INFERNO_SMALL_VECTOR
+#ifndef INFERNO_UTILITIES_SMALL_VECTOR
+#define	INFERNO_UTILITIES_SMALL_VECTOR
 
 #include <vector>
 #include <algorithm>
@@ -9,6 +9,7 @@
 
 namespace inferno {
 
+
 /// \brief Vector that stores values on the stack if size is smaller than MAX_STACK
 /// \tparam T value type
 /// \tparam MAX_STACK maximum number of elements kept on the stack
@@ -16,9 +17,7 @@ namespace inferno {
 /// The member functions resize and clear reduce the size but not the
 /// capacity of the vector.
 ///
-/// \ingroup datastructures
-
-
+/// \ingroup utilities
 namespace detail_small_vector{
 
     template<class TAG>
@@ -558,4 +557,4 @@ SmallVector<T, MAX_STACK>::front() {
 
 } // namespace inferno
 
-#endif // INFERNO_SMALL_VECTOR
+#endif // INFERNO_UTILITIES_SMALL_VECTOR

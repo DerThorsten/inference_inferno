@@ -21,8 +21,8 @@
 
 // inferno relatex
 #include "inferno/inferno.hxx"
-#include "inferno/mixed_label.hxx"
-#include "inferno/small_vector.hxx"
+#include "inferno/utilities/mixed_label.hxx"
+#include "inferno/utilities/small_vector.hxx"
 
 
 

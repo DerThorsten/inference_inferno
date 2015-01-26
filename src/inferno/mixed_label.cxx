@@ -6,7 +6,7 @@
 #include <cmath>
 
 #include "inferno/inferno.hxx"
-#include "inferno/mixed_label.hxx"
+#include "inferno/utilities/mixed_label.hxx"
 
 namespace inferno{
 

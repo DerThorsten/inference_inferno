@@ -1,7 +1,7 @@
 #define BOOST_TEST_MODULE LabelTest
 #include <boost/test/unit_test.hpp>
 
-#include "inferno/mixed_label.hxx"
+#include "inferno/utilities/mixed_label.hxx"
 
 #define TEST_EPS 0.00001
 

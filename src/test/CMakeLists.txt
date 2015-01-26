@@ -29,3 +29,7 @@ add_executable(test_model test_model.cxx )
 target_link_libraries(test_model ${TEST_LIBS})
 add_test(test_model test_model)
 
+
+add_executable(test_externals_qpbo test_externals_qpbo.cxx )
+target_link_libraries(test_externals_qpbo ${TEST_LIBS} ${INFERNO_EXTERNAL_LIB_QPBO_SHARED})
+add_test(test_externals_qpbo test_externals_qpbo)

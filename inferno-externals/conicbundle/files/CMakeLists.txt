@@ -61,33 +61,33 @@ include_directories( CBsources )
 ADD_LIBRARY(inferno-external-conicbundle   ${CONICBUNDLE_SRC_FILES})
 ADD_LIBRARY(inferno-external-conicbundle-shared   SHARED ${CONICBUNDLE_SRC_FILES} )
 
-install (TARGETS inferno-external-conicbundle DESTINATION lib/inferno/externals/)
-install (TARGETS inferno-external-conicbundle-shared DESTINATION lib/inferno/externals/)
+install (TARGETS inferno-external-conicbundle DESTINATION lib/inferno_externals/)
+install (TARGETS inferno-external-conicbundle-shared DESTINATION lib/inferno_externals/)
 
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/CBsources
-    DESTINATION include/inferno/externals/conicbundle/
+    DESTINATION include/inferno_externals/conicbundle/
     FILES_MATCHING
     PATTERN "*.hxx"
     PATTERN ".svn" EXCLUDE
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Tools
-    DESTINATION include/inferno/externals/conicbundle/
+    DESTINATION include/inferno_externals/conicbundle/
     FILES_MATCHING
     PATTERN "*.hxx"
     PATTERN ".svn" EXCLUDE
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Matrix
-    DESTINATION include/inferno/externals/conicbundle/
+    DESTINATION include/inferno_externals/conicbundle/
     FILES_MATCHING
     PATTERN "*.hxx"
     PATTERN ".svn" EXCLUDE
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include
-    DESTINATION include/inferno/externals/conicbundle
+    DESTINATION include/inferno_externals/conicbundle
     FILES_MATCHING
     PATTERN "*.hxx"
     PATTERN ".svn" EXCLUDE

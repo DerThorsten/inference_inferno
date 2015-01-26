@@ -103,12 +103,12 @@ endif()
 ADD_LIBRARY(inferno-external-daoopt   ${DAOOPT_ZLIB_SRC_FILES})
 ADD_LIBRARY(inferno-external-daoopt-shared   SHARED ${DAOOPT_ZLIB_SRC_FILES} )
 
-install (TARGETS inferno-external-daoopt DESTINATION lib/inferno/externals/)
-install (TARGETS inferno-external-daoopt-shared DESTINATION lib/inferno/externals/)
+install (TARGETS inferno-external-daoopt DESTINATION lib/inferno_externals/)
+install (TARGETS inferno-external-daoopt-shared DESTINATION lib/inferno_externals/)
 
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
-   DESTINATION include/inferno/externals/daoopt
+   DESTINATION include/inferno_externals/daoopt
    FILES_MATCHING
    PATTERN "*.h"
    PATTERN ".svn" EXCLUDE
@@ -116,7 +116,7 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
 
 #
 #install(DIRECTORY Eigen
-#    DESTINATION include/inferno/externals
+#    DESTINATION include/inferno_externals
 #    PATTERN ".svn" EXCLUDE
 #)
 #

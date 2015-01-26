@@ -38,19 +38,19 @@ endif()
 ADD_LIBRARY(inferno-external-mrf   ${MRF_SRC_FILES})
 ADD_LIBRARY(inferno-external-mrf-shared   SHARED ${MRF_SRC_FILES} )
 
-install (TARGETS inferno-external-mrf DESTINATION lib/inferno/externals/)
-install (TARGETS inferno-external-mrf-shared DESTINATION lib/inferno/externals/)
+install (TARGETS inferno-external-mrf DESTINATION lib/inferno_externals/)
+install (TARGETS inferno-external-mrf-shared DESTINATION lib/inferno_externals/)
 
 
 install(DIRECTORY "."
-    DESTINATION include/inferno/externals/mrf
+    DESTINATION include/inferno_externals/mrf
     FILES_MATCHING
     PATTERN "*.h"
     PATTERN ".svn" EXCLUDE
 )
 #
 #install(DIRECTORY Eigen
-#    DESTINATION include/inferno/externals
+#    DESTINATION include/inferno_externals
 #    PATTERN ".svn" EXCLUDE
 #)
 

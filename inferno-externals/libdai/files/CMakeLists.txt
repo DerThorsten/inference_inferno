@@ -59,12 +59,12 @@ include_directories( ${GMPXX_INCLUDE_DIR} )
 ADD_LIBRARY(inferno-external-libdai   ${LIBDAI_SRC_FILES})
 ADD_LIBRARY(inferno-external-libdai-shared   SHARED ${LIBDAI_SRC_FILES} )
 
-install (TARGETS inferno-external-libdai DESTINATION lib/inferno/externals/)
-install (TARGETS inferno-external-libdai-shared DESTINATION lib/inferno/externals/)
+install (TARGETS inferno-external-libdai DESTINATION lib/inferno_externals/)
+install (TARGETS inferno-external-libdai-shared DESTINATION lib/inferno_externals/)
 
 
 install(DIRECTORY include/dai
-    DESTINATION include/inferno/externals/
+    DESTINATION include/inferno_externals/
     FILES_MATCHING
     PATTERN "*.h"
     PATTERN ".svn" EXCLUDE

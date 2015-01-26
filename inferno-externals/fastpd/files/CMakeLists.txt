@@ -11,12 +11,12 @@ SET(FASTPD_SRC_FILES
 ADD_LIBRARY(inferno-external-fastpd   ${FASTPD_SRC_FILES})
 ADD_LIBRARY(inferno-external-fastpd-shared   SHARED ${FASTPD_SRC_FILES} )
 
-install (TARGETS inferno-external-fastpd DESTINATION lib/inferno/externals/)
-install (TARGETS inferno-external-fastpd-shared DESTINATION lib/inferno/externals/)
+install (TARGETS inferno-external-fastpd DESTINATION lib/inferno_externals/)
+install (TARGETS inferno-external-fastpd-shared DESTINATION lib/inferno_externals/)
 
 
 install(DIRECTORY "."
-    DESTINATION include/inferno/externals/fastpd
+    DESTINATION include/inferno_externals/fastpd
     FILES_MATCHING
     PATTERN "*.h"
     PATTERN ".svn" EXCLUDE

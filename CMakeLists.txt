@@ -84,6 +84,16 @@ endif()
 #-------------------------------------------------------------------------------------------------------------------
 FIND_PACKAGE(INFERNO_EXTERNALS REQUIRED)
 
+
+file(GLOB_RECURSE headers ${INFERNO_EXTERNALS_INCLUDE_DIR})
+include_directories(${headers})
+include_directories(${INFERNO_EXTERNALS_INCLUDE_DIR})
+link_directories(${INFERNO_EXTERNALS_LIBRARIES_DIR})
+
+MESSAGE(STATUS "INFERNO_EXTERNALS_LIBRARIES_DIR" ${INFERNO_EXTERNALS_LIBRARIES_DIR})
+
+#INFERNO_EXTERNALS_INCLUDE_DIR
+
 #-------------------------------------------------------------------------------------------------------------------
 # OpenMP
 #-------------------------------------------------------------------------------------------------------------------
@@ -118,6 +128,50 @@ else()
   set(LINK_RT false) 
   message(STATUS "Linking to RT is diabled")
 endif()
+
+#-------------------------------------------------------------------------------------------------------------------
+# documentation
+#-------------------------------------------------------------------------------------------------------------------
+
+option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" OFF)
+IF(BUILD_DOCUMENTATION)
+ 
+file(GLOB_RECURSE headers include/*.hxx)
+include_directories(include)
+SET(project_includes ${headers})
+
+  FIND_PACKAGE(Doxygen)
+  IF(NOT DOXYGEN_FOUND)
+    MESSAGE(FATAL_ERROR
+      "Doxygen is needed to build the documentation.")
+  ENDIF()
+ 
+  SET( doxyfile_in          ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in     )
+  SET( doxyfile             ${PROJECT_BINARY_DIR}/Doxyfile              )
+  SET( doxy_html_index_file ${CMAKE_CURRENT_BINARY_DIR}/html/index.html )
+  SET( doxy_output_root     ${CMAKE_CURRENT_BINARY_DIR}                 ) # Pasted into Doxyfile.in
+  SET( doxy_input           ${PROJECT_SOURCE_DIR}/include               ) # Pasted into Doxyfile.in
+  SET( doxy_extra_files     ${CMAKE_CURRENT_SOURCE_DIR}/mainpage.dox    ) # Pasted into Doxyfile.in
+ 
+  CONFIGURE_FILE( ${doxyfile_in} ${doxyfile} @ONLY )
+ 
+  ADD_CUSTOM_COMMAND( OUTPUT ${doxy_html_index_file}
+                      COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
+                      # The following should be ${doxyfile} only but it
+                      # will break the dependency.
+                      # The optimal solution would be creating a
+                      # custom_command for ${doxyfile} generation
+                      # but I still have to figure out how...
+                      MAIN_DEPENDENCY ${doxyfile} ${doxyfile_in}
+                      DEPENDS ${project_includes} ${doxy_extra_files}
+                      DEPENDS  ${doxy_extra_files}
+                      COMMENT "Generating HTML documentation")
+  MESSAGE(STATUS ${headers})
+  ADD_CUSTOM_TARGET( doc  DEPENDS ${doxy_html_index_file} ${project_includes})
+ 
+  INSTALL( DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION share/doc )
+ENDIF()
+
 
 
 #-------------------------------------------------------------------------------------------------------------------
