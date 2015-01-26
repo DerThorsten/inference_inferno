@@ -1,4 +1,5 @@
-#ifndef DISCRETE_VALUE_TYPE
+#ifndef INFERNO_DISCRETE_VALUE_TYPE
+#define INFERNO_DISCRETE_VALUE_TYPE
 
 #include <cstdint>
 #include <vector>
@@ -20,12 +21,13 @@ public:
 
 
     // with default impl
-    virtual uint32_t size()const{
+    virtual uint64_t size()const{
         const uint32_t arity = this->arity();
-        uint32_t size = 1;
+        uint64_t size = 1;
         for(uint32_t d=0; d<arity; ++d){
             size *= this->shape(d);
         }
+        return size;
     }
 
     virtual ValueType eval(const L l0)const{
