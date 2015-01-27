@@ -555,6 +555,20 @@ SmallVector<T, MAX_STACK>::front() {
    return pointerToSequence_[0];
 }
 
+template<class T, size_t MAX_STACK>
+std::ostream& operator <<(std::ostream& stream, const SmallVector<T, MAX_STACK> & vec) {
+    stream<<"[";
+    for(size_t d=0; d<vec.size(); ++d){
+        if(d==vec.size()-1){
+            stream<<vec[d];
+        }
+        else
+            stream<<vec[d]<<", ";
+    }
+    stream<<"]";
+    return stream;
+}
+
 } // namespace inferno
 
 #endif // INFERNO_UTILITIES_SMALL_VECTOR

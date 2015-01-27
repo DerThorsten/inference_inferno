@@ -10,54 +10,6 @@
 
 
 
-BOOST_AUTO_TEST_CASE(TestModel)
-{
-    using namespace inferno;
-
-    const LabelType nLabes = 2;
-    const Vi nVar = 10;
-
-    GeneralDiscreteGraphicalModel model(nVar, nLabes);
-    
-
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(-1, 1);
-
-
-
-    
-    std::uniform_real_distribution<float> distribution(-1,1); //Values between -1 and 1
-    std::mt19937 engine; // Mersenne twister MT19937
-    auto generator = std::bind(distribution, engine);
-   
-    std::vector<ValueType> values(nLabes); 
-    // unary factors
-
-
-    
-    for(Vi vi=0; vi<nVar; ++vi){
-        for(auto & v : values)
-            v = generator();
-        auto vti = model.addValueTable(new UnaryValueTable(values.begin(), values.end()) );
-        auto fi = model.addFactor(vti ,{vi});
-    }
-
-    // second order
-    for(Vi vi=0; vi<nVar-1; ++vi){
-        auto beta = generator( );
-        std::cout<<beta<<"\n";
-        auto vti = model.addValueTable(new PottsValueTable(nLabes, beta));
-        auto fi = model.addFactor(vti ,{vi, vi+1});
-    }
-
-
-    for(auto fiter=model.factorIdsBegin(); fiter != model.factorIdsEnd(); ++fiter){
-        std::cout<<*fiter<<" "<<io::varibleIds(model[*fiter])<<"\n"<<io::valueTable(model[*fiter])<<"\n";
-    }
-    
-
-}
 
 
 
@@ -116,3 +68,63 @@ BOOST_AUTO_TEST_CASE(TestImplicitMulticutModel)
 
 }
 
+
+
+BOOST_AUTO_TEST_CASE(TestModel)
+{
+    using namespace inferno;
+
+    const LabelType nLabes = 2;
+    const Vi nVar = 10;
+
+    GeneralDiscreteGraphicalModel model(nVar, nLabes);
+    
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(-1, 1);
+
+
+
+    
+    std::uniform_real_distribution<float> distribution(-1,1); //Values between -1 and 1
+    std::mt19937 engine; // Mersenne twister MT19937
+    auto generator = std::bind(distribution, engine);
+   
+    std::vector<ValueType> values(nLabes); 
+    // unary factors
+
+
+    
+    for(Vi vi=0; vi<nVar; ++vi){
+        for(auto & v : values)
+            v = generator();
+        auto vti = model.addValueTable(new UnaryValueTable(values.begin(), values.end()) );
+        auto fi = model.addFactor(vti ,{vi});
+    }
+
+    // second order
+    for(Vi vi=0; vi<nVar-1; ++vi){
+        auto beta = generator( );
+        std::cout<<beta<<"\n";
+        auto vti = model.addValueTable(new PottsValueTable(nLabes, beta));
+        auto fi = model.addFactor(vti ,{vi, vi+1});
+
+        const auto factor = model[fi];
+
+
+        std::cout<<"conf iter\n";
+        for(const auto & conf : factor->confs()){
+            
+            std::cout<<conf<<"\n";
+        }
+        std::cout<<"conf iter done\n";
+    }
+
+
+    for(auto fiter=model.factorIdsBegin(); fiter != model.factorIdsEnd(); ++fiter){
+        //std::cout<<*fiter<<" "<<io::varibleIds(model[*fiter])<<"\n"<<io::valueTable(model[*fiter])<<"\n";
+    }
+    
+
+}

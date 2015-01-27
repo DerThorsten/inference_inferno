@@ -59,6 +59,7 @@ public:
     typedef boost::counting_iterator<uint64_t> FactorIdIter;
     typedef boost::counting_iterator<Vi> VariableIdIter;
     typedef const GeneralDiscreteGraphicalModelFactor * FactorProxy;
+    typedef FactorProxy FactorProxyRef;
     //
     FactorIdIter factorIdsBegin()const{
         return FactorIdIter(0);

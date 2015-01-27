@@ -48,7 +48,7 @@ public:
     typedef boost::counting_iterator<uint64_t> FactorIdIter;
     typedef boost::counting_iterator<Vi> VariableIdIter;
     typedef ImplicitMulticutModelFactor FactorProxy;
-
+    typedef const FactorProxy & FactorProxyRef;
 
     ImplicitMulticutModel(const uint64_t nVar)
     :   nVar_(nVar),

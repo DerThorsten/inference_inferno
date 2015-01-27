@@ -3,12 +3,62 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/value_tables/base_discrete_value_table.hxx"
+#include "inferno/utilities/shape_walker.hxx"
+
+
 namespace inferno{
+
+
+
+
 
 
 template<class FACTOR >
 class DiscreteFactorBase{
+
+private:
+
+
+
+    struct ShapeFunctor{
+        ShapeFunctor(){}
+        ShapeFunctor(const FACTOR * f)
+        : f_(f){
+        }
+        DiscreteLabel operator()(const size_t d)const{
+            return f_->shape(d);
+        }
+        const FACTOR * f_;
+    };
+
+    struct ConfRange{
+        typedef ConfIterator< ShapeFunctor > const_iterator;
+        ConfRange(const FACTOR * factor)
+        :   begin_(factor->confIter()),
+            end_()
+        {
+            end_ = begin_.getEnd();
+        }
+        const_iterator begin()const{
+            return begin_;
+        }
+        const_iterator end()const{
+            return end_;
+        }
+        const_iterator begin_;
+        const_iterator end_;
+    };
+
 public:
+
+    ConfIterator< ShapeFunctor > confIter()const{
+        ShapeFunctor shape(factor());
+        return ConfIterator< ShapeFunctor >(shape, factor()->arity(), factor()->size());
+    }
+
+    ConfRange confs()const{
+        return ConfRange(factor());
+    }
 
     ValueType eval(const LabelType * conf)const{
         return factor()->valueTable()->eval(conf);
@@ -46,6 +96,15 @@ public:
     uint64_t size()const{
         return factor()->valueTable()->size();
     }
+
+    virtual void bufferShape(DiscreteLabel * buffer)const{
+        return factor()->valueTable()->bufferShape(buffer);
+    }
+
+    virtual void bufferValueTable(ValueType * buffer)const{
+        return factor()->valueTable()->bufferValueTable(buffer);
+    }
+
     const FACTOR * operator ->()const{
         return static_cast<const FACTOR *>(this); 
     }
