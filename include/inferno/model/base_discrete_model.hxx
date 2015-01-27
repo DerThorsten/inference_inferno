@@ -3,19 +3,116 @@
 
 #include <initializer_list>
 
+#include <boost/iterator/counting_iterator.hpp>
+#include <boost/iterator/transform_iterator.hpp>
+
 #include "inferno/inferno.hxx"
 #include "inferno/value_tables/base_discrete_value_table.hxx"
 #include "inferno/utilities/small_vector.hxx"
 #include "inferno/model/base_discrete_factor.hxx"
-#include <boost/iterator/counting_iterator.hpp>
+
+
 
 namespace inferno{
+
+
+/** \brief Proxy class to use range based loop
+    for models variables ids
+*/
+template<class MODEL>
+class ModelsVariableIds{
+public:
+    ModelsVariableIds(const MODEL & model) 
+    :   model_(model){
+
+    }
+    typedef typename MODEL::VariableIdIter const_iterator;
+    const_iterator begin()const{
+        return model_.variableIdsBegin();
+    }
+    const_iterator end()const{
+        return model_.variableIdsEnd();
+    }
+private:
+    const MODEL & model_;
+};
+
+/** \brief Proxy class to use range based loop
+    for models factor ids
+*/
+template<class MODEL>
+class ModelsFactorIds{
+public:
+    ModelsFactorIds(const MODEL & model) 
+    :   model_(model){
+
+    }
+    typedef typename MODEL::FactorIdIter const_iterator;
+    const_iterator begin()const{
+        return model_.factorIdsBegin();
+    }
+    const_iterator end()const{
+        return model_.factorIdsEnd();
+    }
+private:
+    const MODEL & model_;
+};
+
+
+
+template<class MODEL>
+struct FactorIdToFactorProxy{
+    typedef typename MODEL::FactorProxy result_type;
+
+    FactorIdToFactorProxy(const MODEL & model)
+    : model_(&model){
+
+    }
+    result_type operator()(const uint64_t fId)const{
+        return model_->operator[](fId);
+    }
+    const MODEL * model_;
+};
+
+
+/** \brief Proxy class to use range based loop
+    for models factor
+*/
+template<class MODEL>
+class ModelsFactors{
+public:
+    ModelsFactors(const MODEL & model) 
+    :   model_(model){
+
+    }
+    typedef typename MODEL::FactorIdIter FactorIdIter;
+    typedef FactorIdToFactorProxy<MODEL> UnaryFunction;
+    typedef boost::transform_iterator<UnaryFunction, FactorIdIter> const_iterator;
+
+    const_iterator begin()const{
+        return boost::make_transform_iterator(model_.factorIdsBegin(), UnaryFunction(model_));
+    }
+    const_iterator end()const{
+        return boost::make_transform_iterator(model_.factorIdsEnd(), UnaryFunction(model_));
+    }
+private:
+    const MODEL & model_;
+};
+
+
 
 
 
 template<class MODEL>
 class DiscreteGraphicalModelBase{
 public:
+        
+    typedef FactorIdToFactorProxy<MODEL> U; 
+
+
+
+
+
 
     template<class T>
     double eval(std::initializer_list<T> conf)const{
@@ -66,6 +163,25 @@ public:
         return std::distance(model().factorIdsBegin(), model().factorIdsEnd());
     }
 
+    Vi minVarId() const{
+        return *model().variableIdsBegin();
+    }
+
+    /// check if the variables are dense
+    ///
+    /// dense means the variables can start at 
+    /// any id, but from there on the ids must be
+    /// consecutive without holes.
+    bool denseVariableIds()const{
+        if(model().nVariables()<=1)
+            return true;
+        else{
+            const Vi minVarId = *model().variableIdsBegin();
+            const Vi maxVarId =  model().variableIdsBegin()[nVariables()-1];
+            return (maxVarId-minVarId)+1 == model().nVariables() ;
+        }
+    }
+
     /// \brief the number of second order factors in
     /// the graphical model
     ///
@@ -85,6 +201,17 @@ public:
         }
         return nPairwise;
     }
+
+    ModelsVariableIds<MODEL> variableIds() const{
+        return ModelsVariableIds<MODEL>(model());
+    }
+    ModelsFactorIds<MODEL> factorIds() const{
+        return ModelsFactorIds<MODEL>(model());
+    }
+    ModelsFactors<MODEL> factors() const{
+        return ModelsFactors<MODEL>(model());
+    }
+
 private:
     const MODEL & model()const{
         return * static_cast<const MODEL *>(this);

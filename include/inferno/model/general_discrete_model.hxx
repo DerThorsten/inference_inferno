@@ -55,13 +55,10 @@ class GeneralDiscreteGraphicalModel :
 public DiscreteGraphicalModelBase<GeneralDiscreteGraphicalModel>{
 
 
-private:
+public:
     typedef boost::counting_iterator<uint64_t> FactorIdIter;
     typedef boost::counting_iterator<Vi> VariableIdIter;
     typedef const GeneralDiscreteGraphicalModelFactor * FactorProxy;
-
-public:
-    typedef const GeneralDiscreteGraphicalModelFactor * ConstFactorPtr;
     //
     FactorIdIter factorIdsBegin()const{
         return FactorIdIter(0);

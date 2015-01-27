@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(TestQpboInference)
 
 
     
-    for(Vi vi=0; vi<nVar; ++vi){
+    for(auto vi : model.variableIds() ){
         for(auto & v : values)
             v = generator();
         auto vti = model.addValueTable(new UnaryValueTable(values.begin(), values.end()) );
@@ -51,9 +51,17 @@ BOOST_AUTO_TEST_CASE(TestQpboInference)
         auto fi = model.addFactor(vti ,{vi, vi+1});
     }
 
-    Qpbo<GeneralDiscreteGraphicalModel> qpbo;
-    qpbo.setModel(model);
+    
+    Qpbo<GeneralDiscreteGraphicalModel>::Options options;
+    Qpbo<GeneralDiscreteGraphicalModel> qpbo(model, options);
+
     qpbo.infer();
+
+    std::vector<LabelType> conf(nVar);
+    qpbo.conf(conf.begin());
+
+    for( auto c : conf)
+        std::cout<<"conf"<<c<<"\n";
 }
 
 

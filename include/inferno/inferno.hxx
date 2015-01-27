@@ -211,14 +211,47 @@ enum SemiRing{
     SumProd = 2
 };
 
-struct RuntimeError
+
+
+/**  \brief Default inferno exception
+*/
+class RuntimeError
 : public std::runtime_error
 {
-   typedef std::runtime_error base;
+public:
+    typedef std::runtime_error base;
 
-   RuntimeError(const std::string& message)
-   :  base(std::string("Inferno error: ") + message) {}
+    RuntimeError(const std::string& message)
+    :   base(std::string("Inferno error: ") + message) {
+
+    }
 };
+
+/**  \brief Exception for not yet implemented / future functionality
+*/
+class NotImplementedException
+: public std::exception {
+
+public:
+
+    /// Construct with given error message:
+    NotImplementedException(const std::string & message = std::string())
+    :   errorMessage_()
+    {
+        errorMessage_ = std::string("Inferno Not Implemented Exception:") + message;
+    }
+
+    /// Provided for compatibility with std::exception.
+    const char * what() const noexcept
+    {
+    return errorMessage_.c_str();
+    }
+
+private:
+
+    std::string errorMessage_;
+};
+
 
 
 }

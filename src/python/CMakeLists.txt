@@ -65,21 +65,17 @@ file(GLOB_RECURSE PYTHON_PY_FILES RELATIVE ${inferno_python_src_dir}/ *.py)
 
 
 foreach(file ${PYTHON_PY_FILES})
-  #... calculate ${i} to get the test name
-  #add_test(validate_${i}, "validator", ${file})
-  
-  get_filename_component(target_folder ${file} DIRECTORY)
-  file(MAKE_DIRECTORY ${inferno_python_tmp_dir}/${target_folder})
+#... calculate ${i} to get the test name
+#add_test(validate_${i}, "validator", ${file})
 
-  MESSAGE("FILE" ${file})
-  MESSAGE("PATH" ${inferno_python_src_dir}/${file})
-  MESSAGE("COPY TO" ${inferno_python_tmp_dir}/${target_folder})
+get_filename_component(target_folder ${file} DIRECTORY)
+file(MAKE_DIRECTORY ${inferno_python_tmp_dir}/${target_folder})
 
-  ADD_CUSTOM_COMMAND(
-   TARGET inferno_python
-   POST_BUILD
-   COMMAND ${CMAKE_COMMAND} ARGS -E copy ${inferno_python_src_dir}/${file} ${inferno_python_tmp_dir}/${target_folder}
-   COMMENT "Copying *.py files to temporary module directory")
+ADD_CUSTOM_COMMAND(
+TARGET inferno_python
+POST_BUILD
+COMMAND ${CMAKE_COMMAND} ARGS -E copy ${inferno_python_src_dir}/${file} ${inferno_python_tmp_dir}/${target_folder}
+COMMENT "Copying *.py files to temporary module directory")
 
 
 endforeach()

@@ -136,9 +136,7 @@ endif()
 option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" OFF)
 IF(BUILD_DOCUMENTATION)
  
-file(GLOB_RECURSE headers include/*.hxx)
-include_directories(include)
-SET(project_includes ${headers})
+file(GLOB_RECURSE all_include_hxx_headers include/*.hxx)
 
   FIND_PACKAGE(Doxygen)
   IF(NOT DOXYGEN_FOUND)
@@ -163,11 +161,11 @@ SET(project_includes ${headers})
                       # custom_command for ${doxyfile} generation
                       # but I still have to figure out how...
                       MAIN_DEPENDENCY ${doxyfile} ${doxyfile_in}
-                      DEPENDS ${project_includes} ${doxy_extra_files}
+                      DEPENDS ${all_include_hxx_headers} ${doxy_extra_files}
                       DEPENDS  ${doxy_extra_files}
                       COMMENT "Generating HTML documentation")
   MESSAGE(STATUS ${headers})
-  ADD_CUSTOM_TARGET( doc  DEPENDS ${doxy_html_index_file} ${project_includes})
+  ADD_CUSTOM_TARGET( doc  DEPENDS ${doxy_html_index_file} ${all_include_hxx_headers})
  
   INSTALL( DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION share/doc )
 ENDIF()

@@ -5,28 +5,42 @@
 
 namespace inferno{
 
+
+    class InferenceOptions{
+    public:
+        InferenceOptions(const SemiRing sr = MinSum)
+        : semiRing(sr){
+        }
+        SemiRing semiRing;
+    };
+
     template<class INFERENCE, class MODEL>
     class DiscreteInferenceBase{
 
     public:
         // setup before inference
-        void setModel(const MODEL & model);
-        void setSemiRing(const MODEL & model);
         void setUpperBound(const ValueType ub);
         void setLowerBound(const ValueType lb);
         template<class ITER>
         void setWarmStart(ITER warmStartConf);
 
-        // actual inference
+        /** \brief run inference
+
+
+            \warning This function must be implemented by INFERENCE.
+        */
         void infer();
-        template<class VI_ITER, class LABEL_ITER>
-        void inferWithFixedVariables(VI_ITER fixedVars, LABEL_ITER fixedVarsLabels);
-        template<class VI_ITER, class EXLUDED_LABEL_ITER>
-        void inferWithPartialFixedVariables(VI_ITER partialFixedVars, EXLUDED_LABEL_ITER excludedLabelsIter);
 
 
-        
+        /** \brief get the result labeling / state-vector
 
+            DiscreteInferenceBase::infer() must be called
+            before calling DiscreteInferenceBase<INFERENCE,MODEL>::conf
+
+            \warning This function must be implemented by INFERENCE.
+        */
+        template<class OUT_ITER>
+        void conf(OUT_ITER);
 
 
     private:
@@ -37,6 +51,9 @@ namespace inferno{
             return static_cast<INFERENCE *>(this);
         }
     };
+
+
+
 }
 
 
