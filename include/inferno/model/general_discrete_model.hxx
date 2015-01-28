@@ -78,7 +78,7 @@ public:
         return &factors_[factorId];
     }
 
-    LabelType numberOfLabels(const uint64_t variabeId)const{
+    LabelType nLabels(const uint64_t variabeId)const{
         return variabeId >= numberOfLabels_.size() ? numberOfLabels_[0] : numberOfLabels_[variabeId]; 
     }
 

@@ -85,7 +85,7 @@ public:
         return FactorProxy(nVar_,edges_[uu],edges_[vv],beta_[uu/2]);
     }
 
-    LabelType numberOfLabels(const uint64_t variabeId)const{
+    LabelType nLabels(const uint64_t variabeId)const{
         return LabelType(nVar_); 
     }
 

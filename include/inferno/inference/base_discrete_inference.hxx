@@ -4,6 +4,12 @@
 #include "inferno/inferno.hxx"
 
 namespace inferno{
+
+/** \namespace inference
+    subnamespace of inferno
+    where all inference related
+    functionality is implemented.
+*/
 namespace inference{
 
     class InferenceOptions{
@@ -41,6 +47,9 @@ namespace inference{
         */
         template<class OUT_ITER>
         void conf(OUT_ITER);
+
+
+
 
 
     private:

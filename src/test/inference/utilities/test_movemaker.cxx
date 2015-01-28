@@ -1,18 +1,18 @@
-#define BOOST_TEST_MODULE QpboExteralTest
+#define BOOST_TEST_MODULE MovemakerTest
 #include <boost/test/unit_test.hpp>
 
 #include <random>
 #include <iostream>
 
 #include "inferno/model/general_discrete_model.hxx"
-#include "inferno/inference/qpbo.hxx"
+//#include "inferno/inference/utilities/movemaker.hxx"
 #define TEST_EPS 0.00001
 
 
 
-BOOST_AUTO_TEST_CASE(TestQpboInference)
+BOOST_AUTO_TEST_CASE(TestMovemaker)
 {
- using namespace inferno;
+    using namespace inferno;
 
     const LabelType nLabes = 2;
     const Vi nVar = 10;
@@ -56,19 +56,7 @@ BOOST_AUTO_TEST_CASE(TestQpboInference)
 
 
 
-    typedef GeneralDiscreteGraphicalModel   Model;
-    typedef inference::Qpbo<Model>          Solver;
-    typedef Solver::Options                 SolverOptions; 
-
-    SolverOptions options;
-    Solver solver(model, options);
-    solver.infer();
-
-    std::vector<LabelType> conf(nVar);
-    solver.conf(conf.begin());
-
-    for( auto c : conf)
-        std::cout<<"conf"<<c<<"\n";
+   
 }
 
 

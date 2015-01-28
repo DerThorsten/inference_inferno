@@ -14,7 +14,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <vector>
-
+#include <limits>
 
 
 
@@ -176,6 +176,14 @@ namespace inferno{
 
 const static int USUAL_MAX_FACTOR_ORDER = 10;
 
+
+
+
+
+template<class T>
+inline bool fEq(const T a,const T b) {
+    return std::fabs(a - b) < std::numeric_limits<T>::epsilon();
+}
 
 /** \var typedef LabelType 
     \brief LabelType encodes a single discrete label

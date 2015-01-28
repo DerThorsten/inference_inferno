@@ -1,6 +1,6 @@
 #pragma once
-#ifndef OPENGM_MULTICUT_HXX
-#define OPENGM_MULTICUT_HXX
+#ifndef INFERNO_INFERENCE_MULTICUT_HXX
+#define INFERNO_INFERENCE_MULTICUT_HXX
 
 #include <algorithm>
 #include <vector>
@@ -19,6 +19,7 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/utilities/timer.hxx"
+#include "inferno/utilities/small_vector.hxx"
 #include "inferno/inference/base_discrete_inference.hxx"
 
 #include <ilcplex/ilocplex.h>
@@ -45,35 +46,69 @@ public:
 
 
 
+struct MulticutOptions : public InferenceOptions
+{
+public:
+   enum MWCRounding {NEAREST,DERANDOMIZED,PSEUDODERANDOMIZED};
 
-/// \brief Multicut Algorithm\n\n
-/// [1] J. Kappes, M. Speth, B. Andres, G. Reinelt and C. Schnoerr, "Globally Optimal Image Partitioning by Multicuts", EMMCVPR 2011\n
-/// [2] J. Kappes, M. Speth, G. Reinelt and C. Schnoerr, "Higher-order Segmentation via Multicuts", Technical Report (http://ipa.iwr.uni-heidelberg.de/ipabib/Papers/kappes-2013-multicut.pdf)\n
-///
-/// this code also supports asymetric multyway cuts as discibed in:\n
-/// [3] T. Kroeger, J. Kappes, T. Beier, U. Koethe,  and F.A. Hamprecht, "Asymmetric Cuts: Joint Image Labeling and Partitioning", GCPR 2014\n
-///
-/// This code was also used in
-/// [4] J. Kappes, M. Speth, G. Reinelt, and C. Schnoerr, “Towards Efficient and Exact MAP-Inference for Large Scale Discrete Computer Vision Problems via Combinatorial Optimization”. CVPR, 2013\n
-/// [5] J. Kappes, B. Andres, F. Hamprecht, C. Schnoerr, S. Nowozin, D. Batra, S. Kim, B. Kausler, J. Lellmann, N. Komodakis, and C. Rother, “A Comparative Study of Modern Inference Techniques for Discrete Energy Minimization Problem”, CVPR, 2013.
-///
-/// Multicut-Algo :
-/// - Cite: [1] and [2]
-/// - Maximum factor order : potts (oo) generalized potts (4 - can be extended to N)
-/// - Maximum number of labels : oo
-/// - Restrictions : functions are arbitrary unary terms or generalized potts terms (positive or negative)
-///                  all variables have the same labelspace (practical no theoretical restriction) 
-///                  the number of states is at least as large as the order of a generalized potts function (practical no theoretical restriction)
-/// - Convergent :   Converge to the global optima if integer and cycleconstraints are enforced
-///
-/// see [2] for further details.
-/// \ingroup inference 
+   int numThreads_;
+   bool verbose_;
+   bool verboseCPLEX_;
+   double cutUp_;
+   double timeOut_;
+   std::string workFlow_;
+   size_t maximalNumberOfConstraintsPerRound_;
+   double edgeRoundingValue_;
+   MWCRounding MWCRounding_;
+   size_t reductionMode_;
+   std::vector<bool> allowCutsWithin_;
+
+   /// \param numThreads number of threads that should be used (default = 0 [automatic])
+   /// \param cutUp value which the optima at least has (helps to cut search-tree)
+   MulticutOptions
+   (
+      int numThreads=0,
+      double cutUp=1.0e+75
+      )
+      : numThreads_(numThreads), verbose_(false),verboseCPLEX_(false), cutUp_(cutUp),
+        timeOut_(36000000), maximalNumberOfConstraintsPerRound_(1000000),
+        edgeRoundingValue_(0.00000001),MWCRounding_(NEAREST), reductionMode_(3)
+      {};
+};
+
+
+/** \brief Multicut Algorithm
+
+
+   [1] J. Kappes, M. Speth, B. Andres, G. Reinelt and C. Schnoerr, "Globally Optimal Image Partitioning by Multicuts", EMMCVPR 2011\n
+   [2] J. Kappes, M. Speth, G. Reinelt and C. Schnoerr, "Higher-order Segmentation via Multicuts", Technical Report (http://ipa.iwr.uni-heidelberg.de/ipabib/Papers/kappes-2013-multicut.pdf)\n
+  
+   this code also supports asymetric multyway cuts as discibed in:\n
+   [3] T. Kroeger, J. Kappes, T. Beier, U. Koethe,  and F.A. Hamprecht, "Asymmetric Cuts: Joint Image Labeling and Partitioning", GCPR 2014\n
+  
+   This code was also used in
+   [4] J. Kappes, M. Speth, G. Reinelt, and C. Schnoerr, “Towards Efficient and Exact MAP-Inference for Large Scale Discrete Computer Vision Problems via Combinatorial Optimization”. CVPR, 2013\n
+   [5] J. Kappes, B. Andres, F. Hamprecht, C. Schnoerr, S. Nowozin, D. Batra, S. Kim, B. Kausler, J. Lellmann, N. Komodakis, and C. Rother, “A Comparative Study of Modern Inference Techniques for Discrete Energy Minimization Problem”, CVPR, 2013.
+  
+   Multicut-Algo :
+   - Cite: [1] and [2]
+   - Maximum factor order : potts (oo) generalized potts (4 - can be extended to N)
+   - Maximum number of labels : oo
+   - Restrictions : functions are arbitrary unary terms or generalized potts terms (positive or negative)
+                    all variables have the same labelspace (practical no theoretical restriction) 
+                    the number of states is at least as large as the order of a generalized potts function (practical no theoretical restriction)
+   - Convergent :   Converge to the global optima if integer and cycle-constraints are enforced
+  
+   see [2] for further details.
+   \ingroup inference 
+*/
 template<class MODEL>
 class Multicut : public DiscreteInferenceBase<Multicut<MODEL>, MODEL >
 {
 public:
 
    typedef MODEL Model;
+   typedef MulticutOptions Options;
    typedef size_t LPIndexType;
 
    //typedef visitors::VerboseVisitor<Multicut<MODEL> > VerboseVisitorType;
@@ -87,38 +122,8 @@ public:
 
 
 
-   struct Parameter : public InferenceOptions
-   {
-   public:
-      enum MWCRounding {NEAREST,DERANDOMIZED,PSEUDODERANDOMIZED};
-
-      int numThreads_;
-      bool verbose_;
-      bool verboseCPLEX_;
-      double cutUp_;
-      double timeOut_;
-      std::string workFlow_;
-      size_t maximalNumberOfConstraintsPerRound_;
-      double edgeRoundingValue_;
-      MWCRounding MWCRounding_;
-      size_t reductionMode_;
-      std::vector<bool> allowCutsWithin_;
-
-      /// \param numThreads number of threads that should be used (default = 0 [automatic])
-      /// \param cutUp value which the optima at least has (helps to cut search-tree)
-      Parameter
-      (
-         int numThreads=0,
-         double cutUp=1.0e+75
-         )
-         : numThreads_(numThreads), verbose_(false),verboseCPLEX_(false), cutUp_(cutUp),
-           timeOut_(36000000), maximalNumberOfConstraintsPerRound_(1000000),
-           edgeRoundingValue_(0.00000001),MWCRounding_(NEAREST), reductionMode_(3)
-         {};
-   };
-
    virtual ~Multicut();
-   Multicut(const Model&, Parameter para=Parameter());
+   Multicut(const Model&, Options para=Options());
 
 
    void infer();
@@ -126,7 +131,10 @@ public:
    void infer(VisitorType&);
 
 
-   void arg(std::vector<DiscreteLabel>&, const size_t = 1) const;
+
+
+   template<class OUT_ITER>
+   void conf(OUT_ITER outIter) const;
    ValueType bound() const;
    ValueType value() const;
    ValueType calcBound(){ return 0; }
@@ -147,7 +155,7 @@ private:
 
    const Model& gm_; 
    ProblemType problemType_;
-   Parameter parameter_;
+   Options options_;
    double constant_;
    double bound_;
    const double infinity_;
@@ -247,14 +255,17 @@ typename Multicut<MODEL>::LPIndexType Multicut<MODEL>::getNeighborhood
    )
 {
    //Calculate Neighbourhood
-   neighbours.resize(gm_.numberOfVariables());
+   neighbours.resize(gm_.nVariables());
    LPIndexType numberOfInternalEdges=0;
    LPIndexType numberOfAdditionalInternalEdges=0;
    // Add edges that have to be included
-   for(size_t f=0; f<gm_.numberOfFactors(); ++f) {
-      if(gm_[f].numberOfVariables()==2) { // Second Order Potts
-         Vi u = gm_[f].variableIndex(1);
-         Vi v = gm_[f].variableIndex(0);
+
+   for(auto fi : gm_.factorIds()) {
+      const auto factor = gm_[fi];
+      const auto arity = factor->arity();
+      if(arity==2) { // Second Order Potts
+         const Vi u = factor->vi(1);
+         const Vi v = factor->vi(0);
          if(neighbours[u].find(v)==neighbours[u].end()) {
             neighbours[u][v] = numberOfTerminalEdges+numberOfInternalEdges;
             neighbours[v][u] = numberOfTerminalEdges+numberOfInternalEdges;
@@ -263,13 +274,17 @@ typename Multicut<MODEL>::LPIndexType Multicut<MODEL>::getNeighborhood
          }
       }
    }
-   for(size_t f=0; f<gm_.numberOfFactors(); ++f) {
-      if(gm_[f].numberOfVariables()>2 && !gm_[f].isPotts()){ // Generalized Potts
-         higherOrderTerms.push_back(HigherOrderTerm(f, false, 0));      
-         for(size_t i=0; i<gm_[f].numberOfVariables();++i) {
+   for(auto fi : gm_.factorIds()) {
+
+      const auto factor = gm_[fi];
+      const auto arity = factor->arity();
+
+      if(arity>2 && ! factor->valueTable()->isPotts()){ // Generalized Potts
+         higherOrderTerms.push_back(HigherOrderTerm(fi, false, 0));      
+         for(size_t i=0; i<arity;++i) {
             for(size_t j=0; j<i;++j) {
-               Vi u = gm_[f].variableIndex(i);
-               Vi v = gm_[f].variableIndex(j);
+              const Vi u = factor->vi(i);
+              const Vi v = factor->vi(j);
                if(neighbours[u].find(v)==neighbours[u].end()) {
                   neighbours[u][v] = numberOfTerminalEdges+numberOfInternalEdges;
                   neighbours[v][u] = numberOfTerminalEdges+numberOfInternalEdges;
@@ -282,22 +297,26 @@ typename Multicut<MODEL>::LPIndexType Multicut<MODEL>::getNeighborhood
       }
    }
    //Add for higher order potts term only neccesary edges 
-   for(size_t f=0; f<gm_.numberOfFactors(); ++f) {
-      if(gm_[f].numberOfVariables()>2 && gm_[f].isPotts()) { //Higher order Potts
-         higherOrderTerms.push_back(HigherOrderTerm(f, true, 0));  
+   for(auto fi : gm_.factorIds()) {
+
+      const auto factor = gm_[fi];
+      const auto arity = factor->arity();
+
+      if(arity>2 && factor->valueTable()->isPotts()) { //Higher order Potts
+         higherOrderTerms.push_back(HigherOrderTerm(fi, true, 0));  
          std::vector<LPIndexType> lpIndexVector;
          //Find spanning tree vor the variables nb(f) using edges that already exist.
-         std::vector<bool> variableInSpanningTree(gm_.numberOfVariables(),true);
-         for(size_t i=0; i<gm_[f].numberOfVariables();++i) {
-            variableInSpanningTree[gm_[f].variableIndex(i)]=false;
+         std::vector<bool> variableInSpanningTree(gm_.nVariables(),true);
+         for(size_t i=0; i<arity;++i) {
+            variableInSpanningTree[factor->vi(i)]=false;
          }     
          size_t connection = 2; 
          // 1 = find a spanning tree and connect higher order auxilary variable to this
          // 2 = find a spanning subgraph including at least all eges in the subset and connect higher order auxilary variable to this
          if(connection==2){
             // ADD ALL 
-            for(size_t i=0; i<gm_[f].numberOfVariables();++i) {
-               const Vi u = gm_[f].variableIndex(i);  
+            for(size_t i=0; i<arity;++i) {
+               const Vi u = factor->vi(i);  
                for(typename EdgeMapType::const_iterator it=neighbours[u].begin() ; it != neighbours[u].end(); ++it){
                   const Vi v = (*it).first;
                   if(variableInSpanningTree[v] == false && u<v){
@@ -308,8 +327,8 @@ typename Multicut<MODEL>::LPIndexType Multicut<MODEL>::getNeighborhood
          }
          else if(connection==1){
             // ADD TREE
-            for(size_t i=0; i<gm_[f].numberOfVariables();++i) {
-               const Vi u = gm_[f].variableIndex(i);  
+            for(size_t i=0; i<arity;++i) {
+               const Vi u = factor->vi(i);  
                for(typename EdgeMapType::const_iterator it=neighbours[u].begin() ; it != neighbours[u].end(); ++it){
                   const Vi v = (*it).first;
                   if(variableInSpanningTree[v] == false){
@@ -341,14 +360,14 @@ template<class MODEL>
 Multicut<MODEL>::Multicut
 (
    const Model& gm,
-   Parameter para
-   ) : gm_(gm), parameter_(para) , bound_(-std::numeric_limits<double>::infinity()), infinity_(1e8), integerMode_(false),
+   Options para
+   ) : gm_(gm), options_(para) , bound_(-std::numeric_limits<double>::infinity()), infinity_(1e8), integerMode_(false),
        EPS_(1e-7)
 {
    if(para.semiRing != MinSum) {
       throw RuntimeError("This implementation does only supports Min-Plus-Semiring.");
    } 
-   if(parameter_.reductionMode_<0 ||parameter_.reductionMode_>3) {
+   if(options_.reductionMode_<0 ||options_.reductionMode_>3) {
       throw RuntimeError("Reduction Mode has to be 1, 2 or 3!");
    } 
 
@@ -361,11 +380,11 @@ Multicut<MODEL>::Multicut
    std::vector<double> valuesHigherOrder;
    std::vector<HigherOrderTerm> higherOrderTerms;
    numberOfInternalEdges_ = getNeighborhood(numberOfTerminalEdges_, neighbours, edgeNodes_ ,higherOrderTerms);
-   numberOfNodes_         = gm_.numberOfVariables(); 
+   numberOfNodes_         = gm_.nVariables(); 
 
 
    // Display some info
-   if(parameter_.verbose_ == true) {
+   if(options_.verbose_ == true) {
       std::cout << "** Multicut Info" << std::endl;
       if(problemType_==MC)
          std::cout << "  problemType_:            Multicut"  << std::endl; 
@@ -374,9 +393,9 @@ Multicut<MODEL>::Multicut
       std::cout << "  numberOfInternalEdges_:  " << numberOfInternalEdges_ << std::endl;
       std::cout << "  numberOfNodes_:          " << numberOfNodes_ << std::endl;
       std::cout << "  allowCutsWithin_:        ";
-      if(problemType_==MWC && parameter_.allowCutsWithin_.size() ==  numberOfTerminals_){
-         for(size_t i=0; i<parameter_.allowCutsWithin_.size(); ++i)
-            if(parameter_.allowCutsWithin_[i]) std::cout<<i<<" ";
+      if(problemType_==MWC && options_.allowCutsWithin_.size() ==  numberOfTerminals_){
+         for(size_t i=0; i<options_.allowCutsWithin_.size(); ++i)
+            if(options_.allowCutsWithin_[i]) std::cout<<i<<" ";
       }
       else{
          std::cout<<"none";   
@@ -392,110 +411,131 @@ Multicut<MODEL>::Multicut
    if(numberOfTerminals_==0) valueSize = numberOfInternalEdges_;
    else                      valueSize = numberOfTerminalEdges_+numberOfInternalEdges_+numberOfInterTerminalEdges_;
    std::vector<double> values (valueSize,0); 
- 
+   
+   INFERNO_CHECK(gm_.denseVariableIds(),"only with dense var ids atm");
+   INFERNO_CHECK_OP(gm_.minVarId(),==,0,"var must start at zero atm")
 
-   for(size_t f=0; f<gm_.numberOfFactors(); ++f) {
-      if(gm_[f].numberOfVariables() == 0) {
-         DiscreteLabel l = 0;
-         constant_ +=  gm_[f](&l);
+
+   //for(size_t f=0; f<gm_.nFactors(); ++f) {
+   for(auto fi : gm_.factorIds()) {
+
+      const auto factor = gm_[fi];
+      const auto arity = factor->arity();
+
+      if(arity == 0) {
+         constant_ +=  factor.eval(DiscreteLabel(0));
       }
-      else if(gm_[f].numberOfVariables() == 1) {
-         Vi node = gm_[f].variableIndex(0);
-         for(DiscreteLabel i=0; i<gm_.numberOfLabels(node); ++i) {
-            for(DiscreteLabel j=0; j<gm_.numberOfLabels(node); ++j) {
-               if(i==j) values[node*numberOfTerminals_+i] += (1.0/(numberOfTerminals_-1)-1) * gm_[f](&j);
-               else     values[node*numberOfTerminals_+i] += (1.0/(numberOfTerminals_-1))   * gm_[f](&j);
+      else if(arity == 1) {
+         const Vi node = factor->vi(0);
+         for(DiscreteLabel i=0; i<gm_.nLabels(node); ++i) {
+            for(DiscreteLabel j=0; j<gm_.nLabels(node); ++j) {
+               if(i==j) values[node*numberOfTerminals_+i] += (1.0/(numberOfTerminals_-1)-1) * factor->eval(j);
+               else     values[node*numberOfTerminals_+i] += (1.0/(numberOfTerminals_-1))   * factor->eval(j);
             }
          }
       }
-      else if(gm_[f].numberOfVariables() == 2) {
-         if(gm_[f].numberOfLabels(0)==2 && gm_[f].numberOfLabels(1)==2){
-            Vi node0 = gm_[f].variableIndex(0);
-            Vi node1 = gm_[f].variableIndex(1);
-            DiscreteLabel cc[] = {0,0}; ValueType a = gm_[f](cc);
-            cc[0]=1;cc[1]=1;        ValueType b = gm_[f](cc);
-            cc[0]=0;cc[1]=1;        ValueType c = gm_[f](cc);
-            cc[0]=1;cc[1]=0;        ValueType d = gm_[f](cc);
+      else if(arity == 2) {
 
-            values[neighbours[gm_[f].variableIndex(0)][gm_[f].variableIndex(1)]] += ((c+d-a-a) - (b-a))/2.0; 
+         const Vi node0 = factor->vi(0);
+         const Vi node1 = factor->vi(1);
+
+         if(factor->shape(0)==2 && factor->shape(1)==2){
+
+            const Vi node0 = factor->vi(0);
+            const Vi node1 = factor->vi(1);
+
+            DiscreteLabel cc[] = {0,0}; ValueType a = factor->eval(cc);
+
+            cc[0]=1;cc[1]=1;        ValueType b = factor->eval(cc);
+            cc[0]=0;cc[1]=1;        ValueType c = factor->eval(cc);
+            cc[0]=1;cc[1]=0;        ValueType d = factor->eval(cc);
+
+            values[neighbours[node0][node1]] += ((c+d-a-a) - (b-a))/2.0; 
             values[node0*numberOfTerminals_+0] += ((b-a)-(-d+c))/2.0;
             values[node1*numberOfTerminals_+0] += ((b-a)-( d-c))/2.0;
             constant_ += a;
-         }else{
-            DiscreteLabel cc0[] = {0,0};
-            DiscreteLabel cc1[] = {0,1};
-            values[neighbours[gm_[f].variableIndex(0)][gm_[f].variableIndex(1)]] += gm_[f](cc1) - gm_[f](cc0); 
-            constant_ += gm_[f](cc0);
+
+         }
+         else{
+            const DiscreteLabel cc0[] = {0,0};
+            const DiscreteLabel cc1[] = {0,1};
+            values[neighbours[node0][node1]] += factor->eval(cc1) - factor->eval(cc0); 
+            constant_ += factor->eval(cc0);
          }
       }
    }
    for(size_t h=0; h<higherOrderTerms.size();++h){
+
+      const Vi fi = higherOrderTerms[h].factorID_; 
+      const auto factor = gm_[fi];
+      const auto arity = factor->arity();
+
+
       if(higherOrderTerms[h].potts_) {
-         const Vi f = higherOrderTerms[h].factorID_; 
+
          higherOrderTerms[h].valueIndex_= valuesHigherOrder.size();
-         INFERNO_ASSERT(gm_[f].numberOfVariables() > 2);
-         std::vector<DiscreteLabel> cc0(gm_[f].numberOfVariables(),0);
-         std::vector<DiscreteLabel> cc1(gm_[f].numberOfVariables(),0); 
+         INFERNO_ASSERT(arity > 2);
+         inferno::SmallVector<DiscreteLabel> cc0(arity,0);
+         inferno::SmallVector<DiscreteLabel> cc1(arity,0); 
          cc1[0] = 1;
-         valuesHigherOrder.push_back(gm_[f](cc1.begin()) - gm_[f](cc0.begin()) ); 
-         constant_ += gm_[f](cc0.begin());
+         valuesHigherOrder.push_back(factor->eval(cc1.data()) - factor->eval(cc0.data()) ); 
+         constant_ += factor->eval(cc0.data());
       }
       else{
-         const Vi f = higherOrderTerms[h].factorID_;
-         higherOrderTerms[h].valueIndex_= valuesHigherOrder.size();
-         if(gm_[f].numberOfVariables() == 3) {
-            size_t i[] = {0, 1, 2 }; 
-            valuesHigherOrder.push_back(gm_[f](i)); 
+
+         if(arity == 3) {
+            DiscreteLabel i[] = {0, 1, 2 }; 
+            valuesHigherOrder.push_back(factor->eval(i)); 
             i[0]=0; i[1]=0; i[2]=1;
-            valuesHigherOrder.push_back(gm_[f](i));
+            valuesHigherOrder.push_back(factor->eval(i));
             i[0]=0; i[1]=1; i[2]=0;
-            valuesHigherOrder.push_back(gm_[f](i)); 
+            valuesHigherOrder.push_back(factor->eval(i)); 
             i[0]=1; i[1]=0; i[2]=0;
-            valuesHigherOrder.push_back(gm_[f](i));
+            valuesHigherOrder.push_back(factor->eval(i));
             i[0]=0; i[1]=0; i[2]=0;
-            valuesHigherOrder.push_back(gm_[f](i));
+            valuesHigherOrder.push_back(factor->eval(i));
          }
-         else if(gm_[f].numberOfVariables() == 4) {
-            size_t i[] = {0, 1, 2, 3 };//0
+         else if(arity == 4) {
+            DiscreteLabel i[] = {0, 1, 2, 3 };//0
             if(numberOfTerminals_>=4){
-               valuesHigherOrder.push_back(gm_[f](i));
+               valuesHigherOrder.push_back(factor->eval(i));
             }else{
                valuesHigherOrder.push_back(0.0);
             }
             if(numberOfTerminals_>=3){
                i[0]=0; i[1]=0; i[2]=1; i[3] = 2;//1
-               valuesHigherOrder.push_back(gm_[f](i));
+               valuesHigherOrder.push_back(factor->eval(i));
                i[0]=0; i[1]=1; i[2]=0; i[3] = 2;//2
-               valuesHigherOrder.push_back(gm_[f](i));
+               valuesHigherOrder.push_back(factor->eval(i));
                i[0]=0; i[1]=1; i[2]=1; i[3] = 2;//4
-               valuesHigherOrder.push_back(gm_[f](i));
+               valuesHigherOrder.push_back(factor->eval(i));
             }else{
                valuesHigherOrder.push_back(0.0);
                valuesHigherOrder.push_back(0.0);
                valuesHigherOrder.push_back(0.0);
             }
             i[0]=0; i[1]=0; i[2]=0; i[3] = 1;//7
-            valuesHigherOrder.push_back(gm_[f](i));
+            valuesHigherOrder.push_back(factor->eval(i));
             i[0]=0; i[1]=1; i[2]=2; i[3] = 0;//8
-            valuesHigherOrder.push_back(gm_[f](i));
+            valuesHigherOrder.push_back(factor->eval(i));
             i[0]=0; i[1]=1; i[2]=1; i[3] = 0;//12
-            valuesHigherOrder.push_back(gm_[f](i));
+            valuesHigherOrder.push_back(factor->eval(i));
             i[0]=1; i[1]=0; i[2]=2; i[3] = 0;//16
-            valuesHigherOrder.push_back(gm_[f](i));
+            valuesHigherOrder.push_back(factor->eval(i));
             i[0]=1; i[1]=0; i[2]=1; i[3] = 0;//18
-            valuesHigherOrder.push_back(gm_[f](i));
+            valuesHigherOrder.push_back(factor->eval(i));
             i[0]=0; i[1]=0; i[2]=1; i[3] = 0;//25
-            valuesHigherOrder.push_back(gm_[f](i));
+            valuesHigherOrder.push_back(factor->eval(i));
             i[0]=1; i[1]=2; i[2]=0; i[3] = 0;//32
-            valuesHigherOrder.push_back(gm_[f](i));
+            valuesHigherOrder.push_back(factor->eval(i));
             i[0]=1; i[1]=1; i[2]=0; i[3] = 0;//33
-            valuesHigherOrder.push_back(gm_[f](i));
+            valuesHigherOrder.push_back(factor->eval(i));
             i[0]=0; i[1]=1; i[2]=0; i[3] = 0;//42
-            valuesHigherOrder.push_back(gm_[f](i));
+            valuesHigherOrder.push_back(factor->eval(i));
             i[0]=1; i[1]=0; i[2]=0; i[3] = 0;//52
-            valuesHigherOrder.push_back(gm_[f](i));
+            valuesHigherOrder.push_back(factor->eval(i));
             i[0]=0; i[1]=0; i[2]=0; i[3] = 0;//63
-            valuesHigherOrder.push_back(gm_[f](i));
+            valuesHigherOrder.push_back(factor->eval(i));
          }
          else{
             throw RuntimeError("Generalized Potts Terms of an order larger than 4 a currently not supported. If U really need them let us know!");
@@ -509,7 +549,7 @@ Multicut<MODEL>::Multicut
    // build LP 
    //std::cout << "Higher order auxilary variables " << numberOfHigherOrderValues_ << std::endl;
    //std::cout << "TerminalEdges " << numberOfTerminalEdges_ << std::endl;
-   INFERNO_ASSERT( numberOfTerminalEdges_ == gm_.numberOfVariables()*numberOfTerminals_ );
+   INFERNO_ASSERT( numberOfTerminalEdges_ == gm_.nVariables()*numberOfTerminals_ );
    //std::cout << "InternalEdges " << numberOfInternalEdges_ << std::endl;
 
    INFERNO_ASSERT(values.size() == numberOfTerminalEdges_+numberOfInternalEdges_+numberOfInterTerminalEdges_);
@@ -544,9 +584,9 @@ Multicut<MODEL>::Multicut
    // multiway cut constraints
    if(problemType_ == MWC) {
       // From each internal-node only one terminal-edge should be 0
-      for(Vi var=0; var<gm_.numberOfVariables(); ++var) {
+      for(Vi var=0; var<gm_.nVariables(); ++var) {
          c_.add(IloRange(env_, numberOfTerminals_-1, numberOfTerminals_-1));
-         for(DiscreteLabel i=0; i<gm_.numberOfLabels(var); ++i) {
+         for(DiscreteLabel i=0; i<gm_.nLabels(var); ++i) {
             c_[constraintCounter].setLinearCoef(x_[var*numberOfTerminals_+i],1);
          }
          ++constraintCounter;
@@ -563,8 +603,10 @@ Multicut<MODEL>::Multicut
    // higher order constraints
    size_t count = 0;
    for(size_t i=0; i<higherOrderTerms.size(); ++i) {
-      size_t factorID = higherOrderTerms[i].factorID_;
-      size_t numVar   = gm_[factorID].numberOfVariables();
+      const auto factorID = higherOrderTerms[i].factorID_;
+      const auto factor = gm_[factorID];
+      size_t numVar   = factor->arity();
+
       INFERNO_ASSERT(numVar>2);
 
       if(higherOrderTerms[i].potts_) {
@@ -574,7 +616,7 @@ Multicut<MODEL>::Multicut
          // Add only one constraint is sufficient with {0,1} constraints
          // ------------------------------------------------------------
          // ** -|E|+1 <= -|E|*y_H+\sum_{e\in H} y_e <= 0 
-         if(parameter_.reductionMode_ % 2 == 1){
+         if(options_.reductionMode_ % 2 == 1){
             c_.add(IloRange(env_, -b+1 , 0));
             for(size_t i1=0; i1<higherOrderTerms[i].lpIndices_.size();++i1) {
                const LPIndexType edgeID = higherOrderTerms[i].lpIndices_[i1]; 
@@ -585,7 +627,7 @@ Multicut<MODEL>::Multicut
          }
          // In general this additional contraints and more local constraints leeds to tighter relaxations
          // ---------------------------------------------------------------------------------------------
-         if(parameter_.reductionMode_ % 4 >=2){ 
+         if(options_.reductionMode_ % 4 >=2){ 
             // ** y_H <= sum_{e \in H} y_e
             c_.add(IloRange(env_, -2.0*b, 0));
             for(size_t i1=0; i1<higherOrderTerms[i].lpIndices_.size();++i1) {
@@ -607,11 +649,16 @@ Multicut<MODEL>::Multicut
          count++;
       }else{
          if(numVar==3) {
+
+            const Vi vis[3] = {factor->vi(0), factor->vi(1), factor->vi(2)};
+
+
             INFERNO_ASSERT(higherOrderTerms[i].valueIndex_<=valuesHigherOrder.size());
+
             LPIndexType edgeIDs[3];
-            edgeIDs[0] = neighbours[gm_[factorID].variableIndex(0)][gm_[factorID].variableIndex(1)];
-            edgeIDs[1] = neighbours[gm_[factorID].variableIndex(0)][gm_[factorID].variableIndex(2)];
-            edgeIDs[2] = neighbours[gm_[factorID].variableIndex(1)][gm_[factorID].variableIndex(2)];
+            edgeIDs[0] = neighbours[vis[0]][ vis[1]];
+            edgeIDs[1] = neighbours[vis[0]][ vis[2]];
+            edgeIDs[2] = neighbours[vis[1]][ vis[2]];
                
             const unsigned int P[] = {0,1,2,4,7,8,12,16,18,25,32,33,42,52,63};
             double c[3];  
@@ -669,12 +716,16 @@ Multicut<MODEL>::Multicut
          else if(numVar==4) {                  
             INFERNO_ASSERT(higherOrderTerms[i].valueIndex_<=valuesHigherOrder.size());
             LPIndexType edgeIDs[6];
-            edgeIDs[0] = neighbours[gm_[factorID].variableIndex(0)][gm_[factorID].variableIndex(1)];
-            edgeIDs[1] = neighbours[gm_[factorID].variableIndex(0)][gm_[factorID].variableIndex(2)];
-            edgeIDs[2] = neighbours[gm_[factorID].variableIndex(1)][gm_[factorID].variableIndex(2)];
-            edgeIDs[3] = neighbours[gm_[factorID].variableIndex(0)][gm_[factorID].variableIndex(3)];
-            edgeIDs[4] = neighbours[gm_[factorID].variableIndex(1)][gm_[factorID].variableIndex(3)];
-            edgeIDs[5] = neighbours[gm_[factorID].variableIndex(2)][gm_[factorID].variableIndex(3)];
+
+            const Vi vis[4] = {factor->vi(0), factor->vi(1), factor->vi(2), factor->vi(3)};
+
+
+            edgeIDs[0] = neighbours[ vis[0] ][ vis[1] ];
+            edgeIDs[1] = neighbours[ vis[0] ][ vis[2] ];
+            edgeIDs[2] = neighbours[ vis[1] ][ vis[2] ];
+            edgeIDs[3] = neighbours[ vis[0] ][ vis[3] ];
+            edgeIDs[4] = neighbours[ vis[1] ][ vis[3] ];
+            edgeIDs[5] = neighbours[ vis[2] ][ vis[3] ];
           
                
             const unsigned int P[] = {0,1,2,4,7,8,12,16,18,25,32,33,42,52,63};
@@ -749,21 +800,27 @@ Multicut<MODEL>::Multicut
 template<class MODEL>
 typename Multicut<MODEL>::ProblemType Multicut<MODEL>::setProblemType() {
    problemType_ = MC;
-   for(size_t f=0; f<gm_.numberOfFactors();++f) {
-      if(gm_[f].numberOfVariables()==1) {
+
+   //for(size_t f=0; f<gm_.nFactors();++f) {
+   for(auto fi : gm_.factorIds()) {
+
+      const auto factor = gm_[fi];
+      const auto arity = factor->arity();
+
+      if(arity==1) {
          problemType_ = MWC;
       }
-      if(gm_[f].numberOfVariables()>1) {
-         for(size_t i=0; i<gm_[f].numberOfVariables();++i) {
-            if(gm_[f].numberOfLabels(i)<gm_.numberOfVariables()) {
+      if(arity>1) {
+         for(size_t i=0; i<arity;++i) {
+            if(factor->shape(i)<gm_.nVariables()) {
                problemType_ = MWC;
             }
          }
       }
-      if(gm_[f].numberOfVariables()==2 && gm_[f].numberOfLabels(0)==2 && gm_[f].numberOfLabels(1)==2){
+      if(arity==2 && factor->shape(0)==2 && factor->shape(1)==2){
          problemType_ = MWC; //OK - can be reparmetrized
       }
-      else if(gm_[f].numberOfVariables()>1 && !gm_[f].isGeneralizedPotts()) {
+      else if(arity>1 && ! factor->valueTable()->isGeneralizedPotts()) {
          problemType_ = INVALID;
          break;
       }
@@ -771,11 +828,11 @@ typename Multicut<MODEL>::ProblemType Multicut<MODEL>::setProblemType() {
  
    // set member variables
    if(problemType_ == MWC) {
-      numberOfTerminals_ = gm_.numberOfLabels(0); 
+      numberOfTerminals_ = gm_.nLabels(0); 
       numberOfInterTerminalEdges_ = (numberOfTerminals_*(numberOfTerminals_-1))/2; 
       numberOfTerminalEdges_ = 0;
-      for(Vi i=0; i<gm_.numberOfVariables(); ++i) {
-         for(DiscreteLabel j=0; j<gm_.numberOfLabels(i); ++j) {
+      for(Vi i=0; i<gm_.nVariables(); ++i) {
+         for(DiscreteLabel j=0; j<gm_.nLabels(i); ++j) {
             ++numberOfTerminalEdges_;
          }
       } 
@@ -810,7 +867,7 @@ size_t Multicut<MODEL>::enforceIntegerConstraints()
    bool enforceIntegerConstraintsOnTerminalEdges = true;
    bool enforceIntegerConstraintsOnInternalEdges = false;
 
-   if(numberOfTerminalEdges_ == 0 ||  parameter_.allowCutsWithin_.size() == numberOfTerminals_) {
+   if(numberOfTerminalEdges_ == 0 ||  options_.allowCutsWithin_.size() == numberOfTerminals_) {
       enforceIntegerConstraintsOnInternalEdges = true;
    }
 
@@ -845,7 +902,7 @@ size_t Multicut<MODEL>::findTerminalTriangleConstraints(IloRangeArray& constrain
    size_t tempConstrainCounter = constraintCounter_;
 
    size_t u,v;
-   if(parameter_.allowCutsWithin_.size()!=numberOfTerminals_){
+   if(options_.allowCutsWithin_.size()!=numberOfTerminals_){
       for(size_t i=0; i<numberOfInternalEdges_;++i) {
          u = edgeNodes_[i].first;//[0];
          v = edgeNodes_[i].second;//[1];
@@ -872,7 +929,7 @@ size_t Multicut<MODEL>::findTerminalTriangleConstraints(IloRangeArray& constrain
                ++constraintCounter_;
             }
          }
-         if(constraintCounter_-tempConstrainCounter >= parameter_.maximalNumberOfConstraintsPerRound_)
+         if(constraintCounter_-tempConstrainCounter >= options_.maximalNumberOfConstraintsPerRound_)
             break;
       }
    }
@@ -881,7 +938,7 @@ size_t Multicut<MODEL>::findTerminalTriangleConstraints(IloRangeArray& constrain
          u = edgeNodes_[i].first;//[0];
          v = edgeNodes_[i].second;//[1];
          for(size_t l=0; l<numberOfTerminals_;++l) {
-            if(parameter_.allowCutsWithin_[l])
+            if(options_.allowCutsWithin_[l])
                continue;
             if(-sol_[numberOfTerminalEdges_+i]+sol_[u*numberOfTerminals_+l]+sol_[v*numberOfTerminals_+l]<-EPS_) {
                constraint.add(IloRange(env_, 0 , 2));
@@ -905,7 +962,7 @@ size_t Multicut<MODEL>::findTerminalTriangleConstraints(IloRangeArray& constrain
                ++constraintCounter_;
             }
          }
-         if(constraintCounter_-tempConstrainCounter >= parameter_.maximalNumberOfConstraintsPerRound_)
+         if(constraintCounter_-tempConstrainCounter >= options_.maximalNumberOfConstraintsPerRound_)
             break;
       }
    }
@@ -924,9 +981,9 @@ size_t Multicut<MODEL>::findMultiTerminalConstraints(IloRangeArray& constraint)
    INFERNO_ASSERT(problemType_ == MWC);
    if(!(problemType_ == MWC)) return 0;
    size_t tempConstrainCounter = constraintCounter_;
-   if(parameter_.allowCutsWithin_.size()==numberOfTerminals_){
-      for(size_t i=0; i<parameter_.allowCutsWithin_.size();++i)
-         if(parameter_.allowCutsWithin_[i])
+   if(options_.allowCutsWithin_.size()==numberOfTerminals_){
+      for(size_t i=0; i<options_.allowCutsWithin_.size();++i)
+         if(options_.allowCutsWithin_[i])
             return 0; //Can not gurantee that Multi Terminal Constraints are valid cuts
    }
 
@@ -966,7 +1023,7 @@ size_t Multicut<MODEL>::findMultiTerminalConstraints(IloRangeArray& constraint)
          }
          ++constraintCounter_;
       } 
-      if(constraintCounter_-tempConstrainCounter >= parameter_.maximalNumberOfConstraintsPerRound_)
+      if(constraintCounter_-tempConstrainCounter >= options_.maximalNumberOfConstraintsPerRound_)
          break;
    }      
    return constraintCounter_-tempConstrainCounter;
@@ -987,7 +1044,7 @@ size_t Multicut<MODEL>::findIntegerTerminalTriangleConstraints(IloRangeArray& co
    size_t tempConstrainCounter = constraintCounter_;
 
    size_t u,v;
-   if(parameter_.allowCutsWithin_.size()!=numberOfTerminals_){
+   if(options_.allowCutsWithin_.size()!=numberOfTerminals_){
       for(size_t i=0; i<numberOfInternalEdges_;++i) {
          u = edgeNodes_[i].first;//[0];
          v = edgeNodes_[i].second;//[1];
@@ -1028,7 +1085,7 @@ size_t Multicut<MODEL>::findIntegerTerminalTriangleConstraints(IloRangeArray& co
             constraint[constraintCounter_].setLinearCoef(x_[v*numberOfTerminals_+conf[v]],1);
             ++constraintCounter_;
          }
-         if(constraintCounter_-tempConstrainCounter >= parameter_.maximalNumberOfConstraintsPerRound_)
+         if(constraintCounter_-tempConstrainCounter >= options_.maximalNumberOfConstraintsPerRound_)
             break;
       }
    }
@@ -1066,14 +1123,14 @@ size_t Multicut<MODEL>::findIntegerTerminalTriangleConstraints(IloRangeArray& co
                ++constraintCounter_;
             }
          }
-         if(sol_[numberOfTerminalEdges_+i]>1-EPS_ && (conf[u]==conf[v])  && !parameter_.allowCutsWithin_[conf[u]] ) {
+         if(sol_[numberOfTerminalEdges_+i]>1-EPS_ && (conf[u]==conf[v])  && !options_.allowCutsWithin_[conf[u]] ) {
             constraint.add(IloRange(env_, 0 , 10));
             constraint[constraintCounter_].setLinearCoef(x_[numberOfTerminalEdges_+i],-1);
             constraint[constraintCounter_].setLinearCoef(x_[u*numberOfTerminals_+conf[u]],1);
             constraint[constraintCounter_].setLinearCoef(x_[v*numberOfTerminals_+conf[v]],1);
             ++constraintCounter_;
          }
-         if(constraintCounter_-tempConstrainCounter >= parameter_.maximalNumberOfConstraintsPerRound_)
+         if(constraintCounter_-tempConstrainCounter >= options_.maximalNumberOfConstraintsPerRound_)
             break;
       }
    }
@@ -1128,7 +1185,7 @@ size_t Multicut<MODEL>::findCycleConstraints(
             ++constraintCounter_; 
          }
       } 
-      if(constraintCounter_-tempConstrainCounter >= parameter_.maximalNumberOfConstraintsPerRound_)
+      if(constraintCounter_-tempConstrainCounter >= options_.maximalNumberOfConstraintsPerRound_)
          break;
    }
    return constraintCounter_-tempConstrainCounter;
@@ -1137,9 +1194,9 @@ size_t Multicut<MODEL>::findCycleConstraints(
 template<class MODEL>
 size_t Multicut<MODEL>::findOddWheelConstraints(IloRangeArray& constraints){
    size_t tempConstrainCounter = constraintCounter_;
-   std::vector<Vi> var2node(gm_.numberOfVariables(),std::numeric_limits<Vi>::max());
-   for(size_t center=0; center<gm_.numberOfVariables();++center){
-      var2node.assign(gm_.numberOfVariables(),std::numeric_limits<Vi>::max());
+   std::vector<Vi> var2node(gm_.nVariables(),std::numeric_limits<Vi>::max());
+   for(size_t center=0; center<gm_.nVariables();++center){
+      var2node.assign(gm_.nVariables(),std::numeric_limits<Vi>::max());
       size_t N = neighbours[center].size();
       std::vector<Vi> node2var(N);
       std::vector<EdgeMapType> E(2*N);
@@ -1194,7 +1251,7 @@ size_t Multicut<MODEL>::findOddWheelConstraints(IloRangeArray& constraints){
             }
             ++constraintCounter_; 
          } 
-         if(constraintCounter_-tempConstrainCounter >= parameter_.maximalNumberOfConstraintsPerRound_)
+         if(constraintCounter_-tempConstrainCounter >= options_.maximalNumberOfConstraintsPerRound_)
             break;
       }
  
@@ -1287,10 +1344,10 @@ size_t Multicut<MODEL>::findIntegerCycleConstraints(
             }
             ++constraintCounter_;
          } 
-         if(constraintCounter_-tempConstrainCounter >= parameter_.maximalNumberOfConstraintsPerRound_)
+         if(constraintCounter_-tempConstrainCounter >= options_.maximalNumberOfConstraintsPerRound_)
             break;
       }
-      if(constraintCounter_-tempConstrainCounter >= parameter_.maximalNumberOfConstraintsPerRound_)
+      if(constraintCounter_-tempConstrainCounter >= options_.maximalNumberOfConstraintsPerRound_)
          break;
    }
    return constraintCounter_-tempConstrainCounter;
@@ -1310,8 +1367,8 @@ void
 Multicut<MODEL>::initCplex()
 {
 
-   cplex_.setParam(IloCplex::Threads, parameter_.numThreads_);
-   cplex_.setParam(IloCplex::CutUp, parameter_.cutUp_);
+   cplex_.setParam(IloCplex::Threads, options_.numThreads_);
+   cplex_.setParam(IloCplex::CutUp, options_.cutUp_);
    cplex_.setParam(IloCplex::MIPDisplay,0);
    cplex_.setParam(IloCplex::BarDisplay,0);
    cplex_.setParam(IloCplex::NetDisplay,0);
@@ -1324,7 +1381,7 @@ Multicut<MODEL>::initCplex()
    cplex_.setParam(IloCplex::EpAGap,0);
    cplex_.setParam(IloCplex::EpGap,0);
 
-   if(parameter_.verbose_ == true && parameter_.verboseCPLEX_) {
+   if(options_.verbose_ == true && options_.verboseCPLEX_) {
       cplex_.setParam(IloCplex::MIPDisplay,2);
       cplex_.setParam(IloCplex::BarDisplay,1);
       cplex_.setParam(IloCplex::NetDisplay,1);
@@ -1339,16 +1396,16 @@ template<class VisitorType>
 void
 Multicut<MODEL>::infer(VisitorType& mcv)
 {
-   std::vector<DiscreteLabel> conf(gm_.numberOfVariables());
+   std::vector<DiscreteLabel> config(gm_.nVariables());
    initCplex();
    //cplex_.setParam(IloCplex::RootAlg, IloCplex::Primal);
     
    if(problemType_ == INVALID){ 
       throw RuntimeError("Error:  Model can not be solved!"); 
    }
-   else if(!readWorkFlow(parameter_.workFlow_)){//Use given workflow if posible
-      if(parameter_.workFlow_.size()>0){
-         std::cout << "Warning: can not parse workflow : " << parameter_.workFlow_ <<std::endl;
+   else if(!readWorkFlow(options_.workFlow_)){//Use given workflow if posible
+      if(options_.workFlow_.size()>0){
+         std::cout << "Warning: can not parse workflow : " << options_.workFlow_ <<std::endl;
          std::cout << "Using default workflow ";
       }
       if(problemType_ == MWC){
@@ -1376,13 +1433,13 @@ Multicut<MODEL>::infer(VisitorType& mcv)
 
       // Check for timeout
       timer.toc();
-      if(timer.elapsedTime()>parameter_.timeOut_) {
+      if(timer.elapsedTime()>options_.timeOut_) {
          break;
       }
       //check for integer constraints   
       for (size_t it=1; it<10000000000; ++it) { 
-         cplex_.setParam(IloCplex::Threads, parameter_.numThreads_); 
-         cplex_.setParam(IloCplex::TiLim, parameter_.timeOut_-timer.elapsedTime());
+         cplex_.setParam(IloCplex::Threads, options_.numThreads_); 
+         cplex_.setParam(IloCplex::TiLim, options_.timeOut_-timer.elapsedTime());
          timer2.tic();
          if(!cplex_.solve()) {
             if(cplex_.getStatus() != IloAlgorithm::Unbounded){ 
@@ -1447,26 +1504,26 @@ Multicut<MODEL>::infer(VisitorType& mcv)
             size_t protocol_ID = Protocol_ID_Unknown;
             timer2.tic();
             if(*it == Action_ID_TTC){
-               if(parameter_.verbose_) std::cout << "* Add  terminal triangle constraints: " << std::flush;
+               if(options_.verbose_) std::cout << "* Add  terminal triangle constraints: " << std::flush;
                n = findTerminalTriangleConstraints(constraint);
-               if(parameter_.verbose_) std::cout << n << std::endl;
+               if(options_.verbose_) std::cout << n << std::endl;
                protocol_ID = Protocol_ID_TTC;
             } 
             else if(*it == Action_ID_TTC_I){ 
                if(!integerMode_){
                   throw RuntimeError("Error: Calling integer terminal triangle constraint (TTC-I) seperation provedure before switching in integer mode (IC)"); 
                }
-               if(parameter_.verbose_) std::cout << "* Add integer terminal triangle constraints: " << std::flush;
-               arg(conf);
-               n = findIntegerTerminalTriangleConstraints(constraint, conf);
-               if(parameter_.verbose_) std::cout << n  << std::endl;
+               if(options_.verbose_) std::cout << "* Add integer terminal triangle constraints: " << std::flush;
+               conf(config.begin());
+               n = findIntegerTerminalTriangleConstraints(constraint, config);
+               if(options_.verbose_) std::cout << n  << std::endl;
                protocol_ID = Protocol_ID_TTC;
         
             }
             else if(*it == Action_ID_MTC){
-               if(parameter_.verbose_) std::cout << "* Add multi terminal constraints: " << std::flush;
+               if(options_.verbose_) std::cout << "* Add multi terminal constraints: " << std::flush;
                n = findMultiTerminalConstraints(constraint);
-               if(parameter_.verbose_) std::cout <<  n << std::endl;
+               if(options_.verbose_) std::cout <<  n << std::endl;
                protocol_ID = Protocol_ID_MTC;
         
             }
@@ -1474,59 +1531,59 @@ Multicut<MODEL>::infer(VisitorType& mcv)
                if(!integerMode_){
                   throw RuntimeError("Error: Calling integer cycle constraints (CC-I) seperation provedure before switching in integer mode (IC)"); 
                }
-               if(parameter_.verbose_) std::cout << "Add integer cycle constraints: " << std::flush;
+               if(options_.verbose_) std::cout << "Add integer cycle constraints: " << std::flush;
                n = findIntegerCycleConstraints(constraint, false);
-               if(parameter_.verbose_) std::cout << n  << std::endl; 
+               if(options_.verbose_) std::cout << n  << std::endl; 
                protocol_ID = Protocol_ID_CC;
             } 
             else if(*it == Action_ID_CC_IFD){ 
                if(!integerMode_){
                   throw RuntimeError("Error: Calling facet defining integer cycle constraints (CC-IFD) seperation provedure before switching in integer mode (IC)"); 
                }
-               if(parameter_.verbose_) std::cout << "Add facet defining integer cycle constraints: " << std::flush;
+               if(options_.verbose_) std::cout << "Add facet defining integer cycle constraints: " << std::flush;
                n = findIntegerCycleConstraints(constraint, true);
-               if(parameter_.verbose_) std::cout << n  << std::endl; 
+               if(options_.verbose_) std::cout << n  << std::endl; 
                protocol_ID = Protocol_ID_CC;
             }
             else if(*it == Action_ID_CC){
-               if(parameter_.verbose_) std::cout << "Add cycle constraints: " << std::flush;     
+               if(options_.verbose_) std::cout << "Add cycle constraints: " << std::flush;     
                n = findCycleConstraints(constraint, false, false);
                cycleConstraints=n;
-               if(parameter_.verbose_) std::cout  << n << std::endl; 
+               if(options_.verbose_) std::cout  << n << std::endl; 
                protocol_ID = Protocol_ID_CC;
             } 
             else if(*it == Action_ID_CC_FD){
-               if(parameter_.verbose_) std::cout << "Add facet defining cycle constraints: " << std::flush;     
+               if(options_.verbose_) std::cout << "Add facet defining cycle constraints: " << std::flush;     
                n = findCycleConstraints(constraint, true, false);
                cycleConstraints=n;
-               if(parameter_.verbose_) std::cout  << n << std::endl; 
+               if(options_.verbose_) std::cout  << n << std::endl; 
                protocol_ID = Protocol_ID_CC;
             } 
             else if(*it == Action_ID_CC_FDB){
-               if(parameter_.verbose_) std::cout << "Add facet defining cycle constraints (with bounding): " << std::flush;     
+               if(options_.verbose_) std::cout << "Add facet defining cycle constraints (with bounding): " << std::flush;     
                n = findCycleConstraints(constraint, true, true);
                cycleConstraints=n;
-               if(parameter_.verbose_) std::cout  << n << std::endl; 
+               if(options_.verbose_) std::cout  << n << std::endl; 
                protocol_ID = Protocol_ID_CC;
             }
             else if(*it == Action_ID_CC_B){
-               if(parameter_.verbose_) std::cout << "Add cycle constraints (with bounding): " << std::flush;     
+               if(options_.verbose_) std::cout << "Add cycle constraints (with bounding): " << std::flush;     
                n = findCycleConstraints(constraint, false, true);
                cycleConstraints=n;
-               if(parameter_.verbose_) std::cout  << n << std::endl; 
+               if(options_.verbose_) std::cout  << n << std::endl; 
                protocol_ID = Protocol_ID_CC;
             } 
             else  if(*it == Action_ID_RemoveConstraints){ 
-               if(parameter_.verbose_) std::cout << "Remove unused constraints: " << std::flush;            
+               if(options_.verbose_) std::cout << "Remove unused constraints: " << std::flush;            
                n = removeUnusedConstraints();
-               if(parameter_.verbose_) std::cout  << n  << std::endl; 
+               if(options_.verbose_) std::cout  << n  << std::endl; 
                protocol_ID = Protocol_ID_RemoveConstraints;  
             }
             else  if(*it == Action_ID_IntegerConstraints){
                if(integerMode_) continue;
-               if(parameter_.verbose_) std::cout << "Add  integer constraints: " << std::flush;
+               if(options_.verbose_) std::cout << "Add  integer constraints: " << std::flush;
                n = enforceIntegerConstraints();
-               if(parameter_.verbose_) std::cout  << n << std::endl; 
+               if(options_.verbose_) std::cout  << n << std::endl; 
                protocol_ID = Protocol_ID_IntegerConstraints;  
             } 
             else  if(*it == Action_ID_OWC){
@@ -1535,9 +1592,9 @@ Multicut<MODEL>::infer(VisitorType& mcv)
                   n=0;
                }
                else if(cycleConstraints==0){             
-                  if(parameter_.verbose_) std::cout << "Add odd wheel constraints: " << std::flush;
+                  if(options_.verbose_) std::cout << "Add odd wheel constraints: " << std::flush;
                   n = findOddWheelConstraints(constraint);
-                  if(parameter_.verbose_) std::cout  << n << std::endl;
+                  if(options_.verbose_) std::cout  << n << std::endl;
                }
                else{
                   //since cycle constraints are found we have to search for more violated cycle constraints first
@@ -1560,7 +1617,7 @@ Multicut<MODEL>::infer(VisitorType& mcv)
             //Switch to next working state
             ++workingState;
             if(workingState<workFlow_.size())
-               if(parameter_.verbose_) std::cout <<std::endl<< "** Switching into next state ( "<< workingState << " )**" << std::endl;
+               if(options_.verbose_) std::cout <<std::endl<< "** Switching into next state ( "<< workingState << " )**" << std::endl;
             break;
          }
          else{
@@ -1574,7 +1631,7 @@ Multicut<MODEL>::infer(VisitorType& mcv)
          
          // Check for timeout
          timer.toc();
-         if(timer.elapsedTime()>parameter_.timeOut_) {
+         if(timer.elapsedTime()>options_.timeOut_) {
             break;
          }
          
@@ -1582,7 +1639,7 @@ Multicut<MODEL>::infer(VisitorType& mcv)
    } //end loop over all working states
    
    //mcv.end(*this); 
-   if(parameter_.verbose_){
+   if(options_.verbose_){
       std::cout << "end normal"<<std::endl;
       std::cout <<"Protokoll:"<<std::endl;
       std::cout <<"=========="<<std::endl;
@@ -1598,7 +1655,7 @@ Multicut<MODEL>::infer(VisitorType& mcv)
    IDS.push_back(Protocol_ID_MTC);
    IDS.push_back(Protocol_ID_IntegerConstraints);
  
-   if(parameter_.verbose_){
+   if(options_.verbose_){
       for(size_t i=0; i<protocolateTiming_.size(); ++i){
          std::cout << std::setw(5)<<   i  ;
          for(size_t n=0; n<IDS.size(); ++n){
@@ -1628,45 +1685,43 @@ Multicut<MODEL>::infer(VisitorType& mcv)
 }
 
 template<class MODEL>
-void
-Multicut<MODEL>::arg
+template<class OUT_ITER>
+void Multicut<MODEL>::conf
 (
-   std::vector<DiscreteLabel>& x,
-   const size_t N
-   ) const
+   OUT_ITER outIter
+)const
 {
-   if(N!=1) {
-      //return UNKNOWN;
-   }
-   else{
-      if(problemType_ == MWC) {
-         if(parameter_.MWCRounding_== parameter_.NEAREST){
-            x.resize(gm_.numberOfVariables());
-            for(Vi node = 0; node<gm_.numberOfVariables(); ++node) {
-               double v = sol_[numberOfTerminals_*node+0];
-               x[node] = 0;
-               for(DiscreteLabel i=0; i<gm_.numberOfLabels(node); ++i) {
-                  if(sol_[numberOfTerminals_*node+i]<v) {
-                     x[node]=i;
-                  }
+   INFERNO_CHECK(gm_.denseVariableIds(),"only with dense var ids atm");
+   INFERNO_CHECK_OP(gm_.minVarId(),==,0,"var must start at zero atm")
+
+   std::vector<LabelType> x(gm_.nVariables());
+   if(problemType_ == MWC) {
+      if(options_.MWCRounding_== options_.NEAREST){
+         for(Vi node = 0; node<gm_.nVariables(); ++node) {
+            double v = sol_[numberOfTerminals_*node+0];
+            x[node] = 0;
+            for(DiscreteLabel i=0; i<gm_.nLabels(node); ++i) {
+               if(sol_[numberOfTerminals_*node+i]<v) {
+                  x[node]=i;
                }
             }
          }
-         else if(parameter_.MWCRounding_==parameter_.DERANDOMIZED){
-            this->derandomizedRounding(x);
-         }
-         else if(parameter_.MWCRounding_==parameter_.PSEUDODERANDOMIZED){
-            this->pseudoDerandomizedRounding(x,1000);
-         }
-         else{
-            //return UNKNOWN;
-         }
+      }
+      else if(options_.MWCRounding_==options_.DERANDOMIZED){
+         this->derandomizedRounding(x);
+      }
+      else if(options_.MWCRounding_==options_.PSEUDODERANDOMIZED){
+         this->pseudoDerandomizedRounding(x,1000);
       }
       else{
-         std::vector<std::list<size_t> > neighbours0;
-         partition(x, neighbours0,parameter_.edgeRoundingValue_);
+         //return UNKNOWN;
       }
    }
+   else{
+      std::vector<std::list<size_t> > neighbours0;
+      partition(x, neighbours0,options_.edgeRoundingValue_);
+   }
+   std::copy(x.begin(), x.end(), outIter);
 }
 template<class MODEL>
 std::vector<size_t>
@@ -1694,7 +1749,7 @@ void Multicut<MODEL>::pseudoDerandomizedRounding
       labelorder1[i]=i;
       labelorder2[i]=numberOfTerminals_-2-i;
    } 
-   for(size_t i=0; i<numberOfTerminals_*gm_.numberOfVariables();++i){
+   for(size_t i=0; i<numberOfTerminals_*gm_.nVariables();++i){
       size_t bin;
       double t,d;
       if(sol_[i]<=0){
@@ -1755,7 +1810,7 @@ void Multicut<MODEL>::derandomizedRounding
       value=d;
       x=temp;
    }
-   for(size_t i=0; i<numberOfTerminals_*gm_.numberOfVariables();++i){
+   for(size_t i=0; i<numberOfTerminals_*gm_.nVariables();++i){
       if( sol_[i]>1e-8 &&  sol_[i]<1-1e-8){
          if(value>(d=derandomizedRoundingSubProcedure(temp,labelorder1,sol_[i]))){
             value=d;
@@ -1779,7 +1834,7 @@ Multicut<MODEL>::derandomizedRoundingSubProcedure
    ) const
 { 
    const DiscreteLabel lastLabel = labelorder.back();
-   const Vi numVar    = gm_.numberOfVariables();
+   const Vi numVar    = gm_.nVariables();
 
    x.assign(numVar,lastLabel);
   
@@ -1790,7 +1845,7 @@ Multicut<MODEL>::derandomizedRoundingSubProcedure
          }
       }
    }
-   return gm_.evaluate(x);
+   return gm_.eval(x.begin());
 }
 
 
@@ -1857,9 +1912,9 @@ ValueType Multicut<MODEL>::bound() const
 template<class MODEL>
 ValueType Multicut<MODEL>::value() const
 {
-   std::vector<DiscreteLabel> c;
-   arg(c);  
-   ValueType value = gm_.evaluate(c);
+   std::vector<DiscreteLabel> c(gm_.nVariables());
+   conf(c);  
+   ValueType value = gm_.eval(c.begin());
    return value;
 }
 

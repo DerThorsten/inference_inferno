@@ -31,8 +31,10 @@ namespace inference{
 
     public:
         typedef kolmogorov::qpbo::QPBO<ValueType> QpboSolver;
-        typedef QpboOptions Options;
+        
         typedef MODEL Model;
+        typedef QpboOptions Options;
+
         Qpbo(const Model & model, const Options & options)
         :   model_(&model),
             options_(options),

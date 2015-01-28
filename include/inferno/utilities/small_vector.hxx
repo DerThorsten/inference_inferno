@@ -10,16 +10,8 @@
 namespace inferno {
 
 
-/// \brief Vector that stores values on the stack if size is smaller than MAX_STACK
-/// \tparam T value type
-/// \tparam MAX_STACK maximum number of elements kept on the stack
-///
-/// The member functions resize and clear reduce the size but not the
-/// capacity of the vector.
-///
-/// \ingroup utilities
+/// \cond HIDDEN_SYMBOLS
 namespace detail_small_vector{
-
     template<class TAG>
     struct AssignmentHelper{
 
@@ -52,7 +44,17 @@ namespace detail_small_vector{
 
 
 }
+/// \endcond
 
+
+/// \brief Vector that stores values on the stack if size is smaller than MAX_STACK
+/// \tparam T value type
+/// \tparam MAX_STACK maximum number of elements kept on the stack
+///
+/// The member functions resize and clear reduce the size but not the
+/// capacity of the vector.
+///
+/// \ingroup utilities
 template<class T, size_t MAX_STACK=inferno::USUAL_MAX_FACTOR_ORDER>
 class SmallVector{
 public:
