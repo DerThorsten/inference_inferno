@@ -4,7 +4,7 @@
 #include "inferno/inferno.hxx"
 
 namespace inferno{
-
+namespace inference{
 
     class InferenceOptions{
     public:
@@ -53,7 +53,7 @@ namespace inferno{
     };
 
 
-
+}
 }
 
 

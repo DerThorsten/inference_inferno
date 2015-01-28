@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE ModelTest
+#define BOOST_TEST_MODULE QpboExteralTest
 #include <boost/test/unit_test.hpp>
 
 #include <random>
@@ -52,8 +52,8 @@ BOOST_AUTO_TEST_CASE(TestQpboInference)
     }
 
     
-    Qpbo<GeneralDiscreteGraphicalModel>::Options options;
-    Qpbo<GeneralDiscreteGraphicalModel> qpbo(model, options);
+    inference::Qpbo<GeneralDiscreteGraphicalModel>::Options options;
+    inference::Qpbo<GeneralDiscreteGraphicalModel> qpbo(model, options);
 
     qpbo.infer();
 

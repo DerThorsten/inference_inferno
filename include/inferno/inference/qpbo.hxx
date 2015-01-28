@@ -5,7 +5,7 @@
 #include <inferno_externals/qpbo/QPBO.h>
 
 namespace inferno{
-
+namespace inference{
 
 
     ///Option object for Qpbo
@@ -123,7 +123,8 @@ namespace inferno{
         ValueType     bound_;
         ValueType     value_;
     };
-}
 
+} // end namespace inference
+} // end namespace inferno
 
 #endif /* INFERNO_INFERENCE_QPBO_HXX */

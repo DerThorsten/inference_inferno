@@ -78,12 +78,38 @@ elseif(MSVC)
    add_definitions(-D_SCL_SECURE_NO_WARNINGS)
 endif()
 
-
 #-------------------------------------------------------------------------------------------------------------------
 # Find Externals
 #-------------------------------------------------------------------------------------------------------------------
+FIND_PACKAGE(Threads REQUIRED)  # includes pthread
 FIND_PACKAGE(INFERNO_EXTERNALS REQUIRED)
 
+#-------------------------------------------------------------------------------------------------------------------
+# Options as (WITH_CPLEX)
+#-------------------------------------------------------------------------------------------------------------------
+OPTION(WITH_CPLEX "Include CPLEX" OFF)
+if(WITH_CPLEX)
+    message(STATUS "build with CPLEX interface")
+    find_package(CPLEX REQUIRED)
+    add_definitions(-DWITH_CPLEX)
+    include_directories(${CPLEX_INCLUDE_DIRS})
+    # add_definitions(-DILOUSESTL) redundant according to http://www-01.ibm.com/support/docview.wss?uid=swg21399983
+    add_definitions(-DIL_STD)
+
+
+
+    if(WITH_CPLEX) 
+        if(WIN32)
+            SET(CPLEX_AND_AUX_LIBRARIES ${CPLEX_LIBRARIES} )
+        else()
+            SET(CPLEX_AND_AUX_LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${CPLEX_LIBRARIES} )
+        endif()
+    endif()
+
+
+else()
+   message(STATUS "build without CPLEX interface")
+endif()
 
 file(GLOB_RECURSE headers ${INFERNO_EXTERNALS_INCLUDE_DIR})
 include_directories(${headers})

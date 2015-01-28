@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE LabelTest
+#define BOOST_TEST_MODULE ShapeWalkerTest
 #include <boost/test/unit_test.hpp>
 
 #include "inferno/utilities/shape_walker.hxx"

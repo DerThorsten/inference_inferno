@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE LabelTest
+#define BOOST_TEST_MODULE MixedLabelTest
 #include <boost/test/unit_test.hpp>
 
 #include "inferno/utilities/mixed_label.hxx"

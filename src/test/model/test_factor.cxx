@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE ModelTest
+#define BOOST_TEST_MODULE FactorTEst
 #include <boost/test/unit_test.hpp>
 
 #include "inferno/model/base_discrete_factor.hxx"

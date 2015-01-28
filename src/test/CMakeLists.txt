@@ -14,27 +14,10 @@ SET(TEST_LIBS
 )
 
 
+#-------------------------------------------------------------------------------------------------------------------
+# test inference
+#-------------------------------------------------------------------------------------------------------------------
+add_subdirectory(model)
+add_subdirectory(utilities)
+add_subdirectory(inference)
 
-
-add_executable(test_mixed_label test_mixed_label.cxx )
-target_link_libraries(test_mixed_label ${TEST_LIBS})
-add_test(test_mixed_label test_mixed_label)
-
-add_executable(test_shape_walker test_shape_walker.cxx )
-target_link_libraries(test_shape_walker ${TEST_LIBS})
-add_test(test_shape_walker test_shape_walker)
-
-
-add_executable(test_factor test_factor.cxx )
-target_link_libraries(test_factor ${TEST_LIBS})
-add_test(test_factor test_factor)
-
-
-add_executable(test_model test_model.cxx )
-target_link_libraries(test_model ${TEST_LIBS})
-add_test(test_model test_model)
-
-
-add_executable(test_externals_qpbo test_externals_qpbo.cxx )
-target_link_libraries(test_externals_qpbo ${TEST_LIBS} ${INFERNO_EXTERNAL_LIB_QPBO_SHARED})
-add_test(test_externals_qpbo test_externals_qpbo)
