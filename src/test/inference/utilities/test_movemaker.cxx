@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "inferno/model/general_discrete_model.hxx"
-//#include "inferno/inference/utilities/movemaker.hxx"
+#include "inferno/inference/utilities/movemaker.hxx"
 #define TEST_EPS 0.00001
 
 

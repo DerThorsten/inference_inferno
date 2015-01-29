@@ -119,8 +119,23 @@ public:
         return model().eval(conf.begin());
     }
 
+
+
+
+    /**
+        this function might change since
+        we need 2 evals:
+        One where the conf iterator itself
+        has the gaps the ids have.
+        This means one would use
+        conf[varId].
+
+    */
     template<class CONF_ITER>
     double eval(CONF_ITER conf)const{
+
+        INFERNO_CHECK(model().denseVariableIds(),"this will be fixed soon ");
+        INFERNO_CHECK_OP(model().minVarId(),==,0,"this will be fixed soon ");
 
         double sum = 0.0;
 
@@ -163,15 +178,32 @@ public:
         return std::distance(model().factorIdsBegin(), model().factorIdsEnd());
     }
 
+    /** \brief get the minimal variable id in the model
+
+        \warning if the graphical model has no variables,
+        calling this function will have undefined behavior.
+    */
     Vi minVarId() const{
         return *model().variableIdsBegin();
     }
+    /** \brief get the maximal variable id in the model
 
-    /// check if the variables are dense
-    ///
-    /// dense means the variables can start at 
-    /// any id, but from there on the ids must be
-    /// consecutive without holes.
+        \warning if the graphical model has no variables,
+        calling this function will have undefined behavior.
+    */
+    Vi maxVarId() const{
+        return * (model().variableIdsBegin() + (model.numberOfVariables()-1));
+    }
+
+    /** check if the variables are dense
+    
+        dense means the variables can start at 
+        any id, but from there on the ids must be
+        consecutive without holes.
+
+        \warning if the graphical model has no variables,
+        calling this function will have undefined behavior.
+    */
     bool denseVariableIds()const{
         if(model().nVariables()<=1)
             return true;

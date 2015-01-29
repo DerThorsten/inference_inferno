@@ -3,9 +3,12 @@
     Any project using inferno should 
     include this header.
 
+
     This header has some fundamental typedefs.
     Runtime error classes 
     and useful macros for runtime checks.
+    In fact, almost any other header of inferno
+    will include this one.
 */
 #ifndef INFERNO_INFERNO_HXX
 #define INFERNO_INFERNO_HXX

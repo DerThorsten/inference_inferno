@@ -25,9 +25,27 @@ bool allValuesEq(const VECTOR vector) {
 }
 
 
-/// \brief DiscreteValueTable abstract base Class
-///
-/// \ingroup DiscreteValueTable
+/** \brief DiscreteValueTable abstract base Class
+
+    Any value table within inferno must derive from 
+    this class.
+    The only pure virtual functions are:
+        - eval
+        - shape
+        - arity
+
+    All other virtual functions have 
+    a default implementation.
+    For maximum speed, derived classes
+    should overwrite as many 
+    virtual functions as possible.
+    The reason why only 3 of the virtual 
+    functions are pure virtual is 
+    rapid prototyping.
+ 
+
+ \ingroup DiscreteValueTable
+*/
 class DiscreteValueTable{
 private:
 
@@ -46,9 +64,9 @@ private:
 public:
     typedef LabelType L;
 
-    // this should be enough as pure virtual interface
 
-    /** evaluate an n-ary value table for a given configuration
+
+    /** \brief evaluate an n-ary value table for a given configuration
         
         \param conf : pointer to a sequence of LabelType 
             which must be as least as long as the the arity
@@ -57,11 +75,38 @@ public:
         \returns : value at given conf
     */
     virtual ValueType eval(const LabelType *conf)const=0;
-    virtual LabelType shape(const uint32_t) const=0;
+    /** \brief shape of the function at axis 'i'. 
+        
+        The qrity of a value table / 
+        function has as many `axis` defines 
+        how many axis exist.
+        And for each axis, shape will return
+        the number of labels / configuration
+        for this particular axis.
+
+        \param i index of the axis.
+            i must b in 0<= i < arity.
+
+    */
+    virtual LabelType shape(const uint32_t i) const=0;
+    /** \brief arity of the value table.
+        
+        Number of variables the function / value table depends on.
+        A unary has an arity of one.
+        A binary of two and so on.
+
+        \warning constant functions have the arity
+        zero and are allowed.
+    */
     virtual uint32_t  arity()const=0;
 
 
-    // with default impl
+    /** \brief number of configurations in a value table.
+        
+        For a unary function, the size is equivalent to
+        shape(0). For a binary function shape(0)*shape(1).
+        For an n-ary function it is shape(0)*shape(1)*...*shape(n-1).
+    */
     virtual uint64_t size()const{
         const uint32_t arity = this->arity();
         uint64_t size = 1;
@@ -71,27 +116,85 @@ public:
         return size;
     }
 
-    /** evaluate an unary value table for a given label
+    /** \brief evaluate an unary 1-ary value table for a given label
+            (or 0-ary value table)
 
-        \param l0 : label 
+        \param l0 : label of only variable of the value table.
+            If the function has an arity of zero, l0 must
+            be zero, otherwise the result will be undefined.
 
-        \returns : value at given conf
+        \warning a function with an arity different to one or zero.
+            will have undefined behavior if this
+            function is called
+
+        \returns : value at given configuration
     */
     virtual ValueType eval(const L l0)const{
         return this->eval(&l0);
     }
+    /** \brief evaluate an binary / 2-ary value table for a given label
+
+        \param l0 : label of the first variable
+        \param l1 : label of the second variable
+
+        \warning a function with an arity different to two
+            will have undefined behavior if this
+            function is called
+
+        \returns : value at given configuration
+    */
     virtual ValueType eval(const L l0, const L l1)const{
         L conf[] = {l0, l1};
         return this->eval(conf);
     }
+    /** \brief evaluate an ternary / 3-ary value table for a given label
+
+        \param l0 : label of the first variable
+        \param l1 : label of the second variable
+        \param l2 : label of the third variable
+        \param l3 : label of the fourth variable
+
+        \warning a function with an arity different to 3
+            will have undefined behavior if this
+            function is called
+
+        \returns : value at given configuration
+    */
     virtual ValueType eval(const L l0, const L l1, const L l2)const{
         L conf[] = {l0, l1, l2};
         return this->eval(conf);
     }
+    /** \brief evaluate an 4-ary value table for a given label
+
+        \param l0 : label of the first variable
+        \param l1 : label of the second variable
+        \param l2 : label of the third variable
+        \param l3 : label of the fourth variable
+
+        \warning a function with an arity different to four
+            will have undefined behavior if this
+            function is called
+
+        \returns : value at given configuration
+    */
     virtual ValueType eval(const L l0, const L l1, const L l2, const L l3)const{
         L conf[] = {l0, l1, l2, l3};
         return this->eval(conf);
     }
+    /** \brief evaluate an 5-ary value table for a given label
+
+        \param l0 : label of the first variable
+        \param l1 : label of the second variable
+        \param l2 : label of the third variable
+        \param l3 : label of the fourth variable
+        \param l4 : label of the fifth variable
+
+        \warning a function with an arity different to five
+            will have undefined behavior if this
+            function is called
+
+        \returns : value at given configuration
+    */
     virtual ValueType eval(const L l0, const L l1, const L l2, const L l3, const L l4)const{
         L conf[] = {l0, l1, l2, l3, l4};
         return this->eval(conf);
@@ -100,7 +203,7 @@ public:
     /** \brief check if the value table encodes a generalized potts function.
         
         A generalized potts function is a 
-        function where all configures which encode the same partitioning 
+        function where all configurations which encode the same partitioning 
         have the same value.
         A unary function is never considered as a generalized potts function.
 
