@@ -5,6 +5,8 @@
 #include <iostream>
 
 #include "inferno/model/general_discrete_model.hxx"
+#include "inferno/value_tables/potts.hxx"
+#include "inferno/value_tables/unary.hxx"
 #include "inferno/inference/qpbo.hxx"
 #define TEST_EPS 0.00001
 
@@ -39,7 +41,7 @@ BOOST_AUTO_TEST_CASE(TestQpboInference)
     for(auto vi : model.variableIds() ){
         for(auto & v : values)
             v = generator();
-        auto vti = model.addValueTable(new UnaryValueTable(values.begin(), values.end()) );
+        auto vti = model.addValueTable(new value_tables::UnaryValueTable(values.begin(), values.end()) );
         auto fi = model.addFactor(vti ,{vi});
     }
 
@@ -47,7 +49,7 @@ BOOST_AUTO_TEST_CASE(TestQpboInference)
     for(Vi vi=0; vi<nVar-1; ++vi){
         auto beta = generator( );
         std::cout<<beta<<"\n";
-        auto vti = model.addValueTable(new PottsValueTable(nLabes, beta));
+        auto vti = model.addValueTable(new value_tables::PottsValueTable(nLabes, beta));
         auto fi = model.addFactor(vti ,{vi, vi+1});
     }
 

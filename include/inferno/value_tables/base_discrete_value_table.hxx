@@ -10,10 +10,19 @@
 
 namespace inferno{
 
+/** \namespace inferno::value_tables 
+    \brief all (discrete) value tables are implemented 
+    in this namespace.
+
+    All values tables and related functionality
+    is implemented within inferno::value_tables .
+*/
+namespace value_tables{
 
 
 
 
+/// \cond
 template<class VECTOR>
 bool allValuesEq(const VECTOR vector) {
     for(size_t i=0;i<vector.size();++i) {
@@ -23,9 +32,9 @@ bool allValuesEq(const VECTOR vector) {
     }
     return true;
 }
+/// \endcnd
 
-
-/** \brief DiscreteValueTable abstract base Class
+/** \brief DiscreteValueTableBase abstract base Class
 
     Any value table within inferno must derive from 
     this class.
@@ -44,20 +53,20 @@ bool allValuesEq(const VECTOR vector) {
     rapid prototyping.
  
 
- \ingroup DiscreteValueTable
+ \ingroup DiscreteValueTableBase
 */
-class DiscreteValueTable{
+class DiscreteValueTableBase{
 private:
 
     struct ShapeFunctor{
         ShapeFunctor(){}
-        ShapeFunctor(const DiscreteValueTable * f)
+        ShapeFunctor(const DiscreteValueTableBase * f)
         : f_(f){
         }
         DiscreteLabel operator()(const size_t d)const{
             return f_->shape(d);
         }
-        const DiscreteValueTable * f_;
+        const DiscreteValueTableBase * f_;
     };
 
     
@@ -454,7 +463,7 @@ public:
         
         \warning
             The buffer must be preallocated and 
-            must hold at least DiscreteValueTable::arity
+            must hold at least DiscreteValueTableBase::arity
             values
 
 
@@ -478,7 +487,7 @@ public:
 
         \warning
             The buffer must be preallocated and 
-            must hold at least DiscreteValueTable::size
+            must hold at least DiscreteValueTableBase::size
             values
 
 
@@ -560,71 +569,8 @@ public:
 };
 
 
-class  PottsValueTable : public DiscreteValueTable{
-public:
-    PottsValueTable(const LabelType l,  const ValueType beta)
-    :   DiscreteValueTable(),
-        nl_(l),
-        beta_(beta){
-    }
-    virtual ValueType eval(const LabelType *conf)const{
-        return conf[0] == conf[1] ? 0.0 : beta_;
-    }
-    virtual ValueType eval(const LabelType l1, const LabelType l2)const{
-        return l1==l2 ? 0 : beta_;
-    }
-    virtual LabelType shape(const uint32_t d) const{
-        return nl_;
-    }
-    virtual uint32_t  arity()const{
-        return 2;
-    }
-    virtual bool isGeneralizedPotts() const{
-        return true;
-    }
-    virtual bool isPotts() const{
-        return true;
-    }
-private:
-    LabelType nl_;
-    ValueType beta_;
-};
 
-
-
-class  UnaryValueTable : public DiscreteValueTable{
-public:
-    UnaryValueTable(const LabelType l)
-    :   DiscreteValueTable(),
-        values_(l){
-    }
-    template<class ITER>
-    UnaryValueTable(ITER valBegin, ITER valEnd)
-    :   DiscreteValueTable(),
-        values_(valBegin, valEnd){
-    }
-    template<class T>
-    UnaryValueTable(std::initializer_list<T> values)
-    :   DiscreteValueTable(),
-        values_(values){
-    }
-    virtual ValueType eval(const LabelType *conf)const{
-        return values_[conf[0]];
-    }
-    virtual ValueType eval(const LabelType l1)const{
-        return values_[l1];
-    }
-    virtual LabelType shape(const uint32_t d) const{
-        return values_.size();
-    }
-    virtual uint32_t  arity()const{
-        return 1;
-    }
-private:
-    std::vector<ValueType> values_;
-};
-
-
-}
+} // end namespace value_tables
+} // end namespace inferno
 
 #endif /*INFERNO_VALUE_TABLES_BASE_DISCRETE_VALUE_TYPE*/

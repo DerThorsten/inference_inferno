@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_CASE(TestFactor)
     using namespace inferno;
     /*
     BOOST_TEST_CHECKPOINT("construct PottsValueTable");
-    DiscreteValueTable  * vt = new PottsValueTable(2, 1.0);
+    DiscreteValueTableBase  * vt = new PottsValueTable(2, 1.0);
     Vi vis[2] = {0, 1};
     BOOST_TEST_CHECKPOINT("construct Factor from PottsValueTable");
     DiscreteFactor f(vis,vis+2, vt);

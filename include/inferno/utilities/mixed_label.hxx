@@ -10,8 +10,18 @@
 namespace inferno{
 
 
+/** \brief A class which can encode a discrete 
+    and continuous label. 
 
-struct MixedLabel{
+    For a mixed graphical model it is useful
+    to have one label type for
+    discrete and continuous variables.
+    A single instance of MixedLabel
+    is either discrete or continuous,
+    but can be casted in each other.
+    
+*/
+class MixedLabel{
 private:
 
 public:

@@ -109,9 +109,9 @@ public:
         return static_cast<const FACTOR *>(this); 
     }
 
-    template<class ITER_GM_CONF, class ITER_FACTOR_CONF>
+    template<class GM_CONF, class ITER_FACTOR_CONF>
     void getFactorConf(
-        ITER_GM_CONF gmConf,
+        GM_CONF gmConf,
         ITER_FACTOR_CONF factorConf     
     )const{
         const auto arity = factor()->arity();

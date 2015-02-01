@@ -45,7 +45,8 @@ public:
 
 
 
-
+/** \brief Options object for Multicut algorithm
+*/
 struct MulticutOptions : public InferenceOptions
 {
 public:
@@ -79,28 +80,42 @@ public:
 
 /** \brief Multicut Algorithm
 
+    <b>Dependencies:</b>
 
-   [1] J. Kappes, M. Speth, B. Andres, G. Reinelt and C. Schnoerr, "Globally Optimal Image Partitioning by Multicuts", EMMCVPR 2011\n
-   [2] J. Kappes, M. Speth, G. Reinelt and C. Schnoerr, "Higher-order Segmentation via Multicuts", Technical Report (http://ipa.iwr.uni-heidelberg.de/ipabib/Papers/kappes-2013-multicut.pdf)\n
+    - This algorithm defends on Cplex. WITH_CPLEX must be defined within
+        CMake to enable this algorithm
+
+    <b>References:</b>
+
+
+    - [1] J. Kappes, M. Speth, B. Andres, G. Reinelt and C. Schnoerr, "Globally Optimal Image Partitioning by Multicuts", EMMCVPR 2011\n
+    - [2] J. Kappes, M. Speth, G. Reinelt and C. Schnoerr, "Higher-order Segmentation via Multicuts", Technical Report (http://ipa.iwr.uni-heidelberg.de/ipabib/Papers/kappes-2013-multicut.pdf)\n
+
+    This code also supports asymetric multyway cuts as discibed in:\n
+
+    - [3] T. Kroeger, J. Kappes, T. Beier, U. Koethe,  and F.A. Hamprecht, "Asymmetric Cuts: Joint Image Labeling and Partitioning", GCPR 2014\n
+
+    This code was also used in
+
+    - [4] J. Kappes, M. Speth, G. Reinelt, and C. Schnoerr, “Towards Efficient and Exact MAP-Inference for Large Scale Discrete Computer Vision Problems via Combinatorial Optimization”. CVPR, 2013\n
+    - [5] J. Kappes, B. Andres, F. Hamprecht, C. Schnoerr, S. Nowozin, D. Batra, S. Kim, B. Kausler, J. Lellmann, N. Komodakis, and C. Rother, “A Comparative Study of Modern Inference Techniques for Discrete Energy Minimization Problem”, CVPR, 2013.
   
-   this code also supports asymetric multyway cuts as discibed in:\n
-   [3] T. Kroeger, J. Kappes, T. Beier, U. Koethe,  and F.A. Hamprecht, "Asymmetric Cuts: Joint Image Labeling and Partitioning", GCPR 2014\n
-  
-   This code was also used in
-   [4] J. Kappes, M. Speth, G. Reinelt, and C. Schnoerr, “Towards Efficient and Exact MAP-Inference for Large Scale Discrete Computer Vision Problems via Combinatorial Optimization”. CVPR, 2013\n
-   [5] J. Kappes, B. Andres, F. Hamprecht, C. Schnoerr, S. Nowozin, D. Batra, S. Kim, B. Kausler, J. Lellmann, N. Komodakis, and C. Rother, “A Comparative Study of Modern Inference Techniques for Discrete Energy Minimization Problem”, CVPR, 2013.
-  
-   Multicut-Algo :
-   - Cite: [1] and [2]
-   - Maximum factor order : potts (oo) generalized potts (4 - can be extended to N)
-   - Maximum number of labels : oo
-   - Restrictions : functions are arbitrary unary terms or generalized potts terms (positive or negative)
+    <b>Multicut :</b>
+    - Cite: [1] and [2]
+    - Maximum factor order : potts (oo) generalized potts (4 - can be extended to N)
+    - Maximum number of labels : oo
+    - Restrictions : functions are arbitrary unary terms or generalized potts terms (positive or negative)
                     all variables have the same labelspace (practical no theoretical restriction) 
                     the number of states is at least as large as the order of a generalized potts function (practical no theoretical restriction)
-   - Convergent :   Converge to the global optima if integer and cycle-constraints are enforced
+    - Convergent :   Converge to the global optima if integer and cycle-constraints are enforced
   
-   see [2] for further details.
-   \ingroup inference 
+    - see [2] for further details.
+    
+    <b>Usage :</b>
+    
+    See example???
+
+    \ingroup discrete_inference optimal_discrete_inference
 */
 template<class MODEL>
 class Multicut : public DiscreteInferenceBase<Multicut<MODEL>, MODEL >

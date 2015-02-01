@@ -1,7 +1,93 @@
+
+
 /**
-\mainpage Inferno Documentation
-
-This might be changed into opengm3 at some point
-
+    \defgroup inference Inference
 */
 
+/**
+    \defgroup discrete_inference Discrete inference
+    \ingroup inference
+*/
+
+
+/**
+    \defgroup optimal_discrete_inference Optimal discrete inference 
+    \ingroup discrete_inference
+*/
+
+/**
+    \defgroup partial_optimal_discrete_inference Partial optimal discrete inference 
+    \ingroup discrete_inference
+*/
+
+
+/**
+    \defgroup approximate_discrete_inference Approximate discrete inference 
+    \ingroup discrete_inference
+*/
+
+
+/**
+    \defgroup value_tables Value tables
+*/
+
+/**
+    \defgroup discrete_value_tables Discrete value tables
+    \ingroup value_tables
+*/
+
+
+/**
+    \defgroup models Graphical models
+*/
+
+/**
+    \defgroup discrete_models Discrete graphical models
+    \ingroup models
+*/
+
+
+/**
+    \defgroup utilities Useful data-structures and algorithms
+*/
+
+
+/**
+    \defgroup multicut Multicut
+*/
+
+/**
+    \defgroup inference_utilities Inference Utilities
+        Useful utility classes and algorithm 
+        for inference algorithms.
+*/
+
+
+
+/** \mainpage  Inferno - A library for discrete energy minimization
+
+
+    \section intro_sec Introduction
+
+    Inferno is a library for discrete energy minimization.
+    It is highly inspired from OpenGM. 
+    In fact, Inferno could be considered as ``OpenGM 3``
+
+    In the future inferno will also include
+    continuous and mixed graphical models.
+    
+
+
+    \subsection diff_ogm_sub_sec Coming from OpenGM
+
+
+ */
+
+
+/**
+    \example very_simple_potts_model.cxx \brief an example
+    A chain where the regularizer is a potts function.
+
+    \example very_simple_multicut_model.cxx \brief an example
+    A tiny multicut model on a 2x2 grid.
+*/

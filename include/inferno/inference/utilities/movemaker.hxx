@@ -1,203 +1,183 @@
-#pragma once
-#ifndef OPENGM_MOVEMAKER_HXX
-#define OPENGM_MOVEMAKER_HXX
+#ifndef INFERNO_INFERENCE_UTILITIES_MOVEMAKER_HXX
+#define INFERNO_INFERENCE_UTILITIES_MOVEMAKER_HXX
 
 #include <algorithm>
 #include <vector>
 
 
 #include "inferno/inferno.hxx"
+#include "inferno/model/factors_of_variables.hxx"
+
+namespace inferno {
+namespace inference {
 
 
-namespace opengm {
-
-
-
-/// A fremework for move making algorithms
-template<class GM>
+/** \brief A helper class for move making algorithms.
+    
+    With Movemaker one can compute optimal moves of a 
+    subset of variables.
+    Furthermore one can evaluate the energy
+    of a move without doing the actual move.
+    
+    \ingroup inference_utilities
+*/
+template<class MODEL>
 class Movemaker {
+
 public:
 
-  
+    /** \brief Rebind the Model to get the Movemaker class for a different 
+        Model Type.
+    */
+    template<class _MODEL>
+        struct RebindGm{
+        /** \var typedef type 
+            \brief Movemaker type for new model type_MODEL
+        */
+        typedef Movemaker<_MODEL> type;
+    };
+
+    typedef MODEL Model;
 
 
-   template<class _GM>
-   struct RebindGm{
-      typedef Movemaker<_GM> type;
-   };
+    Movemaker(const Model &); 
+    template<class StateIterator>
 
+    ValueType value() const{
+        return energy_;
+    }
 
+    template<class IndexIterator, class StateIterator>
+    ValueType valueAfterMove(IndexIterator, IndexIterator, StateIterator);
 
-   Movemaker(const GraphicalModelType&); 
-   template<class StateIterator>
-   Movemaker(const GraphicalModelType&, StateIterator); 
-   ValueType value() const;
-   template<class IndexIterator, class StateIterator>
-   ValueType valueAfterMove(IndexIterator, IndexIterator, StateIterator);
-   const LabelType& state(const size_t) const;
-   LabelIterator stateBegin() const;
-   LabelIterator stateEnd() const;
-   void reset();
-   template<class StateIterator>
-   void initialize(StateIterator);
-   template<class IndexIterator, class StateIterator>
-   ValueType move(IndexIterator, IndexIterator, StateIterator);
-   template<class ACCUMULATOR, class IndexIterator>
-   ValueType moveOptimally(IndexIterator, IndexIterator);
+    DiscreteLabel state(const size_t vi) const{
+        return state_[vi];
+    }
+
+    void reset();
+    template<class CONF_MAP>
+    void initialize(const CONF_MAP &);
+    template<class IndexIterator, class StateIterator>
+    ValueType move(IndexIterator, IndexIterator, StateIterator);
+    template<class IndexIterator>
+    ValueType moveOptimally(IndexIterator, IndexIterator);
 
 private:
+    typedef typename MODEL:: template VariableMap<DiscreteLabel> VarMap;
 
-   template<class FactorIndexIterator>
-   ValueType evaluateFactors(FactorIndexIterator, FactorIndexIterator, const std::vector<LabelType>&) const;
 
-   const GraphicalModelType& gm_;
-   std::vector<std::set<size_t> > factorsOfVariable_;
-   std::vector<LabelType> state_;
-   std::vector<LabelType> stateBuffer_; // always equal to state_ (invariant)
-   ValueType energy_; // energy of state state_ (invariant)
+    template<class FactorIndexIterator>
+    ValueType evaluateFactors(FactorIndexIterator, FactorIndexIterator, const std::vector<DiscreteLabel>&) const;
+
+    const Model & model_;
+    FactorsOfVariables<Model> factorsOfVariables_;
+    VarMap state_;
+    VarMap stateBuffer_; // always equal to state_ (invariant)
+    VarMap bestStateBuffer_; // used in moveOptimaly
+    ValueType energy_; // energy of state state_ (invariant)
+
+    inferno::SmallVector<DiscreteLabel> currentFState_,destFState_; // buffers for the factors  configs
+
+    inferno::FactorsOfMultipleVariables<Model> facToRecomp_;
 };
 
 
 
-template<class GM>
-Movemaker<GM>::Movemaker
+template<class MODEL>
+Movemaker<MODEL>::Movemaker
 (
-   const GraphicalModelType& gm
+   const Model & model
 )
-:  gm_(gm),
-   factorsOfVariable_(gm.numberOfVariables()),
-   state_(gm.numberOfVariables()),
-   stateBuffer_(gm.numberOfVariables()),
-   energy_(gm.evaluate(state_.begin()))
+:  model_(model),
+   factorsOfVariables_(model),
+   state_(model,0),
+   stateBuffer_(model),
+   bestStateBuffer_(model),
+   energy_(model.eval(state_)),
+   currentFState_(),
+   destFState_(),
+   facToRecomp_(model, factorsOfVariables_)
 {
-   for (size_t f = 0; f < gm.numberOfFactors(); ++f) {
-      for (size_t v = 0; v < gm[f].numberOfVariables(); ++v) {
-         factorsOfVariable_[gm[f].variableIndex(v)].insert(f);
-      }
-   }
+    const auto maxArity = model_.maxArity();
+    currentFState_.resize(maxArity);
+    destFState_.resize(maxArity);
 }
 
-template<class GM>
-template<class StateIterator>
-Movemaker<GM>::Movemaker
-(
-   const GraphicalModelType& gm,
-   StateIterator it
-)
-:  gm_(gm),
-   factorsOfVariable_(gm.numberOfVariables()),
-   state_(gm.numberOfVariables()),
-   stateBuffer_(gm.numberOfVariables()),
-   energy_(gm.evaluate(it)) // fails if *it is out of bounds
-{
-   for (size_t j = 0; j < gm.numberOfVariables(); ++j, ++it) {
-      state_[j] = *it;
-      stateBuffer_[j] = *it;
-   }
-   for (size_t f = 0; f < gm.numberOfFactors(); ++f) {
-      for (size_t v = 0; v < gm[f].numberOfVariables(); ++v) {
-         factorsOfVariable_[gm[f].variableIndex(v)].insert(f);
-      }
-   }
-}
 
-template<class GM>
-template<class StateIterator>
-void Movemaker<GM>::initialize
+template<class MODEL>
+template<class CONF_MAP>
+void Movemaker<MODEL>::initialize
 (
-   StateIterator it
+   const CONF_MAP & conf
 ) {
-   energy_ = gm_.evaluate(it); // fails if *it is out of bounds
-   for (size_t j = 0; j < gm_.numberOfVariables(); ++j, ++it) {
-      state_[j] = *it;
-      stateBuffer_[j] = *it;
+   energy_ = model_.eval(conf); 
+   for (const auto vi : model_.varibleIds()) {
+      state_[vi] = conf[vi];
+      stateBuffer_[vi] = conf[vi];
    }
 }
 
-template<class GM>
+template<class MODEL>
 void
-Movemaker<GM>::reset() {
-   for (size_t j = 0; j < gm_.numberOfVariables(); ++j) {
-      state_[j] = 0;
-      stateBuffer_[j] = 0;
+Movemaker<MODEL>::reset() {
+   for (const auto vi : model_.varibleIds()) {
+      state_[vi] = 0;
+      stateBuffer_[vi] = 0;
    }
-   energy_ = gm_.evaluate(state_.begin());
+   energy_ = model_.eval(state_);
 }
 
-template<class GM>
-inline typename Movemaker<GM>::ValueType
-Movemaker<GM>::value() const {
-   return energy_;
-}
 
-template<class GM>
+
+template<class MODEL>
 template<class IndexIterator, class StateIterator>
-typename Movemaker<GM>::ValueType
-Movemaker<GM>::valueAfterMove
+ValueType
+Movemaker<MODEL>::valueAfterMove
 (
    IndexIterator begin,
    IndexIterator end,
-   StateIterator destinationState
+   StateIterator destLabels
 ) { 
-   ValueType destinationValue;
-   if(meta::Compare<OperatorType, opengm::Multiplier>::value){
-      //Partial update for multiplication is not numrical stabel! That why recalculate the objective 
 
-      // set stateBuffer_ to destinationState, and determine factors to recompute
-      for (IndexIterator it = begin; it != end; ++it, ++destinationState) {
-         stateBuffer_[*it] = *destinationState;
-      }
-      // evaluate destination state
-      destinationValue = gm_.evaluate(stateBuffer_); 
-      // restore stateBuffer_
-      for (IndexIterator it = begin; it != end; ++it) {
-         stateBuffer_[*it] = state_[*it];
-      }
-   }else{
-      // do partial update 
+    // do partial update 
 
-      // set stateBuffer_ to destinationState, and determine factors to recompute
-      std::set<size_t> factorsToRecompute;
-      for (IndexIterator it = begin; it != end; ++it, ++destinationState) {
-         OPENGM_ASSERT(*destinationState < gm_.numberOfLabels(*it));
-         if (state_[*it] != *destinationState) {
-            OPENGM_ASSERT(*destinationState < gm_.numberOfLabels(*it));
-            stateBuffer_[*it] = *destinationState;
-            std::set<size_t> tmpSet;
-            std::set_union(factorsToRecompute.begin(), factorsToRecompute.end(),
-                           factorsOfVariable_[*it].begin(), factorsOfVariable_[*it].end(),
-                           std::inserter(tmpSet, tmpSet.begin()));
-            factorsToRecompute.swap(tmpSet);
-         }
-      }
-      // \todo consider buffering the values of ALL factors at the current state!
-      destinationValue = energy_;
-      for (std::set<size_t>::const_iterator it = factorsToRecompute.begin(); it != factorsToRecompute.end(); ++it) {
-         OPENGM_ASSERT(*it < gm_.numberOfFactors());
-         // determine current and destination state of the current factor
-         std::vector<size_t> currentFactorState(gm_[*it].numberOfVariables());
-         std::vector<size_t> destinationFactorState(gm_[*it].numberOfVariables());
-         for (size_t j = 0; j < gm_[*it].numberOfVariables(); ++j) {
-            currentFactorState[j] = state_[gm_[*it].variableIndex(j)];
-            OPENGM_ASSERT(currentFactorState[j] < gm_[*it].numberOfLabels(j));
-            destinationFactorState[j] = stateBuffer_[gm_[*it].variableIndex(j)];
-            OPENGM_ASSERT(destinationFactorState[j] < gm_[*it].numberOfLabels(j));
-         }
-         OperatorType::op(destinationValue, gm_[*it](destinationFactorState.begin()), destinationValue);
-         OperatorType::iop(destinationValue, gm_[*it](currentFactorState.begin()), destinationValue);
-      }
-      // restore stateBuffer_
-      for (IndexIterator it = begin; it != end; ++it) {
-         stateBuffer_[*it] = state_[*it];
-      }
-   }
-   return destinationValue;
+    // set stateBuffer_ to destLabels, and determine factors to recompute
+    for (auto it = begin; it != end; ++it, ++destLabels) {
+        const auto vi = *it;
+        const auto dLabel = *destLabels;
+        if (state_[vi] != dLabel) {
+            stateBuffer_[vi] = dLabel;
+        }
+    }
+    facToRecomp_.reset();
+    facToRecomp_.addVariables(begin, end);
+
+    // \todo consider buffering the values of ALL factors at the current state!
+    ValueType destinationValue = energy_;
+
+
+
+    for (const auto fi: facToRecomp_) {
+
+        const auto factor = model_[fi];
+        factor->getFactorConf(state_, currentFState_.begin());
+        factor->getFactorConf(stateBuffer_, destFState_.begin());
+        destinationValue -= factor->eval(currentFState_.data());
+        destinationValue += factor->eval(destFState_.data());
+    }
+
+    // restore stateBuffer_
+    for (auto  it = begin; it != end; ++it) {
+        stateBuffer_[*it] = state_[*it];
+    }
+
+    return destinationValue;
 }
 
-template<class GM>
+template<class MODEL>
 template<class IndexIterator, class StateIterator>
-inline typename Movemaker<GM>::ValueType
-Movemaker<GM>::move
+inline ValueType
+Movemaker<MODEL>::move
 (
    IndexIterator begin,
    IndexIterator end,
@@ -214,144 +194,108 @@ Movemaker<GM>::move
 }
 
 
-/// for a subset of variables, move to a labeling that is optimal w.r.t. ACCUMULATOR
+/// for a subset of variables, move to a labeling that is optimal 
 /// \param variableIndices random access iterator to the beginning of a sequence of variable indices
 /// \param variableIndicesEnd random access iterator to the end of a sequence of variable indices
 /// \return new value
-template<class GM>
-template<class ACCUMULATOR, class IndexIterator>
-inline typename Movemaker<GM>::ValueType
-Movemaker<GM>::moveOptimally
+template<class MODEL>
+template<class IndexIterator>
+inline ValueType
+Movemaker<MODEL>::moveOptimally
 (
-   IndexIterator variableIndices,
-   IndexIterator variableIndicesEnd
+    IndexIterator variableIndices,
+    IndexIterator variableIndicesEnd
 ) {
-   // determine factors to recompute
-   std::set<size_t> factorsToRecompute;
-   for (IndexIterator it = variableIndices; it != variableIndicesEnd; ++it) {
-      std::set<size_t> tmpSet;
-      std::set_union(factorsToRecompute.begin(), factorsToRecompute.end(),
-         factorsOfVariable_[*it].begin(), factorsOfVariable_[*it].end(),
-         std::inserter(tmpSet, tmpSet.begin()));
-      factorsToRecompute.swap(tmpSet);
-   }
+    // determine factors to recompute
+    facToRecomp_.reset();
+    facToRecomp_.addVariables(variableIndices, variableIndicesEnd);
 
-   // find an optimal move and the corresponding energy of factors to recompute
-   size_t numberOfVariables = std::distance(variableIndices, variableIndicesEnd);
-   ValueType initialEnergy = evaluateFactors(
-      factorsToRecompute.begin(),
-      factorsToRecompute.end(),
-      state_);
-   ValueType bestEnergy = initialEnergy;
-   std::vector<size_t> bestState(numberOfVariables);
-   for (size_t j=0; j<numberOfVariables; ++j) {
-      const size_t vi = variableIndices[j];
-      stateBuffer_[vi] = 0;
-   }
-   for (;;) {
-      // compute energy
-      ValueType energy = evaluateFactors(
-         factorsToRecompute.begin(),
-         factorsToRecompute.end(),
-         stateBuffer_);
-      if(ACCUMULATOR::bop(energy, bestEnergy)) {
-         // update energy and state
-         bestEnergy = energy;
-         for (size_t j = 0; j < numberOfVariables; ++j) {
-            bestState[j] = stateBuffer_[variableIndices[j]];
-         }
-      }
-      // increment buffered state
-      for (size_t j = 0; j < numberOfVariables; ++j) {
-         const size_t vi = variableIndices[j];
-         if (stateBuffer_[vi] < gm_.numberOfLabels(vi) - 1) {
-            ++stateBuffer_[vi];
-            break;
-         } else {
-            if (j < numberOfVariables - 1) {
-               stateBuffer_[vi] = 0;
-            } else {
-               goto overflow;
+    // find an optimal move and the corresponding energy of factors to recompute
+    size_t numberOfVariables = std::distance(variableIndices, variableIndicesEnd);
+    ValueType initialEnergy = evaluateFactors(facToRecomp_.begin(),facToRecomp_.end(),state_);
+
+    ValueType bestEnergy = initialEnergy;
+
+
+    for (size_t j=0; j<numberOfVariables; ++j) {
+        const size_t vi = variableIndices[j];
+        stateBuffer_[vi] = 0;
+    }
+    for (;;) {
+        // compute energy
+        ValueType energy = evaluateFactors(facToRecomp_.begin(),facToRecomp_.end(),stateBuffer_);
+        if(energy<bestEnergy) {
+            // update energy and state
+            bestEnergy = energy;
+            for (size_t j = 0; j < numberOfVariables; ++j) {
+                bestStateBuffer_[j] = stateBuffer_[variableIndices[j]];
             }
-         }
-      }
-   }
-overflow:
-   ;
+        }
+        // increment buffered state
+        for (size_t j = 0; j < numberOfVariables; ++j) {
+            const size_t vi = variableIndices[j];
+            if (stateBuffer_[vi] < model_.nLabels(vi) - 1) {
+                ++stateBuffer_[vi];
+                break;
+            } 
+            else {
+                if (j < numberOfVariables - 1) {
+                    stateBuffer_[vi] = 0;
+                } 
+                else {
+                    goto overflow;
+                }
+            }
+        }
+    }
+    overflow:
+        ;
 
-   if (ACCUMULATOR::bop(bestEnergy, initialEnergy)) {
-      // update state_ and stateBuffer_
-      for (size_t j = 0; j < numberOfVariables; ++j) {
-         const size_t vi = variableIndices[j];
-         state_[vi] = bestState[j];
-         stateBuffer_[vi] = bestState[j];
-      }
-      // update energy
-      if(meta::And<
-      meta::Compare<ACCUMULATOR, opengm::Maximizer>::value,
-      meta::Compare<OperatorType, opengm::Multiplier>::value
-      >::value && energy_ == static_cast<ValueType> (0)) {
-         OPENGM_ASSERT(state_.size() == gm_.numberOfVariables());
-         energy_ = gm_.evaluate(state_.begin());
-      }
-      else {
-         OperatorType::iop(initialEnergy, energy_); // energy_ -= initialEnergy
-         OperatorType::op(bestEnergy, energy_); // energy_ += bestEnergy
-      }
-   } else {
-      // restore stateBuffer_
-      for (size_t j = 0; j < numberOfVariables; ++j) {
-         const size_t vi = variableIndices[j];
-         stateBuffer_[vi] = state_[vi];
-      }
-   }
+    if (bestEnergy < initialEnergy ) {
+        // update state_ and stateBuffer_
+        for (size_t j = 0; j < numberOfVariables; ++j) {
+            const size_t vi = variableIndices[j];
+            state_[vi] = bestStateBuffer_[j];
+            stateBuffer_[vi] = bestStateBuffer_[j];
+        }
+        energy_ -= initialEnergy;
+        energy_ += bestEnergy;
+
+    } 
+    else {
+        // restore stateBuffer_
+        for (size_t j = 0; j < numberOfVariables; ++j) {
+            const size_t vi = variableIndices[j];
+            stateBuffer_[vi] = state_[vi];
+        }
+    }
 
    return energy_;
 }
 
 
-template<class GM>
-inline const typename Movemaker<GM>::LabelType&
-Movemaker<GM>::state
-(
-   const size_t variableIndex
-) const {
-   OPENGM_ASSERT(variableIndex < state_.size());
-   return state_[variableIndex];
-}
 
-template<class GM>
-inline typename Movemaker<GM>::LabelIterator
-Movemaker<GM>::stateBegin() const {
-   return state_.begin();
-}
-
-template<class GM>
-inline typename Movemaker<GM>::LabelIterator
-Movemaker<GM>::stateEnd() const {
-   return state_.end();
-}
-
-template<class GM>
+template<class MODEL>
 template<class FactorIndexIterator>
-inline typename Movemaker<GM>::ValueType
-Movemaker<GM>::evaluateFactors
+inline ValueType
+Movemaker<MODEL>::evaluateFactors
 (
-   FactorIndexIterator begin,
-   FactorIndexIterator end,
-   const std::vector<LabelType>& state
+    FactorIndexIterator begin,
+    FactorIndexIterator end,
+    const std::vector<DiscreteLabel>& state
 ) const {
-   ValueType value = OperatorType::template neutral<ValueType>();
-   for(; begin != end; ++begin) {
-      std::vector<size_t> currentFactorState(gm_[*begin].numberOfVariables());
-      for (size_t j=0; j<gm_[*begin].numberOfVariables(); ++j) {
-         currentFactorState[j] = state[gm_[*begin].variableIndex(j)];
-      }
-      OperatorType::op(value, gm_[*begin](currentFactorState.begin()), value);
-   }
-   return value;
+    ValueType value = ValueType(0.0);
+    for(; begin != end; ++begin) {
+        const auto fi = *begin;
+        const auto factor = model_[fi];
+        const auto arity = factor->arity();
+        factor->getFactorConf(state, currentFState_.begin());
+        value += factor->eval(currentFState_.data());
+    }
+    return value;
 }
 
-} // namespace opengm
+} // end namespace inference
+} // end inference namespace inferno
 
-#endif // #ifndef OPENGM_MOVEMAKER_HXX
+#endif // #ifndef INFERNO_INFERENCE_UTILITIES_MOVEMAKER_HXX

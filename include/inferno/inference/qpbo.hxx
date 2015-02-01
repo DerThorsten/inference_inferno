@@ -4,6 +4,9 @@
 #include "inferno/inference/base_discrete_inference.hxx"
 #include <inferno_externals/qpbo/QPBO.h>
 
+#include "inferno/inference/utilities/fix-fusion/higher-order-energy.hpp"
+#include "inferno/inference/utilities/fix-fusion/clique.hpp"
+
 namespace inferno{
 namespace inference{
 
@@ -13,7 +16,9 @@ namespace inference{
     {
         /// using probeing technique
         bool useProbeing;
-        /// forcing strong persistency
+        /// \brief forcing strong persistency
+        /// so far it is NOT recommended to
+        /// enable this option
         bool strongPersistency;
         /// using improving technique
         bool useImproveing;
@@ -26,6 +31,12 @@ namespace inference{
         }
     };
 
+    /** \brief Qpbo algorithm
+        Qpbo for second order graphical models with binary
+        variables.
+
+        \ingroup discrete_inference partial_optimal_discrete_inference approximate_discrete_inference
+    */
     template<class MODEL>
     class Qpbo : public DiscreteInferenceBase<Qpbo<MODEL>, MODEL > {
 
@@ -41,43 +52,54 @@ namespace inference{
             qpbo_(NULL),
             constTerm_(0.0),
             bound_(-1.0*std::numeric_limits<ValueType>::infinity()),
-            value_( 1.0*std::numeric_limits<ValueType>::infinity())
+            value_( 1.0*std::numeric_limits<ValueType>::infinity()),
+            hoe_()
         {
             if(options_.semiRing != MinSum)
                 throw NotImplementedException("only MinSum is currently implemented");
 
-            if(model_->denseVariableIds()){
-                const auto minVarId = model_->minVarId();
-                const auto nVar = model_->nVariables();
-                INFERNO_CHECK_OP(model_->maxArity(),<=,2, "qpbo allows only models with a maximal arity of 2");
-                qpbo_ = new QpboSolver(nVar, model_->nPairwiseFactors());
-                qpbo_->AddNode(nVar);
+            const auto maxArity = model_->maxArity();
+            if(maxArity<=2){
+                if(model_->denseVariableIds()){
+                    const auto minVarId = model_->minVarId();
+                    const auto nVar = model_->nVariables();             
+                    qpbo_ = new QpboSolver(nVar, model_->nPairwiseFactors());
+                    qpbo_->AddNode(nVar);
 
-                for(const auto factor : model_->factors()){
-                    const auto arity = factor->arity();
-                    if(arity == 0){
-                        constTerm_ += factor->eval(0l);
-                    }
-                    else if(arity == 1){
-                        const int qpboVi0 = factor->vi(0)-minVarId;
-                        qpbo_->AddUnaryTerm(qpboVi0, factor->eval(0l), factor->eval(1l));
-                    }
-                    else if(arity == 2){
-                        const int qpboVi0 = factor->vi(0)-minVarId;
-                        const int qpboVi1 = factor->vi(1)-minVarId;
+                    for(const auto factor : model_->factors()){
+                        const auto arity = factor->arity();
+                        if(arity == 0){
+                            constTerm_ += factor->eval(0l);
+                        }
+                        else if(arity == 1){
+                            const int qpboVi0 = factor->vi(0)-minVarId;
+                            qpbo_->AddUnaryTerm(qpboVi0, factor->eval(0l), factor->eval(1l));
+                        }
+                        else if(arity == 2){
+                            const int qpboVi0 = factor->vi(0)-minVarId;
+                            const int qpboVi1 = factor->vi(1)-minVarId;
 
-                        qpbo_->AddPairwiseTerm(qpboVi0, qpboVi1,
-                                               factor->eval(0,0), factor->eval(0,1),
-                                               factor->eval(1,0), factor->eval(1,1));
+                            qpbo_->AddPairwiseTerm(qpboVi0, qpboVi1,
+                                                   factor->eval(0,0), factor->eval(0,1),
+                                                   factor->eval(1,0), factor->eval(1,1));
+                        }
+                        else
+                            throw RuntimeError("INTERNAL ERROR: model_.maxArity() must have a bug");
                     }
-                    else
-                        throw RuntimeError("INTERNAL ERROR: model_.maxArity() must have a bug");
+                    qpbo_->MergeParallelEdges();
                 }
-                qpbo_->MergeParallelEdges();
+                else{
+                    throw NotImplementedException("models with non-dense variable ids are not yet supported");
+                }
             }
             else{
-                throw NotImplementedException("models with non-dense variable ids are not yet supported");
+                if(model_->denseVariableIds()){
+                }
+                else{
+                    throw NotImplementedException("models with non-dense variable ids are not yet supported");
+                }
             }
+            
         }
 
         ~Qpbo(){
@@ -124,6 +146,8 @@ namespace inference{
         ValueType     constTerm_;
         ValueType     bound_;
         ValueType     value_;
+        HigherOrderEnergy<ValueType, 10> hoe_;
+
     };
 
 } // end namespace inference

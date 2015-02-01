@@ -13,12 +13,15 @@
 #ifndef INFERNO_INFERNO_HXX
 #define INFERNO_INFERNO_HXX
 
+
+#include "inferno/utilities/marray_wrap.hxx"
+
 #include <cstdint>
 #include <stdexcept>
 #include <sstream>
 #include <vector>
 #include <limits>
-
+#include <cmath>
 
 
 
@@ -206,6 +209,8 @@ typedef int64_t LabelType;
 
 
 typedef int64_t Vi;
+typedef int64_t Fi;
+
 typedef LabelType DiscreteLabel;
 typedef double  ContinousLabel;
 typedef double  FunctionValueType;
@@ -214,6 +219,10 @@ typedef double ValueType;
 
 typedef std::vector<DiscreteLabel > DiscreteLabelVec;
 typedef std::vector<ContinousLabel > ContinousLabelVec;
+
+
+typedef andres::View<ValueType> ValueMarrayView;
+typedef andres::Marray<ValueType> ValueMarray;
 
 /// \brief The semi ring on which inference is performed
 enum SemiRing{

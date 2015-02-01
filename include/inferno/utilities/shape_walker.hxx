@@ -11,6 +11,24 @@ namespace inferno{
 
 
 
+/** \brief helper class to iterate over all
+    configurations of a certain shape.
+
+    Usually this class is
+    used to build general iterators
+    for discrete factors and discrete value tables.
+
+    \warning Using this class to iterate over
+    all configurations is way more expensive
+    then nested for loops.
+    But since these nested for loops cannot 
+    be written down for any arity, we
+    need this call as fall-back.
+    In inferno, this class is mostly used
+    for factors and value tables 
+    with an arity larger then 5.
+
+*/
 template<class SHAPE_FUNCTOR, class OUT_ITER>
 class ShapeWalker
 {
@@ -62,6 +80,24 @@ private:
 };
 
 
+/** \brief forward iterate over all
+    configurations of a certain shape.
+
+    Usually this class is
+    used to build general iterators
+    for discrete factors and discrete value tables.
+
+    \warning Using this class to iterate over
+    all configurations is way more expensive
+    then nested for loops.
+    But since these nested for loops cannot 
+    be written down for any arity, we
+    need this call as fall-back.
+    In inferno, this class is mostly used
+    for factors and value tables 
+    with an arity larger then 5.
+
+*/
 template<class SHAPE_FUNCTOR>
 class ConfIterator
   : public boost::iterator_facade<

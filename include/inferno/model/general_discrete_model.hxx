@@ -9,11 +9,13 @@
 namespace inferno{
 
 
+/** \brief Factor class for the GeneralDiscreteGraphicalModel
+*/
 class GeneralDiscreteGraphicalModelFactor : public DiscreteFactorBase<GeneralDiscreteGraphicalModelFactor> {
 public:
 
     template<class VI_T>
-    GeneralDiscreteGraphicalModelFactor(const DiscreteValueTable * vt,
+    GeneralDiscreteGraphicalModelFactor(const value_tables::DiscreteValueTableBase * vt,
                    std::initializer_list<VI_T> list)
     :   vis_(list),
         vt_(vt){
@@ -21,14 +23,14 @@ public:
     }
 
     template<class VI_ITER>
-    GeneralDiscreteGraphicalModelFactor(const DiscreteValueTable * vt,
+    GeneralDiscreteGraphicalModelFactor(const value_tables::DiscreteValueTableBase * vt,
                    const VI_ITER viBegin, 
                    const VI_ITER viEnd)
     :   vis_(viBegin, viEnd),
         vt_(vt){
 
     }
-    const DiscreteValueTable * valueTable()const{
+    const value_tables::DiscreteValueTableBase * valueTable()const{
         return vt_;
     }   
     size_t arity()const{
@@ -44,13 +46,18 @@ public:
 
 private:
     const std::vector<Vi> vis_;
-    const DiscreteValueTable * vt_;
+    const value_tables::DiscreteValueTableBase * vt_;
 
 };
 
 
 
+/** \brief  Very flexible graphical
+    model.
 
+    \ingroup models
+    \ingroup discrete_models
+*/
 class GeneralDiscreteGraphicalModel : 
 public DiscreteGraphicalModelBase<GeneralDiscreteGraphicalModel>{
 
@@ -60,7 +67,41 @@ public:
     typedef boost::counting_iterator<Vi> VariableIdIter;
     typedef const GeneralDiscreteGraphicalModelFactor * FactorProxy;
     typedef FactorProxy FactorProxyRef;
-    //
+    
+    /** \brief container which can store an instance
+        of T for any variable id.
+
+        \warning changing the number of the variables in
+        this model will invalidate any instance VariableMap.
+    */
+    template<class T>
+    class VariableMap : public std::vector<T>{
+    public:
+        VariableMap(const GeneralDiscreteGraphicalModel & m, const T & val)
+        : std::vector<T>(m.nVariables(),val){
+        }//
+        VariableMap(const GeneralDiscreteGraphicalModel & m)
+        : std::vector<T>(m.nVariables()){
+        }
+    };
+    /** \brief container which can store an instance
+        of T for any factor id.
+
+        \warning Adding additional factors or changing the number of the factors in
+        this model will invalidate any instance FactorMap.
+    */
+    template<class T>
+    class FactorMap : public std::vector<T>{
+    public:
+        FactorMap(const GeneralDiscreteGraphicalModel & m, const T & val)
+        : std::vector<T>(m.nFactors(),val){
+        }
+        FactorMap(const GeneralDiscreteGraphicalModel & m)
+        : std::vector<T>(m.nFactors()){
+        }
+    };
+
+
     FactorIdIter factorIdsBegin()const{
         return FactorIdIter(0);
     }
@@ -89,7 +130,7 @@ public:
         valueTables_(),
         factors_(){
     }
-    const uint64_t addValueTable( DiscreteValueTable * vt){
+    const uint64_t addValueTable( value_tables::DiscreteValueTableBase * vt){
         valueTables_.push_back(vt);
         return valueTables_.size()-1;
     }   
@@ -106,7 +147,7 @@ public:
 private:
     const uint64_t nVar_;
     std::vector<LabelType>              numberOfLabels_;
-    std::vector<DiscreteValueTable * >  valueTables_;
+    std::vector<value_tables::DiscreteValueTableBase * >  valueTables_;
     std::vector<GeneralDiscreteGraphicalModelFactor>         factors_;
     
 

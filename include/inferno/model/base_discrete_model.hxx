@@ -25,7 +25,7 @@ public:
     ModelsVariableIds(const MODEL & model) 
     :   model_(model){
 
-    }
+    }//
     typedef typename MODEL::VariableIdIter const_iterator;
     const_iterator begin()const{
         return model_.variableIdsBegin();
@@ -46,7 +46,7 @@ public:
     ModelsFactorIds(const MODEL & model) 
     :   model_(model){
 
-    }
+    }//
     typedef typename MODEL::FactorIdIter const_iterator;
     const_iterator begin()const{
         return model_.factorIdsBegin();
@@ -67,7 +67,7 @@ struct FactorIdToFactorProxy{
     FactorIdToFactorProxy(const MODEL & model)
     : model_(&model){
 
-    }
+    }//
     result_type operator()(const uint64_t fId)const{
         return model_->operator[](fId);
     }
@@ -84,7 +84,7 @@ public:
     ModelsFactors(const MODEL & model) 
     :   model_(model){
 
-    }
+    }//
     typedef typename MODEL::FactorIdIter FactorIdIter;
     typedef FactorIdToFactorProxy<MODEL> UnaryFunction;
     typedef boost::transform_iterator<UnaryFunction, FactorIdIter> const_iterator;
@@ -117,25 +117,15 @@ public:
     template<class T>
     double eval(std::initializer_list<T> conf)const{
         return model().eval(conf.begin());
-    }
+    }//
 
 
 
 
-    /**
-        this function might change since
-        we need 2 evals:
-        One where the conf iterator itself
-        has the gaps the ids have.
-        This means one would use
-        conf[varId].
+    template<class CONFIG>
+    double eval(CONFIG conf)const{
 
-    */
-    template<class CONF_ITER>
-    double eval(CONF_ITER conf)const{
 
-        INFERNO_CHECK(model().denseVariableIds(),"this will be fixed soon ");
-        INFERNO_CHECK_OP(model().minVarId(),==,0,"this will be fixed soon ");
 
         double sum = 0.0;
 
@@ -253,6 +243,15 @@ private:
     }
 };
 
+
+template<class MODEL>
+class FactorsOfVariable{
+    
+public:
+
+private:
+
+};
 
 
 }

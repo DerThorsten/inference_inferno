@@ -5,13 +5,22 @@
 
 namespace inferno{
 
-/** \namespace inference
-    subnamespace of inferno
+/** \namespace inferno::inference
+    \brief subnamespace of inferno
     where all inference related
     functionality is implemented.
+
+    All inference algorithms and related
+    functionality is implemented 
+    within inferno::inference.
 */
 namespace inference{
 
+    /** \brief base class for inference options
+
+        any options object of an inference algorithm
+        should derive from this class.
+    */
     class InferenceOptions{
     public:
         InferenceOptions(const SemiRing sr = MinSum)
@@ -20,6 +29,15 @@ namespace inference{
         SemiRing semiRing;
     };
 
+    /** \brief base class for any discrete inference class
+        implemented with
+        <a href="http://en.wikipedia.org/wiki/Curiously_recurring_template_pattern"> CRT-pattern</a>.  
+    
+        Any discrete inference function should derive from
+        this class with <a href="http://en.wikipedia.org/wiki/Curiously_recurring_template_pattern"> CRT-pattern</a>.
+        
+
+    */
     template<class INFERENCE, class MODEL>
     class DiscreteInferenceBase{
 
