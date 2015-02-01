@@ -96,14 +96,10 @@ if(WITH_CPLEX)
     # add_definitions(-DILOUSESTL) redundant according to http://www-01.ibm.com/support/docview.wss?uid=swg21399983
     add_definitions(-DIL_STD)
 
-
-
-    if(WITH_CPLEX) 
-        if(WIN32)
-            SET(CPLEX_AND_AUX_LIBRARIES ${CPLEX_LIBRARIES} )
-        else()
-            SET(CPLEX_AND_AUX_LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${CPLEX_LIBRARIES} )
-        endif()
+    if(WIN32)
+        SET(CPLEX_AND_AUX_LIBRARIES ${CPLEX_LIBRARIES} )
+    else()
+        SET(CPLEX_AND_AUX_LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${CPLEX_LIBRARIES} )
     endif()
 
 
