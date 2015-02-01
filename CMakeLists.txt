@@ -20,7 +20,7 @@ include(INFERNO_ADD_NUMPY_MODULE)
 project(inferos)
 set (INFERNO_VERSION_MAJOR 0)
 set (INFERNO_VERSION_MINOR 2)
-set (INFERNO_VERSION_PATCH 0)
+set (INFERNO_VERSION_PATCH 1)
 
 #-------------------------------------------------------------------------------------------------------------------
 # c++ 11
