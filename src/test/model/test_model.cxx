@@ -28,14 +28,20 @@ BOOST_AUTO_TEST_CASE(TestImplicitMulticutModel)
     //  2 | 3
 
     ImplicitMulticutModel model(nVar);
+
+    BOOST_CHECK_EQUAL(model.minVarId(),0);
+    BOOST_CHECK_EQUAL(model.maxVarId(),3);
         
     model.addFactor(0,1, 1.0);
     model.addFactor(2,3, 1.0);
     model.addFactor(0,2, 1.0);
     model.addFactor(1,3, 1.0);
 
+    BOOST_CHECK_EQUAL(model.minFactorId(),0);
+    BOOST_CHECK_EQUAL(model.maxFactorId(),3);
+
     for(auto fiter=model.factorIdsBegin(); fiter != model.factorIdsEnd(); ++fiter){
-        std::cout<<*fiter<<" "<<io::varibleIds(model[*fiter])<<"\n"<<io::valueTable(model[*fiter])<<"\n";
+        //std::cout<<*fiter<<" "<<io::varibleIds(model[*fiter])<<"\n"<<io::valueTable(model[*fiter])<<"\n";
     }
     
 
@@ -108,19 +114,11 @@ BOOST_AUTO_TEST_CASE(TestModel)
     // second order
     for(Vi vi=0; vi<nVar-1; ++vi){
         auto beta = generator( );
-        std::cout<<beta<<"\n";
         auto vti = model.addValueTable(new value_tables::PottsValueTable(nLabes, beta));
         auto fi = model.addFactor(vti ,{vi, vi+1});
 
         const auto factor = model[fi];
 
-
-        std::cout<<"conf iter\n";
-        for(const auto & conf : factor->confs()){
-            
-            std::cout<<conf<<"\n";
-        }
-        std::cout<<"conf iter done\n";
     }
 
 

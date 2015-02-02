@@ -57,6 +57,9 @@ public DiscreteGraphicalModelBase<ImplicitMulticutModel>{
 
 public:
 
+    const static bool SortedVariableIds = true;
+    const static bool SortedFactorIds = true;
+
     typedef boost::counting_iterator<uint64_t> FactorIdIter;
     typedef boost::counting_iterator<Vi> VariableIdIter;
 

@@ -67,6 +67,10 @@ public:
     typedef boost::counting_iterator<Vi> VariableIdIter;
     typedef const GeneralDiscreteGraphicalModelFactor * FactorProxy;
     typedef FactorProxy FactorProxyRef;
+
+    const static bool SortedVariableIds = true;
+    const static bool SortedFactorIds = true;
+
     
     /** \brief container which can store an instance
         of T for any variable id.
@@ -130,17 +134,17 @@ public:
         valueTables_(),
         factors_(){
     }
-    const uint64_t addValueTable( value_tables::DiscreteValueTableBase * vt){
+    uint64_t addValueTable( value_tables::DiscreteValueTableBase * vt){
         valueTables_.push_back(vt);
         return valueTables_.size()-1;
     }   
     template<class VI_ITER>
-    const uint64_t addFactor(const uint64_t vti , VI_ITER viBegin, VI_ITER viEnd){
+    uint64_t addFactor(const uint64_t vti , VI_ITER viBegin, VI_ITER viEnd){
         factors_.push_back(GeneralDiscreteGraphicalModelFactor(valueTables_[vti], viBegin, viEnd));
         return factors_.size()-1;
     }
     template<class VI_T>
-    const uint64_t addFactor(const uint64_t vti , std::initializer_list<VI_T>  list){
+    uint64_t addFactor(const uint64_t vti , std::initializer_list<VI_T>  list){
         factors_.push_back(GeneralDiscreteGraphicalModelFactor(valueTables_[vti], list));
         return factors_.size()-1;
     }

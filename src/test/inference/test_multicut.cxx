@@ -28,9 +28,6 @@ BOOST_AUTO_TEST_CASE(TestMulticutInferenceTrivial1)
     model.addFactor(0,2, 1.0);
     model.addFactor(1,3, 1.0);
 
-    for(auto fiter=model.factorIdsBegin(); fiter != model.factorIdsEnd(); ++fiter){
-        std::cout<<*fiter<<" "<<io::varibleIds(model[*fiter])<<"\n"<<io::valueTable(model[*fiter])<<"\n";
-    }
 
     typedef ImplicitMulticutModel       Model;
     typedef inference::Multicut<Model>  Solver;
@@ -68,9 +65,6 @@ BOOST_AUTO_TEST_CASE(TestMulticutInferenceTrivial2)
     model.addFactor(0,2, 1.0);
     model.addFactor(1,3, 1.0);
 
-    for(auto fiter=model.factorIdsBegin(); fiter != model.factorIdsEnd(); ++fiter){
-        std::cout<<*fiter<<" "<<io::varibleIds(model[*fiter])<<"\n"<<io::valueTable(model[*fiter])<<"\n";
-    }
 
     typedef ImplicitMulticutModel       Model;
     typedef inference::Multicut<Model>  Solver;
@@ -109,9 +103,7 @@ BOOST_AUTO_TEST_CASE(TestMulticutInferenceTrivial3)
     model.addFactor(0,2, 1.0);
     model.addFactor(1,3, 1.0);
 
-    for(auto fiter=model.factorIdsBegin(); fiter != model.factorIdsEnd(); ++fiter){
-        std::cout<<*fiter<<" "<<io::varibleIds(model[*fiter])<<"\n"<<io::valueTable(model[*fiter])<<"\n";
-    }
+
 
     typedef ImplicitMulticutModel       Model;
     typedef inference::Multicut<Model>  Solver;
@@ -149,9 +141,7 @@ BOOST_AUTO_TEST_CASE(TestMulticutInferenceTrivial4)
     model.addFactor(0,2, 1.0);
     model.addFactor(1,3, 1.0);
 
-    for(auto fiter=model.factorIdsBegin(); fiter != model.factorIdsEnd(); ++fiter){
-        std::cout<<*fiter<<" "<<io::varibleIds(model[*fiter])<<"\n"<<io::valueTable(model[*fiter])<<"\n";
-    }
+
 
     typedef ImplicitMulticutModel       Model;
     typedef inference::Multicut<Model>  Solver;

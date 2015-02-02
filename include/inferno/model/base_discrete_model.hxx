@@ -2,6 +2,7 @@
 #define INFERNO_MODEL_BASE_MODEL_HXX
 
 #include <initializer_list>
+#include <iterator>
 
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/iterator/transform_iterator.hpp>
@@ -14,6 +15,67 @@
 
 
 namespace inferno{
+
+
+    
+/// \cond
+template<class ITER_TAG, bool IS_SORTED>
+struct MinElement;
+
+
+template<class ITER_TAG>
+struct MinElement<ITER_TAG, true>{
+    template<class ITER>
+    static ITER minElement(ITER begin, ITER end){
+        return  begin;
+    }
+};
+template<class ITER_TAG>
+struct MinElement<ITER_TAG, false>{
+    template<class ITER>
+    static ITER minElement(ITER begin, ITER end){
+        return  std::min_element(begin, end);
+    }
+};
+
+
+template<class ITER_TAG, bool IS_SORTED>
+struct MaxElement{
+    template<class ITER>
+    static ITER maxElement(ITER begin, ITER end){
+        return  std::max_element(begin, end);
+    }
+};
+
+
+template< >
+struct MaxElement<std::random_access_iterator_tag, true>{
+    template<class ITER>
+    static ITER maxElement(ITER begin, ITER end){
+        --end;
+        return end;
+    }
+};
+
+template< >
+struct MaxElement<std::bidirectional_iterator_tag, true>{
+    template<class ITER>
+    static ITER maxElement(ITER begin, ITER end){
+        --end;
+        return end;
+    }
+};
+
+
+
+
+
+/// \endcond
+
+
+
+
+
 
 
 /** \brief Proxy class to use range based loop
@@ -106,11 +168,10 @@ private:
 template<class MODEL>
 class DiscreteGraphicalModelBase{
 public:
-        
+
+
+
     typedef FactorIdToFactorProxy<MODEL> U; 
-
-
-
 
 
 
@@ -170,19 +231,56 @@ public:
 
     /** \brief get the minimal variable id in the model
 
+        \warning 
+        - if the graphical model has no variables,
+            calling this function will have undefined behavior.
+        - if MODEL::SortedVariableIds is false, 
+          this default implementation is O(N)
+
+    */
+    Vi minVarId() const{
+        typedef typename std::iterator_traits<typename MODEL::VariableIdIter>::iterator_category  IterTag;
+        return * MinElement<IterTag, MODEL::SortedVariableIds>::minElement(
+            model().variableIdsBegin(), model().variableIdsEnd()
+        );
+    }
+    /** \brief get the maximal variable id in the model
+
+        \warning 
+        - if the graphical model has no variables,
+            calling this function will have undefined behavior.
+        - if MODEL::SortedVariableIds is false, 
+          this default implementation is O(N)
+    */
+    Vi maxVarId() const{
+        typedef typename std::iterator_traits<typename MODEL::VariableIdIter>::iterator_category  IterTag;
+        return * MaxElement<IterTag, MODEL::SortedVariableIds>::maxElement(
+            model().variableIdsBegin(), model().variableIdsEnd()
+        );
+    }
+
+
+    /** \brief get the minimal variable id in the model
+
         \warning if the graphical model has no variables,
         calling this function will have undefined behavior.
     */
-    Vi minVarId() const{
-        return *model().variableIdsBegin();
+    Fi minFactorId() const{
+        typedef typename std::iterator_traits<typename MODEL::FactorIdIter>::iterator_category  IterTag;
+        return * MinElement<IterTag, MODEL::SortedFactorIds>::minElement(
+            model().factorIdsBegin(), model().factorIdsEnd()
+        );
     }
     /** \brief get the maximal variable id in the model
 
         \warning if the graphical model has no variables,
         calling this function will have undefined behavior.
     */
-    Vi maxVarId() const{
-        return * (model().variableIdsBegin() + (model.numberOfVariables()-1));
+    Fi maxFactorId() const{
+        typedef typename std::iterator_traits<typename MODEL::FactorIdIter>::iterator_category  IterTag;
+        return * MaxElement<IterTag, MODEL::SortedFactorIds>::maxElement(
+            model().factorIdsBegin(), model().factorIdsEnd()
+        );
     }
 
     /** check if the variables are dense
@@ -235,6 +333,8 @@ public:
     }
 
 private:
+   
+
     const MODEL & model()const{
         return * static_cast<const MODEL *>(this);
     }

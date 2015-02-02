@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(TestQpboInference)
     // second order
     for(Vi vi=0; vi<nVar-1; ++vi){
         auto beta = generator( );
-        std::cout<<beta<<"\n";
+        //std::cout<<beta<<"\n";
         auto vti = model.addValueTable(new value_tables::PottsValueTable(nLabes, beta));
         auto fi = model.addFactor(vti ,{vi, vi+1});
     }
@@ -69,8 +69,7 @@ BOOST_AUTO_TEST_CASE(TestQpboInference)
     std::vector<LabelType> conf(nVar);
     solver.conf(conf.begin());
 
-    for( auto c : conf)
-        std::cout<<"conf"<<c<<"\n";
+
 }
 
 

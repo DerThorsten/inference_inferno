@@ -97,6 +97,7 @@ namespace inference{
             }
             else{
                 if(model_->denseVariableIds()){
+                    
                 }
                 else{
                     throw NotImplementedException("models with non-dense variable ids are not yet supported");
