@@ -210,6 +210,7 @@ typedef int64_t LabelType;
 
 typedef int64_t Vi;
 typedef int64_t Fi;
+typedef int64_t Vti;
 
 typedef LabelType DiscreteLabel;
 typedef double  ContinousLabel;

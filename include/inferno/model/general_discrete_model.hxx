@@ -14,9 +14,24 @@ namespace inferno{
 class GeneralDiscreteGraphicalModelFactor : public DiscreteFactorBase<GeneralDiscreteGraphicalModelFactor> {
 public:
 
+
+    GeneralDiscreteGraphicalModelFactor()
+    :   vis_(),
+        vt_(NULL){
+
+    }
+
+    //GeneralDiscreteGraphicalModelFactor & operator = (const GeneralDiscreteGraphicalModelFactor & other){
+    //    if(this!= &other){
+    //        vis_ = other.vis_;
+    //        vt_ = other.vt_;
+    //    }
+    //    return *this;
+    //}
+
     template<class VI_T>
     GeneralDiscreteGraphicalModelFactor(const value_tables::DiscreteValueTableBase * vt,
-                   std::initializer_list<VI_T> list)
+                   std::initializer_list<VI_T> list )
     :   vis_(list),
         vt_(vt){
 
@@ -43,9 +58,12 @@ public:
         return vis_[d];
     }
 
-
+    /// \brief not part of the actual api
+    const std::vector<Vi> & visVector()const{
+        return vis_;
+    }
 private:
-    const std::vector<Vi> vis_;
+    std::vector<Vi> vis_;
     const value_tables::DiscreteValueTableBase * vt_;
 
 };

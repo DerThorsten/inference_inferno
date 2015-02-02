@@ -98,7 +98,6 @@ BOOST_AUTO_TEST_CASE(TestModel)
     std::uniform_real_distribution<float> distribution(-1,1); //Values between -1 and 1
     std::mt19937 engine; // Mersenne twister MT19937
     auto generator = std::bind(distribution, engine);
-   
     std::vector<ValueType> values(nLabes); 
     // unary factors
 

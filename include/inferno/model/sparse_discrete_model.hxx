@@ -27,6 +27,8 @@ struct TakeFirst{
     model.
 
     Sparse means variable and factor ids can be sparse and unsorted
+    
+    \todo rename in "editable graphical model"
 
     \ingroup models
     \ingroup discrete_models
@@ -35,10 +37,11 @@ class SparseDiscreteGraphicalModel :
 public DiscreteGraphicalModelBase<SparseDiscreteGraphicalModel>{
 
 private:
-    typedef TakeFirst<Vi, GeneralDiscreteGraphicalModelFactor>  FacStorageKeyAccessor;
-    typedef TakeFirst<Vi, DiscreteLabel>                        NlStorageKeyAccessor;
+    typedef std::pair<GeneralDiscreteGraphicalModelFactor, Vti>     FacVtiPair; 
+    typedef TakeFirst<Vi, FacVtiPair>                               FacStorageKeyAccessor;
+    typedef TakeFirst<Vi, DiscreteLabel>                            NlStorageKeyAccessor;
 
-    typedef std::unordered_map<Fi, GeneralDiscreteGraphicalModelFactor>   FactorStorage;
+    typedef std::unordered_map<Fi, FacVtiPair>                            FactorStorage;
     typedef std::unordered_map<Vi, DiscreteLabel>                         NlStorage;
 public:
    
@@ -113,7 +116,7 @@ public:
 
     FactorProxy operator[](const uint64_t factorId)const{
         const auto it = factors_.find(factorId);
-        return & it->second;
+        return & it->second.first;
     }
 
     LabelType nLabels(const uint64_t variabeId)const{
@@ -133,25 +136,105 @@ public:
         numberOfLabels_[vi] = nl;
     }   
 
-    uint64_t addValueTable( value_tables::DiscreteValueTableBase * vt){
-        //valueTables_.push_back(vt);
-        //return valueTables_.size()-1;
+    Vti addValueTable(const Vti vti,value_tables::DiscreteValueTableBase * vt){
+        valueTables_[vti] = vt;
+        return vti;
     }   
     template<class VI_ITER>
-    uint64_t addFactor(const uint64_t vti , VI_ITER viBegin, VI_ITER viEnd){
-        //factors_.push_back(GeneralDiscreteGraphicalModelFactor(valueTables_[vti], viBegin, viEnd));
-        //return factors_.size()-1;
+    Fi addFactor(const Vti vti, const Fi fi , VI_ITER viBegin, VI_ITER viEnd){
+        INFERNO_CHECK(factors_.find(fi)==factors_.end(), "factor already exists");
+        INFERNO_CHECK(factorsOfValueTables_[vti].find(fi)==factorsOfValueTables_[vti].end(), "factor already exists in vti's factors");
+        factorsOfValueTables_[vti].insert(fi);
+        factors_[fi] = FacVtiPair(GeneralDiscreteGraphicalModelFactor(valueTables_[vti], viBegin, viEnd),vti);
+        for(const auto vi : factors_[fi].first.visVector()){
+            factorsOfVariables_[vi].insert(fi);
+        }
+        return fi;
     }
     template<class VI_T>
-    uint64_t addFactor(const uint64_t vti , std::initializer_list<VI_T>  list){
-        //factors_.push_back(GeneralDiscreteGraphicalModelFactor(valueTables_[vti], list));
-        //return factors_.size()-1;
+    Fi addFactor(const Vti vti,const Fi fi, std::initializer_list<VI_T>  list){
+        INFERNO_CHECK(factors_.find(fi)==factors_.end(), "factor already exists");
+        INFERNO_CHECK(factorsOfValueTables_[vti].find(fi)==factorsOfValueTables_[vti].end(), "factor already exists in vti's factors");
+        factorsOfValueTables_[vti].insert(fi);
+        for(const auto vi : list){
+            factorsOfVariables_[vi].insert(fi);
+        }
+        factors_[fi] = FacVtiPair(GeneralDiscreteGraphicalModelFactor(valueTables_[vti],list),vti);
+        return fi;
     }
+
+    size_t nConnectedFactorsForVti(const Vti vti)const{
+        const auto it = factorsOfValueTables_.find(vti);
+        INFERNO_CHECK(it!=factorsOfValueTables_.end(),"no such vti");
+        return it->second.size();
+    }
+
+    size_t nConnectedFactorsForVi(const Vi vi)const{
+        const auto it = factorsOfVariables_.find(vi);
+        INFERNO_CHECK(it!=factorsOfVariables_.end(),"no such vi");
+        return it->second.size();
+    }
+
+    Vti factorsVti(const Fi fi)const{
+        const auto it = factors_.find(fi);
+        INFERNO_CHECK(it!=factors_.end(),"no such fi");
+        return it->second.second;
+    }
+
+    void eraseVariable(const Vi vi){
+
+        numberOfLabels_.erase(vi);
+
+        // erase all factors which depend on vi
+        for(const auto fi : factorsOfVariables_.find(vi)->second){
+            
+            // get the factor/vti pair
+            const auto & facVtiPair = factors_.find(fi)->second;
+            const auto vti = facVtiPair.second;
+
+            // get all factors connected to this vti
+            // and check how many factors are connected to this vti
+            INFERNO_ASSERT(factorsOfValueTables_.find(vti)!=factorsOfVariables_.end());
+            auto & vtisFacs = factorsOfValueTables_.find(vti)->second;
+            const auto nConnected = vtisFacs.size();
+
+
+            if(nConnected == 1){
+                // only this factor is connected to the vti
+                // => the vti can be deleted
+                INFERNO_ASSERT_OP(fi,==, (*(vtisFacs.begin())));
+                delete valueTables_.find(vti)->second;
+                factorsOfValueTables_.erase(vti);
+
+            }
+            else{
+                // remove fi from factorsOfValueTables_[vti]
+                vtisFacs.erase(fi);
+                INFERNO_CHECK_OP(vtisFacs.size(),>=,1,"error here");
+            }
+            // remove the factor
+            // all other vars which depend on this factor
+            const auto & visVec = factors_[fi].first.visVector();
+            for(const auto otherVis : visVec){
+                if(otherVis!=vi){
+                    factorsOfVariables_[otherVis].erase(fi);
+                }
+            }
+            factors_.erase(fi);
+        }
+        // remove vi from factorsOfVariables_
+        factorsOfVariables_.erase(vi);
+
+    }
+
 private:
     std::unordered_map<Vi, LabelType>                                   numberOfLabels_;
-    std::unordered_map<Vi, value_tables::DiscreteValueTableBase * >     valueTables_;
+    std::unordered_map<Vti, value_tables::DiscreteValueTableBase * >    valueTables_;
     FactorStorage                                                       factors_;
     
+
+    std::unordered_map<Vi, std::unordered_set<Fi> > factorsOfVariables_;
+    std::unordered_map<Vti, std::unordered_set<Fi> > factorsOfValueTables_; 
 
 };
 
