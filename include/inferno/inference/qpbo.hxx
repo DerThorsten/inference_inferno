@@ -1,11 +1,14 @@
 #ifndef INFERNO_INFERENCE_QPBO_HXX
 #define INFERNO_INFERENCE_QPBO_HXX
 
-#include "inferno/inference/base_discrete_inference.hxx"
-#include <inferno_externals/qpbo/QPBO.h>
+#include <unordered_map>
 
+#include "inferno/inference/base_discrete_inference.hxx"
 #include "inferno/inference/utilities/fix-fusion/higher-order-energy.hpp"
 #include "inferno/inference/utilities/fix-fusion/clique.hpp"
+
+#include <inferno_externals/qpbo/QPBO.h>
+
 
 namespace inferno{
 namespace inference{

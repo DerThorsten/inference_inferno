@@ -5,7 +5,7 @@
 
 int main(){
 
-   const Vi nVar = 4;
+   const inferno::Vi nVar = 4;
 
     //  0 | 1
     //  _ | _
@@ -19,17 +19,17 @@ int main(){
     model.addFactor(1,3, 1.0);
 
     for(auto fiter=model.factorIdsBegin(); fiter != model.factorIdsEnd(); ++fiter){
-        std::cout<<*fiter<<" "<<io::varibleIds(model[*fiter])<<"\n"<<io::valueTable(model[*fiter])<<"\n";
+        std::cout<<*fiter<<" "<<inferno::io::varibleIds(model[*fiter])<<"\n"<<inferno::io::valueTable(model[*fiter])<<"\n";
     }
 
-    typedef inferno::ImplicitMulticutModel  Model;
-    typedef inference::Multicut<Model>      Solver;
-    typedef Solver::Options                 SolverOptions; 
+    typedef inferno::ImplicitMulticutModel          Model;
+    typedef inferno::inference::Multicut<Model>     Solver;
+    typedef Solver::Options                         SolverOptions; 
 
     SolverOptions options;
     Solver solver(model, options);
     solver.infer();
 
-    DiscreteLabel conf[4];
+    inferno::DiscreteLabel conf[4];
     solver.conf(conf);
 }
