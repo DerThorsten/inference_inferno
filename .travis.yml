@@ -50,6 +50,7 @@ script:
     - mkdir inst_dir
     - cmake . -DINFERNO_EXTERNALS_INCLUDE_DIR=$CWD/ext_inst_dir/include/ -DINFERNO_EXTERNALS_LIBRARIES_DIR=$CWD/ext_inst_dir/lib/inferno_externals/ -DCMAKE_INSTALL_PREFIX=inst_dir 
     - cmake . 
-    - cmake . -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE 
+    - QPBO_LIB=$CWD/ext_inst_dir/lib//libinferno-external-qpbo-shared.so
+    - cmake . -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE  -DINFERNO_EXTERNAL_LIB_QPBO_SHARED=$QPBO_LIB
     - make -j4
     - ctest -V
