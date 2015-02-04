@@ -35,7 +35,8 @@ install:
 script: 
     - $CXX --version
     # build all externals
-    - cd inferno-externals
+    - ls
+    - ldd
     - mkdir ext_inst_dir
     - cmake .  -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE -DINSTALL_PREFIX=ext_inst_dir
     - make -j4
