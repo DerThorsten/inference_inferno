@@ -34,9 +34,7 @@ install:
     - if [ "$CXX" == "clang++" ]; then export CXX="clang++-3.4"; fi
 script: 
     - $CXX --version
-    # build all externals
-    - ls
-    - ldd
+    - cd inferno-externals
     - mkdir ext_inst_dir
     - cmake .  -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE -DINSTALL_PREFIX=ext_inst_dir
     - make -j4
