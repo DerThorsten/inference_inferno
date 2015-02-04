@@ -41,7 +41,7 @@ script:
     - cd $CWD
     - cd inferno-externals
     - mkdir ext_inst_dir
-    - cmake .  -DWITH_MPLP=FALSE  -DWITH_MAXFLOW=FALSE -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE -DCMAKE_INSTALL_PREFIX=ext_inst_dir
+    - cmake .  -DWITH_MPLP=FALSE -DWITH_CONICBUNDLE=FALSE -DWITH_MAXFLOW=FALSE -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE -DCMAKE_INSTALL_PREFIX=ext_inst_dir
     - make -j4
     - sudo make install
     - cd .. 
