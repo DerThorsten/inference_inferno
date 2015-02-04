@@ -22,6 +22,7 @@ namespace value_tables{
 
 
 
+
 /// \cond
 template<class VECTOR>
 bool allValuesEq(const VECTOR vector) {
@@ -68,7 +69,24 @@ private:
         }
         const DiscreteValueTableBase * f_;
     };
-
+    
+    struct ConfRange{
+        typedef ConfIterator< ShapeFunctor > const_iterator;
+        ConfRange(const DiscreteValueTableBase * factor)
+        :   begin_(factor->confIter()),
+            end_()
+        {
+            end_ = begin_.getEnd();
+        }
+        const_iterator begin()const{
+            return begin_;
+        }
+        const_iterator end()const{
+            return end_;
+        }
+        const_iterator begin_;
+        const_iterator end_;
+    };
     
 public:
     typedef LabelType L;
@@ -453,6 +471,15 @@ public:
             return true;
         }
     }
+
+    ConfIterator< ShapeFunctor > confIter()const{
+        ShapeFunctor shape(this);
+        return ConfIterator< ShapeFunctor >(shape, this->arity(), this->size());
+    }
+    ConfRange confs()const{
+        return ConfRange(this);
+    }
+
 
     /** \brief 
             copy the shape into a buffer

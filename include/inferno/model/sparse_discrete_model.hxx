@@ -13,18 +13,15 @@
 
 namespace inferno{
 
-template<typename T1, typename T2> 
-struct TakeFirst{
-    typedef  T1  result_type;
-    T1 operator()(const std::pair<T1, T2> & aPair) const
-    {
-      return  aPair.first;
-    }
-};
+
 
 
 /** \brief  Very flexible  sparse graphical
     model.
+    \warning This model is more or less just 
+        to test the API.  Really try to stick
+        with dense graphical models, this makes
+        live a lot easier.
 
     Sparse means variable and factor ids can be sparse and unsorted
     
@@ -37,6 +34,14 @@ class SparseDiscreteGraphicalModel :
 public DiscreteGraphicalModelBase<SparseDiscreteGraphicalModel>{
 
 private:
+    template<typename T1, typename T2> 
+    struct TakeFirst{
+        typedef  T1  result_type;
+        T1 operator()(const std::pair<T1, T2> & aPair) const
+        {
+          return  aPair.first;
+        }
+    };
     typedef std::pair<GeneralDiscreteGraphicalModelFactor, Vti>     FacVtiPair; 
     typedef TakeFirst<Vi, FacVtiPair>                               FacStorageKeyAccessor;
     typedef TakeFirst<Vi, DiscreteLabel>                            NlStorageKeyAccessor;

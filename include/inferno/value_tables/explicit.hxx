@@ -106,7 +106,7 @@ public:
     \ingroup value_tables
     \ingroup discrete_value_tables
 */
-class ExplicitView : ExplicitBaseValueMarrayView
+class ExplicitView : public ExplicitBaseValueMarrayView
 {
 public:
     template<class STORAGE_IN>

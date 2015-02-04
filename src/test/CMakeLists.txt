@@ -13,6 +13,7 @@ SET(TEST_LIBS
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 )
 
+include_directories(test_include)
 
 #-------------------------------------------------------------------------------------------------------------------
 # test inference
@@ -20,4 +21,4 @@ SET(TEST_LIBS
 add_subdirectory(model)
 add_subdirectory(utilities)
 add_subdirectory(inference)
-
+add_subdirectory(value_tables)
