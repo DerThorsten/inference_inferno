@@ -10,14 +10,14 @@ SET(TO_FIND "")
 IF(WITH_QPBO)
     FIND_LIBRARY(INFERNO_EXTERNAL_LIB_QPBO_SHARED 
         NAMES inferno-external-qpbo-shared libinferno-external-qpbo-shared 
-        PATHS ${INFERNO_EXTERNALS_LIBRARIES_DIR})
+        HINT ${INFERNO_EXTERNALS_LIBRARIES_DIR})
     SET(TO_FIND ${TO_FIND} INFERNO_EXTERNAL_LIB_QPBO_SHARED)
 ENDIF(WITH_QPBO)
 
 IF(WITH_TRWS)
     FIND_LIBRARY(INFERNO_EXTERNAL_LIB_TRWS_SHARED 
-        NAMES inferno-external-trws-shared libinferno-external-trws-shared 
-        PATHS ${INFERNO_EXTERNALS_LIBRARIES_DIR})
+        NAMES   inferno-external-trws-shared libinferno-external-trws-shared 
+        HINT ${INFERNO_EXTERNALS_LIBRARIES_DIR})
     SET(TO_FIND ${TO_FIND} INFERNO_EXTERNAL_LIB_TRWS_SHARED)
 ENDIF(WITH_TRWS)
 
