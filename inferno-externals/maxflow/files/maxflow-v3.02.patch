@@ -78,7 +78,7 @@ diff -rupNb maxflow-v3.02.src/instances.inc MaxFlow_new/instances.inc
  //    tcaptype should be 'larger' than captype
  
  template class Graph<int,int,int>;
-+template class Graph<size_t,size_t,size_t>;
++template class Graph<std::size_t,std::size_t,std::size_t>;
  template class Graph<short,int,int>;
  template class Graph<float,float,float>;
  template class Graph<double,double,double>;
