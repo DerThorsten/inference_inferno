@@ -81,6 +81,9 @@ endif()
 #-------------------------------------------------------------------------------------------------------------------
 # Find Externals
 #-------------------------------------------------------------------------------------------------------------------
+
+OPTION(WITH_QPBO "Include wrapper for QPBO code" OFF)
+
 FIND_PACKAGE(Threads REQUIRED)  # includes pthread
 FIND_PACKAGE(INFERNO_EXTERNALS REQUIRED)
 
