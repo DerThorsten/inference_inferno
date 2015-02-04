@@ -38,6 +38,8 @@ install:
     #
 script: 
     # build inferno externals
+    - QPBO_LIB_S=$CWD/ext_inst_dir/lib/libinferno-external-qpbo-shared.so
+    - TRWS_LIB_S=$CWD/ext_inst_dir/lib/libinferno-external-qpbo-shared.so
     - cd $CWD
     - cd inferno-externals
     - mkdir ext_inst_dir
@@ -50,7 +52,6 @@ script:
     - mkdir inst_dir
     - cmake . -DINFERNO_EXTERNALS_INCLUDE_DIR=$CWD/ext_inst_dir/include/ -DINFERNO_EXTERNALS_LIBRARIES_DIR=$CWD/ext_inst_dir/lib/inferno_externals/ -DCMAKE_INSTALL_PREFIX=inst_dir 
     - cmake . 
-    - QPBO_LIB=$CWD/ext_inst_dir/lib//libinferno-external-qpbo-shared.so
-    - cmake . -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE  -DINFERNO_EXTERNAL_LIB_QPBO_SHARED=$QPBO_LIB
+    - cmake . -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE -DINFERNO_EXTERNAL_LIB_TRWS_SHARED=$QPBO_LIBS -DINFERNO_EXTERNAL_LIB_QPBO_SHARED=$TRWS_LIB_S
     - make -j4
     - ctest -V
