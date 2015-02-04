@@ -38,7 +38,7 @@ install:
     - if [ "$CXX" == "clang++" ]; then cd /usr/lib && sudo ln -sf libc++.so.1.0 libc++.so; fi
     - if [ "$CXX" == "clang++" ]; then sudo ln -sf libc++.so.1.0 libc++.so.1 && cd $cwd; fi
 
-    - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
+    #- if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
     - if [ "$CXX" == "clang++" ]; then export CXX="clang++-3.4"; fi
     #
 script: 
@@ -48,7 +48,7 @@ script:
     - cd $CWD
     - cd inferno-externals
     - mkdir ext_inst_dir
-    - cmake .  -DWITH_MPLP=FALSE -DWITH_DAOOPT=FALSE -DWITH_CONICBUNDLE=FALSE -DWITH_MAXFLOW=FALSE -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE -DCMAKE_INSTALL_PREFIX=$CWD/ext_inst_dir
+    - cmake .  -DWITH_MPLP=FALSE -DWITH_DAOOPT=FALSE -DWITH_CONICBUNDLE=FALSE -DWITH_MAXFLOW=FALSE -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE -DCMAKE_INSTALL_PREFIX=$CWD/ext_inst_dir -DCMAKE_CXX_COMPILER=/usr/bin/$CXX
     - make -j4
     - sudo make install
     - cd .. 
