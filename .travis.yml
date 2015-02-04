@@ -19,7 +19,7 @@ install:
     # g++4.8.1
     - CWD=$(pwd)
     - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
-    - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
+    - if [ "$CXX" = "g++-4.8" ]; then export CXX="g++-4.8"; fi
     - if [ "$CXX" == "clang++" ]; then export CXXFLAGS="-std=c++11"; fi
     #
 install:
