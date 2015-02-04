@@ -35,6 +35,7 @@ install:
     #
 script: 
     # build inferno externals
+    - cd $HOME
     - cd inferno-externals
     - mkdir ext_inst_dir
     - cmake .  -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE -DINSTALL_PREFIX=ext_inst_dir
@@ -43,6 +44,6 @@ script:
     - cd .. 
     # build inferno itself
     - mkdir inst_dir
-    - cmake .  -DINFERNO_EXTERNALS_INCLUDE_DIR=ext_inst_dir/include/ -DINFERNO_EXTERNAL_LIBRARIES_DIR=ext_inst_dir/lib/ -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE -DINSTALL_PREFIX=inst_dir 
+    - cmake .  -DINFERNO_EXTERNALS_INCLUDE_DIR=ext_inst_dir/include/ -DINFERNO_EXTERNALS_LIBRARIES_DIR=ext_inst_dir/lib/ -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE -DINSTALL_PREFIX=inst_dir 
     - make -j4
     - ctest -V
