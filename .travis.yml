@@ -16,11 +16,13 @@ before_install:
     #
 install:
     # g++4.8.1
+    - CWD=$(pwd)
     - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
     #
 install:
-    # clang 3.4
+    # clang 3.4]
+    - CWD=$(pwd)
     - if [ "$CXX" == "clang++" ]; then sudo apt-get install --allow-unauthenticated -qq clang-3.4; fi
     - if [ "$CXX" == "clang++" ]; then export CXXFLAGS="-std=c++0x -stdlib=libc++"; fi
     - if [ "$CXX" == "clang++" ]; then svn co --quiet http://llvm.org/svn/llvm-project/libcxx/trunk libcxx; fi
@@ -35,7 +37,7 @@ install:
     #
 script: 
     # build inferno externals
-    - cd $HOME
+    - cd $CWD
     - cd inferno-externals
     - mkdir ext_inst_dir
     - cmake .  -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE -DINSTALL_PREFIX=ext_inst_dir
