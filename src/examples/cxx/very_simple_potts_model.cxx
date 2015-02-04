@@ -1,3 +1,5 @@
+#include <random>
+
 #include "inferno/inferno.hxx"
 #include "inferno/model/general_discrete_model.hxx"
 #include "inferno/value_tables/potts.hxx"
