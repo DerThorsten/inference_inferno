@@ -42,20 +42,17 @@ install:
     #
 script: 
     # build inferno externals
-    - QPBO_LIB_S=$CWD/ext_inst_dir/lib/libinferno-external-qpbo-shared.so
-    - TRWS_LIB_S=$CWD/ext_inst_dir/lib/libinferno-external-trws-shared.so
     - cd $CWD
     - mkdir ext_inst_dir
     - cd inferno-externals
-    - cmake .  -DWITH_MPLP=FALSE -DWITH_DAOOPT=FALSE -DWITH_CONICBUNDLE=FALSE -DWITH_MAXFLOW=FALSE -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE -DCMAKE_INSTALL_PREFIX=$CWD/ext_inst_dir -DCMAKE_CXX_COMPILER=/usr/bin/$CXX
+    - cmake .  -DWITH_QPBO=TRUE -DCMAKE_INSTALL_PREFIX=$CWD/ext_inst_dir -DCMAKE_CXX_COMPILER=/usr/bin/$CXX
     - make -j4
     - sudo make install
     - cd .. 
     # build inferno itself
     - export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:$CWD/ext_inst_dir/lib/inferno_externals/"
     - mkdir inst_dir
-    - cmake . -DINFERNO_EXTERNALS_INCLUDE_DIR=$CWD/ext_inst_dir/include/ -DINFERNO_EXTERNALS_LIBRARIES_DIR=$CWD/ext_inst_dir/lib/inferno_externals/ -DCMAKE_INSTALL_PREFIX=inst_dir -DCMAKE_CXX_COMPILER=/usr/bin/$CXX
-    #- cmake . -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE  -DINFERNO_EXTERNAL_LIB_TRWS_SHARED=$TRWS_LIB_S -DINFERNO_EXTERNAL_LIB_QPBO_SHARED=$QPBO_LIB_S
-    - cmake . -DWITH_TRWS=TRUE  -DWITH_QPBO=TRUE  
+    - cmake . -DINFERNO_EXTERNALS_INCLUDE_DIR=$CWD/ext_inst_dir/include/ -INFERNO_EXTERNALS_ROOT_DIR=$CWD/ext_inst_dir -DCMAKE_INSTALL_PREFIX=inst_dir -DCMAKE_CXX_COMPILER=/usr/bin/$CXX
+    - cmake .  -DWITH_QPBO=TRUE  
     - make -j4
     - ctest -V
