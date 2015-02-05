@@ -91,7 +91,8 @@ private:
 public:
     typedef LabelType L;
 
-
+    virtual ~DiscreteValueTableBase(){
+    }
 
     /** \brief evaluate an n-ary value table for a given configuration
         

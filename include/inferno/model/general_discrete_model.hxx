@@ -89,7 +89,12 @@ public:
     const static bool SortedVariableIds = true;
     const static bool SortedFactorIds = true;
 
-    
+    ~GeneralDiscreteGraphicalModel(){
+        for(auto vt : valueTables_)
+            delete vt;
+    }
+
+
     /** \brief container which can store an instance
         of T for any variable id.
 
