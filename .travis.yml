@@ -39,8 +39,8 @@ install:
     - if [ "$CXX" == "clang++" ]; then cd /usr/lib && sudo ln -sf libc++.so.1.0 libc++.so; fi
     - if [ "$CXX" == "clang++" ]; then sudo ln -sf libc++.so.1.0 libc++.so.1 && cd $cwd; fi
 
-    - if [ "$CXX" = "g++" ]; echo "I AM USING G++"; fi
-    - if [ "$CXX" = "clang++" ]; echo "I AM USING CLANG++"; fi
+    - if [ "$CXX" = "g++" ]; then echo "I AM USING G++"; fi
+    - if [ "$CXX" = "clang++" ];then echo "I AM USING CLANG++"; fi
 
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
     - if [ "$CXX" == "clang++" ]; then export CXX="clang++-3.4"; fi
