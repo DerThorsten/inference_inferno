@@ -52,7 +52,7 @@ script:
     # build inferno itself
     - export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:$CWD/ext_inst_dir/lib/inferno_externals/"
     - mkdir inst_dir
-    - cmake . -DINFERNO_EXTERNALS_INCLUDE_DIR=$CWD/ext_inst_dir/include/ -INFERNO_EXTERNALS_ROOT_DIR=$CWD/ext_inst_dir -DCMAKE_INSTALL_PREFIX=inst_dir -DCMAKE_CXX_COMPILER=/usr/bin/$CXX
+    - cmake .  -DINFERNO_EXTERNALS_ROOT_DIR=$CWD/ext_inst_dir -DCMAKE_INSTALL_PREFIX=inst_dir -DCMAKE_CXX_COMPILER=/usr/bin/$CXX
     - cmake .  -DWITH_QPBO=TRUE  
     - make -j4
     - ctest -V
