@@ -47,28 +47,24 @@ addons:
       name: "DerThorsten/inferno"
       description: "Build submitted via Travis CI"
     notification_email: thorsten.beier@iwr.uni-heidelberg.de
-    build_command_prepend: "cmake .; make clean"
-    build_command:   "make -j 4"
-    branch_pattern: coverity_scan
+    build_command_prepend: "cd $CWD; mkdir -p ext_inst_dir; cd inferno-externals ;cmake .  -DWITH_QPBO=TRUE -DCMAKE_INSTALL_PREFIX=$CWD/ext_inst_dir; make; sudo make install; cd .. ;  mkdir -p inst_dir ; cmake . -DINFERNO_EXTERNALS_ROOT_DIR=$CWD/ext_inst_dir -DCMAKE_INSTALL_PREFIX=inst_dir -DWITH_QPBO=TRUE ; make clean"
+    build_command:   make
+    branch_pattern: master
 
 
 script: 
     - cd $CWD
-    - mkdir ext_inst_dir
+    - mkdir -p ext_inst_dir
     - cd inferno-externals
     - cmake .  -DWITH_QPBO=TRUE -DCMAKE_INSTALL_PREFIX=$CWD/ext_inst_dir 
-    - make -j4
+    - make -j 4
     - sudo make install
     - cd .. 
     # build inferno itself
-    - export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:$CWD/ext_inst_dir/lib/inferno_externals/"
-    - mkdir inst_dir
+    - mkdir -p inst_dir
     - cmake .  -DINFERNO_EXTERNALS_ROOT_DIR=$CWD/ext_inst_dir -DCMAKE_INSTALL_PREFIX=inst_dir 
     - cmake .  -DWITH_QPBO=TRUE  
-    - make -j4
+    - make -j 4
     - ./src/test/utilities/test_mixed_label
     - ctest -V
     - ctest
-    #
-after_success:
-    - coveralls
