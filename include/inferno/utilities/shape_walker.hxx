@@ -108,7 +108,12 @@ class ConfIterator
 {
     typedef SmallVector<DiscreteLabel>::iterator SVIter;
  public:
-    ConfIterator(){}
+    ConfIterator()
+    :   shape_(SHAPE_FUNCTOR()),
+        conf_(SmallVector<DiscreteLabel>()),
+        confIndex_(0),
+        nConf_(0){
+    }
     ConfIterator(
         const size_t nConf
     )
