@@ -26,53 +26,82 @@ BOOST_AUTO_TEST_CASE(TestImplicitMulticutModel)
     //  0 | 1
     //  _ | _
     //  2 | 3
-
+    BOOST_TEST_CHECKPOINT("construct model");
     ImplicitMulticutModel model(nVar);
 
+
+    BOOST_TEST_CHECKPOINT("minVarId");
     BOOST_CHECK_EQUAL(model.minVarId(),0);
+    BOOST_TEST_CHECKPOINT("maxVarId");
     BOOST_CHECK_EQUAL(model.maxVarId(),3);
-        
+    
+    BOOST_TEST_CHECKPOINT("addFactor0");     
     model.addFactor(0,1, 1.0);
+    BOOST_TEST_CHECKPOINT("addFactor1");     
     model.addFactor(2,3, 1.0);
+    BOOST_TEST_CHECKPOINT("addFactor2");     
     model.addFactor(0,2, 1.0);
+    BOOST_TEST_CHECKPOINT("addFactor3");     
     model.addFactor(1,3, 1.0);
 
+    BOOST_TEST_CHECKPOINT("minFactorId");     
     BOOST_CHECK_EQUAL(model.minFactorId(),0);
+    BOOST_TEST_CHECKPOINT("maxFactorId");     
     BOOST_CHECK_EQUAL(model.maxFactorId(),3);
 
+    BOOST_TEST_CHECKPOINT("factorLoop");     
     for(auto fiter=model.factorIdsBegin(); fiter != model.factorIdsEnd(); ++fiter){
         //std::cout<<*fiter<<" "<<io::varibleIds(model[*fiter])<<"\n"<<io::valueTable(model[*fiter])<<"\n";
     }
     
+    BOOST_TEST_CHECKPOINT("modelEval");
+    //  0 | 0
+    //  _ | _
+    //  0 | 0
+    {
+        DiscreteLabel conf[4] = {0,0,0,0};
+        BOOST_CHECK_CLOSE(model.eval(conf), 0.0, TEST_EPS);
+    }
+    
+    //  1 | 1
+    //  _ | _
+    //  1 | 1
+    {
+        DiscreteLabel conf[4] = {1,1,1,1};
+        BOOST_CHECK_CLOSE(model.eval(conf), 0.0, TEST_EPS);
+    }
 
-    //  0 | 0
-    //  _ | _
-    //  0 | 0
-    BOOST_CHECK_CLOSE(model.eval({0,0,0,0}), 0.0, TEST_EPS);
-    //  1 | 1
-    //  _ | _
-    //  1 | 1
-    BOOST_CHECK_CLOSE(model.eval({1,1,1,1}), 0.0, TEST_EPS);
-
     //  1 | 1
     //  _ | _
     //  0 | 0
-    BOOST_CHECK_CLOSE(model.eval({1,1,0,0}), 2.0, TEST_EPS);
+    {
+        DiscreteLabel conf[4] = {1,1,0,0};
+        BOOST_CHECK_CLOSE(model.eval(conf), 2.0, TEST_EPS);
+    }
 
     //  2 | 0
     //  _ | _
     //  0 | 0
-    BOOST_CHECK_CLOSE(model.eval({2,0,0,0}), 2.0, TEST_EPS);
+    {
+        DiscreteLabel conf[4] = {2,0,0,0};
+        BOOST_CHECK_CLOSE(model.eval(conf), 2.0, TEST_EPS);
+    }
 
     //  1 | 2
     //  _ | _
     //  1 | 0
-    BOOST_CHECK_CLOSE(model.eval({1,2,1,0}), 3.0, TEST_EPS);
+    {
+        DiscreteLabel conf[4] = {1,2,1,0};
+        BOOST_CHECK_CLOSE(model.eval(conf), 3.0, TEST_EPS);
+    }
 
     //  3 | 2
     //  _ | _
     //  1 | 0
-    BOOST_CHECK_CLOSE(model.eval({3,2,1,0}), 4.0, TEST_EPS);
+    {
+        DiscreteLabel conf[4] = {3,2,1,0};
+        BOOST_CHECK_CLOSE(model.eval(conf), 4.0, TEST_EPS);
+    }
 
 }
 
