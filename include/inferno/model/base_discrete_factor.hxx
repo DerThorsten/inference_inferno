@@ -21,7 +21,8 @@ private:
 
 
     struct ShapeFunctor{
-        ShapeFunctor(){}
+        ShapeFunctor()
+        : f_(NULL){}
         ShapeFunctor(const FACTOR * f)
         : f_(f){
         }

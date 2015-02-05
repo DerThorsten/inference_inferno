@@ -49,7 +49,7 @@ addons:
     notification_email: thorsten.beier@iwr.uni-heidelberg.de
     build_command_prepend: "cd $CWD; mkdir -p ext_inst_dir; cd inferno-externals ;cmake .  -DWITH_QPBO=TRUE -DCMAKE_INSTALL_PREFIX=$CWD/ext_inst_dir; make; sudo make install; cd .. ;  mkdir -p inst_dir ; cmake . -DINFERNO_EXTERNALS_ROOT_DIR=$CWD/ext_inst_dir -DCMAKE_INSTALL_PREFIX=inst_dir -DWITH_QPBO=TRUE ; make clean"
     build_command:   make
-    branch_pattern: master
+    branch_pattern: coverity_scan
 
 
 script: 
