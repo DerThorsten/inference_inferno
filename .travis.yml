@@ -48,7 +48,7 @@ addons:
       description: "Build submitted via Travis CI"
     notification_email: thorsten.beier@iwr.uni-heidelberg.de
     build_command_prepend: "cmake .; make clean"
-    build_command:   "make -j 4"
+    build_command:   "make -j 4; ctest -V"
     branch_pattern: coverity_scan
 
 
@@ -69,6 +69,3 @@ script:
     - ./src/test/utilities/test_mixed_label
     - ctest -V
     - ctest
-    #
-after_success:
-    - coveralls
