@@ -17,6 +17,7 @@ before_install:
     - sudo apt-get update -qq
     - sudo apt-get -qq install libstdc++-4.8-dev
 install:
+    - CWD=$(pwd)
     - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
     - if [ "$CXX" == "g++" ]; then export CXXFLAGS="-std=c++11"; fi
     - if [ "$CXX" == "g++" ];then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90; fi
@@ -33,8 +34,7 @@ install:
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
     - if [ "$CXX" == "clang++" ]; then export CXX="clang++-3.4"; fi
 script: 
-    # build inferno externals
-    - CWD=$(pwd)
+    - cd $CWD
     - mkdir ext_inst_dir
     - cd inferno-externals
     - cmake .  -DWITH_QPBO=TRUE -DCMAKE_INSTALL_PREFIX=$CWD/ext_inst_dir 
