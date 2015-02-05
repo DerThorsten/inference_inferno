@@ -22,7 +22,7 @@ install:
     - CWD=$(pwd)
     - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
     - if [ "$CXX" == "g++" ]; then export CXXFLAGS="-std=c++11"; fi
-    - if [ "$CXX" == "g++" ];then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90; fi
+    - if [ "$CXX" == "g++" ];then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8; fi
     #
 install:
     # clang 3.4]
