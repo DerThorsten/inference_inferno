@@ -113,6 +113,7 @@ public:
         edges_.push_back(u);
         edges_.push_back(v);
         beta_.push_back(beta);
+        return beta.size()-1;
     }
 
     uint64_t maxArity()const{
