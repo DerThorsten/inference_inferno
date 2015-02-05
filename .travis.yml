@@ -44,16 +44,16 @@ install:
     - echo $CXX
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
     - if [ "$CXX" == "clang++" ]; then export CXX="clang++-3.4"; fi
-    #show all installed gccs
-    - ls /usr/bin/gcc*
-    - whereis gcc
-    - whereis gcc-
-    - whereis gcc-4.8
 script: 
     - ls /usr/bin/gcc*
     - whereis gcc
     - whereis gcc-
     - whereis gcc-4.8
+
+    - whereis g++
+    - whereis g++-
+    - whereis g++-4.8
+
     # build inferno externals
     #- /usr/bin/$CXX --version
     - cd $CWD
