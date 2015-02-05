@@ -112,8 +112,8 @@ class ConfIterator
     ConfIterator(
         const size_t nConf
     )
-    :   shape_(),
-        conf_(),
+    :   shape_(SHAPE_FUNCTOR()),
+        conf_(SmallVector<DiscreteLabel>()),
         confIndex_(nConf),
         nConf_(nConf){
     }

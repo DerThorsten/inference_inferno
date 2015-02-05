@@ -60,7 +60,8 @@ class DiscreteValueTableBase{
 private:
 
     struct ShapeFunctor{
-        ShapeFunctor(){}
+        ShapeFunctor()
+        : f_(NULL){}
         ShapeFunctor(const DiscreteValueTableBase * f)
         : f_(f){
         }
