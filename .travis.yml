@@ -47,8 +47,8 @@ addons:
       name: "DerThorsten/inferno"
       description: "Build submitted via Travis CI"
     notification_email: thorsten.beier@iwr.uni-heidelberg.de
-    build_command_prepend: "cmake .; make clean"
-    build_command:   "make -j 4; ctest -V"
+    build_command_prepend: "cmake . .  -DINFERNO_EXTERNALS_ROOT_DIR=$CWD/ext_inst_dir -DCMAKE_INSTALL_PREFIX=inst_dir -DWITH_QPBO; make clean"
+    build_command:   "make -j4; ctest -V"
     branch_pattern: master
 
 
