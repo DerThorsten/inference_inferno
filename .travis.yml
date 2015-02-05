@@ -50,8 +50,12 @@ install:
     - whereis gcc-
     - whereis gcc-4.8
 script: 
+    - ls /usr/bin/gcc*
+    - whereis gcc
+    - whereis gcc-
+    - whereis gcc-4.8
     # build inferno externals
-    - /usr/bin/$CXX --version
+    #- /usr/bin/$CXX --version
     - cd $CWD
     - mkdir ext_inst_dir
     - cd inferno-externals
