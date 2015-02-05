@@ -55,4 +55,5 @@ script:
     - cmake .  -DINFERNO_EXTERNALS_ROOT_DIR=$CWD/ext_inst_dir -DCMAKE_INSTALL_PREFIX=inst_dir -DCMAKE_CXX_COMPILER=/usr/bin/$CXX
     - cmake .  -DWITH_QPBO=TRUE  
     - make -j4
+    - ./src/test/utilities/test_mixed_label
     - ctest -V
