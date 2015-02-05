@@ -47,7 +47,7 @@ install:
     #
 script: 
     # build inferno externals
-    - $CXX --version
+    - /usr/bin/$CXX --version
     - cd $CWD
     - mkdir ext_inst_dir
     - cd inferno-externals
