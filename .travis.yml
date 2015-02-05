@@ -33,6 +33,25 @@ install:
     - if [ "$CXX" == "clang++" ]; then sudo ln -sf libc++.so.1.0 libc++.so.1 && cd $cwd; fi
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
     - if [ "$CXX" == "clang++" ]; then export CXX="clang++-3.4"; fi
+
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "ZSeqKqGvq/bhcxFAX7/08drh2ACbMGdR4hxjmT2YP7BHgeNVLn3SIa2d2MvJPDyDzRaL1ULtyJZaRaPG8/cwhmADbQlVRBRq50Y+4zdViFw6Mdw9yjTdL0D7KXXGke+XGvUuCjJcvGgxKNgCtYme0Ymx5lZL7RRIKu2IhGhoTf4="
+
+
+addons:
+  coverity_scan:
+    project:
+      name: "DerThorsten/inferno"
+      description: "Build submitted via Travis CI"
+    notification_email: thorsten.beier@iwr.uni-heidelberg.de
+    build_command_prepend: "./configure; make clean"
+    build_command:   "make -j 4"
+    branch_pattern: coverity_scan
+
+
 script: 
     - cd $CWD
     - mkdir ext_inst_dir
