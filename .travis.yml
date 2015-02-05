@@ -50,3 +50,6 @@ script:
     - ./src/test/utilities/test_mixed_label
     - ctest -V
     - ctest
+    #
+after_success:
+    - coveralls
