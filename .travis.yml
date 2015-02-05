@@ -49,7 +49,7 @@ addons:
     notification_email: thorsten.beier@iwr.uni-heidelberg.de
     build_command_prepend: "cmake .; make clean"
     build_command:   "make -j 4; ctest -V"
-    branch_pattern: coverity_scan
+    branch_pattern: master
 
 
 script: 
