@@ -5,9 +5,10 @@
 #include <iostream>
 
 #include "inferno/model/general_discrete_model.hxx"
+#include "inferno/model/implicit_multicut_model.hxx"
 #include "inferno/value_tables/potts.hxx"
 #include "inferno/value_tables/unary.hxx"
-#include "inferno/model/implicit_multicut_model.hxx"
+
 #define TEST_EPS 0.00001
 
 
