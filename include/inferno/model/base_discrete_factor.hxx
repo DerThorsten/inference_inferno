@@ -10,6 +10,17 @@ namespace inferno{
 
 
 
+class Lifetime{
+    enum FactorProxy{
+        TmpObj,
+        PtrObj
+    };
+    enum ValueTableOwner{
+        FactorIsOwner,
+        ModelIsOwner
+    };
+};
+
 
 
 
@@ -205,11 +216,6 @@ std::ostream& operator <<(std::ostream& stream, const io::FactorValueTableCout<F
     return stream;
 }
 
+} // end namespace inferno
 
-
-
-
-
-}
-
-#endif 
+#endif /* INFERNO_MODEL_BASE_FACTOR_HXX */

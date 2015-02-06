@@ -89,6 +89,11 @@ public:
     const static bool SortedVariableIds = true;
     const static bool SortedFactorIds = true;
 
+    /** \brief destructor for model
+
+        \warning this will delete all value
+        table have been added.
+    */
     ~GeneralDiscreteGraphicalModel(){
         for(auto vt : valueTables_)
             delete vt;
