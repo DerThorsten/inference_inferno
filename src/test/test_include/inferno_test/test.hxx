@@ -1,6 +1,8 @@
 #ifndef INFERNO_TEST_TEST_HXX
 #define INFERNO_TEST_TEST_HXX
 
+#define INFERNO_DEBUG 
+
 #include <vector>
 #include <random>
 

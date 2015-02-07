@@ -220,12 +220,12 @@ public:
     }
 
     /// \brief number of variables in the graphical model
-    size_t nVariables() const {
+    uint64_t nVariables() const {
         return std::distance(model().variableIdsBegin(), model().variableIdsEnd());
     }
 
     /// \brief number of factors in the graphical model
-    size_t nFactors() const {
+    uint64_t nFactors() const {
         return std::distance(model().factorIdsBegin(), model().factorIdsEnd());
     }
 

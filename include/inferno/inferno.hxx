@@ -82,6 +82,17 @@
  }
 
 
+#ifdef NDEBUG
+    #ifdef INFERNO_DEBUG 
+        #define INFERNO_DO_DEBUG
+    #endif
+#else
+    #ifdef INFERNO_DEBUG 
+        #define INFERNO_DO_DEBUG
+    #endif
+#endif
+
+
 /** \def INFERNO_ASSERT_OP(a,op,b,message)
     \brief macro for runtime checks
     

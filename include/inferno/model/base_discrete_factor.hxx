@@ -104,7 +104,9 @@ public:
                          const LabelType l4)const{
         return factor()->valueTable()->eval(l0, l1, l2, l3, l4);
     }
-
+    size_t arity()const{
+        return factor()->valueTable()->arity();
+    }
     uint64_t size()const{
         return factor()->valueTable()->size();
     }
@@ -170,7 +172,7 @@ namespace io{
 
 
     template<class FACTOR_PROXY>
-    FactorVariableIdsCout<FACTOR_PROXY> varibleIds(const FACTOR_PROXY & factor){
+    FactorVariableIdsCout<FACTOR_PROXY> variableIds(const FACTOR_PROXY & factor){
         return FactorVariableIdsCout<FACTOR_PROXY>(factor);
     }
 
