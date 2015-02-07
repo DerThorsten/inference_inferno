@@ -36,9 +36,7 @@ BOOST_AUTO_TEST_CASE(TestViewSubmodel)
     typedef models::ViewSubmodel<Model, FacOfVars> ViewSubmodelType;
     BOOST_TEST_CHECKPOINT("submodel constructor");
     ViewSubmodelType submodel(model, facOfVars);
-
-    BOOST_TEST_CHECKPOINT("check nVariables");
-    BOOST_CHECK_EQUAL(submodel.nVariables(),0);
+    INFERNO_CHECK_EMPTY_MODEL(submodel);
     //BOOST_CHECK_EQUAL(submodel.nFactors(),0);
     // 0 | 1 | 2 
     // -- --- --
@@ -63,6 +61,12 @@ BOOST_AUTO_TEST_CASE(TestViewSubmodel)
     BOOST_TEST_CHECKPOINT("setSubmodelVariables");
     submodel.setSubmodelVariables({1, 4, 5});
     BOOST_CHECK_EQUAL(submodel.nVariables(),3);
+
+    {
+        const auto svi = {0, 1, 2};
+        const auto snl = {nl, nl, nl};
+        INFERNO_CHECK_MODEL_VIS(ViewSubmodelType, submodel, svi);
+    }
 
     // 2 binary factors left
     // 6 new unaries

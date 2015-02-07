@@ -1,3 +1,7 @@
+/** \file sparse_discrete_model.hxx 
+    \brief  functionality for inferno::SparseDiscreteGraphicalModel is implemented in this header.
+    \todo add namespae
+*/
 #ifndef INFERNO_MODEL_SPARSE_DISCRETE_MODEL_HXX
 #define INFERNO_MODEL_SPARSE_DISCRETE_MODEL_HXX
 
@@ -26,7 +30,7 @@ namespace inferno{
     Sparse means variable and factor ids can be sparse and unsorted
     
     \todo rename in "editable graphical model"
-
+    \todo move this to the namespace inferno::models
     \ingroup models
     \ingroup discrete_models
 */

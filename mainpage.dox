@@ -64,6 +64,23 @@
 
 
 
+/**
+    \example very_simple_potts_model.cxx 
+    \brief A chain with 10 variables where the regularizer is a potts function.
+    Each variables has two states.
+    
+    \example very_simple_multicut_model.cxx 
+    \brief  A tiny multicut model on a 2x2 grid.
+
+    \example grid_2d_non_shared_non_submodular.cxx
+    \brief Setup a model on a grid / image.
+    Any variable has the same number of labels, 
+    and only first and second order factors are used.
+    The regularizer is different for each second order 
+    function (in this example we just use random data)
+*/
+
+
 /** \mainpage  Inferno - A library for discrete energy minimization
 
 
@@ -78,16 +95,87 @@
     
 
 
-    \subsection diff_ogm_sub_sec Coming from OpenGM
+    \section sec_desing A bit about the Design:
+        \subsection sec_mp_value_tables Value Tables API:
+            Virtual functions for value tables:
+            In contrast to OpenGM we want to keep the template usage
+            on a normal level. Therefore we use a abstract class
+            design with virtual function to encode value tables.
+            A value table is what OpenGM calls a ''Function''.
+            The base class for discrete value tables is 
+            inferno::value_tables::DiscreteValueTableBase.
+            With this design we can avoid the complicated ''typelist''
+            of OpenGM.
+            inferno::value_tables::DiscreteValueTableBase has 
+            a small set of pure virtual functions and a large
+            set of virtual functions with default implementations.
+            Derived function <b>should</b> overwrite these
+            default implantations whenever  efficient computation
+            is possible within the derived class.
 
+        \subsection sec_mp_model_api Model API:
+            Easy creation of different model types:
+            With Infernos API it should we very simple to create
+            a custom model.
+            To create a new discrete model, one has to derive
+            from a certain base class, namely inferno::DiscreteGraphicalModelBase.
+            Here we use the  
+            <a href="http://en.wikipedia.org/wiki/Curiously_recurring_template_pattern"> 
+            curiously recurring template pattern (CRTP) </a>.
+            Therefore any class deriving from inferno::DiscreteGraphicalModelBase 
+            <b>must</b> implement a minimal API which consists of a few
+            typedefs, static members, and member functions.
+            In addition to the minimal API, a lot of additional member 
+            function <b>can</b> be implemented.
+            If these additional functions are not implemented, inferno::DiscreteGraphicalModelBase 
+            will provide default implementations.
+            Currently the following discrete models are implemented : 
+
+                \subsubsection sec_mp_general_model_api General discrete model:
+                    inferno::GeneralDiscreteGraphicalModel :
+                    A very flexible discrete graphical model 
+                    with no limitation w.r.t. the order of factors.
+                    Any factor graph can be encoded with this graphical 
+                    model.
+                    All value tables can be used and shared
+                    between the factors.
+
+                \subsubsection sec_mp_sparse_model_api Sparse discrete model:
+                    inferno::SparseDiscreteGraphicalModel
+                    A very flexible discrete graphical model 
+                    with no limitation w.r.t. the order of factors.
+                    Any factor graph can be encoded with this graphical 
+                    model.
+                    All value tables can be used and shared
+                    between the factors.
+                    In contrast to inferno::GeneralDiscreteGraphicalModel
+                    neither variables nor factor or functions must have
+                    continuous indices. Therefore
+                    factors and variables can be erased and re-added efficiently.
+
+                \subsubsection sec_mp_view_sub_model_api Discrete view sub-model:
+                    inferno::models::ViewSubmodel:
+                    A efficient way to create sub-models w.r.t.
+                    a subset of base variables of a base model 
+                    multiple times (the subset of variables can be 
+                    changed efficiently).
+
+        \subsection sec_mp_factor_api Factor API:
+            All factors provide access to their value-table.
+            All factors of models share the same API. Again, we use the
+            <a href="http://en.wikipedia.org/wiki/Curiously_recurring_template_pattern"> 
+            curiously recurring template pattern (CRTP) </a>. 
+            Any model must provide a factor class which is derived
+            from inferno::DiscreteFactorBase.  
+            Therefore any class deriving from inferno::DiscreteFactorBase 
+            <b>must</b> implement a minimal API which consists of a few
+            typedefs, static members, and member functions.
+            In addition to the minimal API, a lot of additional member 
+            function <b>can</b> be implemented.
+            If these additional functions are not implemented, inferno::DiscreteFactorBase 
+            will provide default implementations.
+
+ 
 
  */
 
-
-/**
-    \example very_simple_potts_model.cxx \brief an example
-    A chain where the regularizer is a potts function.
-
-    \example very_simple_multicut_model.cxx \brief an example
-    A tiny multicut model on a 2x2 grid.
-*/

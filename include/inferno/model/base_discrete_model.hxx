@@ -260,7 +260,7 @@ public:
     }
 
 
-    /** \brief get the minimal variable id in the model
+    /** \brief get the minimal factor id in the model
 
         \warning if the graphical model has no variables,
         calling this function will have undefined behavior.
@@ -273,7 +273,7 @@ public:
     }
     /** \brief get the maximal variable id in the model
 
-        \warning if the graphical model has no variables,
+        \warning if the graphical model has no factors,
         calling this function will have undefined behavior.
     */
     Fi maxFactorId() const{

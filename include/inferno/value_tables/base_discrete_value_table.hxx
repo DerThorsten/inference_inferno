@@ -1,3 +1,7 @@
+/** \file factors_of_variables.hxx 
+    \brief inferno::value_tables::DiscreteValueTableBase
+    is implemented in this header. 
+*/
 #ifndef INFERNO_VALUE_TABLES_BASE_DISCRETE_VALUE_TYPE
 #define INFERNO_VALUE_TABLES_BASE_DISCRETE_VALUE_TYPE
 
@@ -33,7 +37,7 @@ bool allValuesEq(const VECTOR vector) {
     }
     return true;
 }
-/// \endcnd
+/// \endcond
 
 /** \brief DiscreteValueTableBase abstract base Class
 

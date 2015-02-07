@@ -1,3 +1,6 @@
+/** \file implicit_multicut_model.hxx 
+    \brief  functionality for inferno::ImplicitMulticutModelFactor is implemented in this header.
+*/
 #ifndef INFERNO_MODEL_IMPLICIT_MULTICUT_MODEL_HXX
 #define INFERNO_MODEL_IMPLICIT_MULTICUT_MODEL_HXX
 
@@ -19,6 +22,8 @@ namespace inferno{
     Therefore each time ImplicitMulticutModel::operator[]
     is called, a new allocated instance of this class
     is returned.
+
+    \todo move this to the namespace inferno::models
 */
 class ImplicitMulticutModelFactor : public DiscreteFactorBase<ImplicitMulticutModelFactor>{
 public:

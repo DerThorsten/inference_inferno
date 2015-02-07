@@ -1,3 +1,10 @@
+/** \file qpbo.hxx 
+    \brief  Implementation of inferno::inference::Qpbo  
+
+    \warning To include this header one needs qpbo
+    from  inferno_externals
+    (in CMake ''WITH_QPBO'')
+*/
 #ifndef INFERNO_INFERENCE_QPBO_HXX
 #define INFERNO_INFERENCE_QPBO_HXX
 

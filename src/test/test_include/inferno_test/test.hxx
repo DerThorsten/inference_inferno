@@ -95,6 +95,37 @@
 } 
 
 
+#define INFERNO_CHECK_EMPTY_MODEL(model)\
+    BOOST_CHECK_EQUAL(model.nVariables(),0); \
+    BOOST_CHECK_EQUAL(model.nFactors(),0); \
+
+
+#define INFERNO_CHECK_MODEL_VIS(MODEL, model, varIds) \
+{ \
+    const auto SortedVariableIds = MODEL::SortedVariableIds; \
+    const auto SortedFactorIds = MODEL::SortedFactorIds; \
+    std::vector<inferno::Vi> vis(model.variableIdsBegin(), model.variableIdsEnd()); \
+    BOOST_CHECK_EQUAL(vis.size(),model.nVariables());\
+    if(SortedVariableIds){ \
+        INFERNO_CHECK_EQ_COLLECTION(vis, varIds); \
+        const auto modelMinVarId = model.minVarId();\
+        const auto modelMaxVarId = model.maxVarId();\
+        BOOST_REQUIRE_EQUAL(modelMinVarId,vis.front());\
+        BOOST_REQUIRE_EQUAL(modelMaxVarId,vis.back());\
+         const auto realMin = *std::min_element(vis.begin(), vis.end());\
+        const auto realMax = *std::max_element(vis.begin(), vis.end());\
+        BOOST_REQUIRE_EQUAL(modelMinVarId,realMin);\
+        BOOST_REQUIRE_EQUAL(modelMaxVarId,realMax);\
+    } \
+    else{ \
+        const auto modelMinVarId = model.minVarId();\
+        const auto modelMaxVarId = model.maxVarId();\
+        const auto realMin = *std::min_element(vis.begin(), vis.end());\
+        const auto realMax = *std::max_element(vis.begin(), vis.end());\
+        BOOST_REQUIRE_EQUAL(modelMinVarId,realMin);\
+        BOOST_REQUIRE_EQUAL(modelMaxVarId,realMax);\
+    } \
+} \
 
 namespace inferno{
 namespace test_models{

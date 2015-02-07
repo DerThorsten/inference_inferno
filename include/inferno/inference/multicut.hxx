@@ -1,3 +1,9 @@
+/** \file multicut.hxx 
+    \brief  Implementation of inferno::inference::Multicut  
+
+    \warning To include this header one needs cplex 
+    (in CMake ''WITH_CPLEX'')
+*/
 #pragma once
 #ifndef INFERNO_INFERENCE_MULTICUT_HXX
 #define INFERNO_INFERENCE_MULTICUT_HXX

@@ -1,3 +1,7 @@
+/** \file factors_of_variables.hxx 
+    \brief  default implementation of inferno::FactorsOfVariables is implemented
+    within this header
+*/
 #ifndef INFERNO_MODEL_FACTORS_OF_VARIABLES_HXX
 #define INFERNO_MODEL_FACTORS_OF_VARIABLES_HXX
 

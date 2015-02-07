@@ -1,3 +1,6 @@
+/** \file general_discrete_model.hxx 
+    \brief  functionality for inferno::GeneralDiscreteGraphicalModel is implemented in this header.
+*/
 #ifndef INFERNO_MODEL_GENERAL_DISCRETE_MODEL_HXX
 #define INFERNO_MODEL_GENERAL_DISCRETE_MODEL_HXX
 
@@ -75,6 +78,8 @@ private:
 
     \ingroup models
     \ingroup discrete_models
+
+    \todo move this to the namespace inferno::models
 */
 class GeneralDiscreteGraphicalModel : 
 public DiscreteGraphicalModelBase<GeneralDiscreteGraphicalModel>{

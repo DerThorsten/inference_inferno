@@ -1,3 +1,6 @@
+/** \file vector_set.hxx 
+    \brief  definition and implementation a set et with O(n) insert and O(1) access
+*/
 #pragma once
 #ifndef INFERNO_UTILITIES_VECTOR_SET_HXX
 #define INFERNO_UTILITIES_VECTOR_SET_HXX

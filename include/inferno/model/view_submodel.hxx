@@ -1,3 +1,6 @@
+/** \file view_submodel.hxx 
+    \brief  functionality for inferno::models::ViewSubmodel is implemented in this header.
+*/
 #ifndef INFERNO_MODEL_VIEW_SUBMODEL_HXX
 #define INFERNO_MODEL_VIEW_SUBMODEL_HXX
 
@@ -21,9 +24,22 @@ namespace models{
 
 
 
-
+/** \namespace inferno::models::detail_view_submodel
+    \brief detail namespace only for functionality of
+    ViewSubmodel.
+*/
 namespace detail_view_submodel{
 
+    /** \brief factor class of  inferno::models::ViewSubmodel
+        
+        This class should is only used by inferno::models::ViewSubmodel.
+        Here we use a design with virtual functions.
+        Therefore the factor class itself can vary on runtime.
+        A factor can either be fully included or partially
+        included.
+        Fully included factors are implemented  inferno::models::detail_view_submodel::FullyIncludedFactor,
+        and partially included factors in inferno::models::detail_view_submodel::PartiallyIncludedFactor
+    */ 
     template<class VIEW_SUBMODEL>
     class FactorBase : public inferno::DiscreteFactorBase< FactorBase<VIEW_SUBMODEL> >{
     public:
@@ -31,7 +47,10 @@ namespace detail_view_submodel{
         virtual Vi vi(const size_t d) const = 0;
         virtual const inferno::value_tables::DiscreteValueTableBase * valueTable()const=0;
     };
+    /** \brief factor class of  inferno::models::ViewSubmodel implementing a fully included factor
 
+        This factor directly uses the value table of the factor this factor is viewing to.
+    */
     template<class VIEW_SUBMODEL>
     class FullyIncludedFactor :  public FactorBase<VIEW_SUBMODEL>
     {
@@ -58,7 +77,10 @@ namespace detail_view_submodel{
     };
 
 
-
+    /** \brief value table calls tailor-made  for inferno::models::detail_view_submodel::PartiallyIncludedFactor
+        
+        This value table is only used within inferno::models::ViewSubmodel.
+    */
     template<class PFACTOR>
     class  PartialView : public inferno::value_tables::DiscreteValueTableBase{
     public:
@@ -86,7 +108,12 @@ namespace detail_view_submodel{
 
 
 
+    /** \brief factor class of  inferno::models::ViewSubmodel implementing a partially included factor
 
+        This factor directly uses the value table of the factor this factor is viewing to.
+        The variables of the base factor which are not included are fixed to
+        their current label.
+    */
     template<class VIEW_SUBMODEL>
     class PartiallyIncludedFactor :  public FactorBase<VIEW_SUBMODEL>
     {
@@ -154,7 +181,7 @@ namespace detail_view_submodel{
     };
 
 
-
+    /// \cond
     template<class BASE_MODEL>
     class ViMapping{
 
@@ -220,7 +247,7 @@ namespace detail_view_submodel{
         std::vector<Vi> viToBaseVi_;
         Vi nVar_;
     };
-
+    /// \endcond
 }
 
 
@@ -233,10 +260,23 @@ namespace detail_view_submodel{
 
 /** \brief view submodel for a few variables.
     
-    This class is designed for the following use case.
-    Generate different submodels (different vi)
-    from  BASE_MODEL (one submodel at the time).
+    \tparam BASE_MODEL base-model 
+    \tparam BASE_MODEL_FACTORS_OF_VARIABLES factors-of-variables mapping
+        w.r.t. the base-model.
 
+    Efficiently generate a submodel w.r.t. a base-model.
+    The use case is the following: 
+    Most of the variables of the base-model should be fixed
+    to a certain label. Only a small portion of the variables
+    is not fixed. These non fixed variables are the
+    variables of the ViewSubmodel.
+    All modifications of the base-models value tables
+    are reflected in the ViewSubmodel.
+
+    \warning If the structure of the  base-model changes
+    the ViewSubmodel becomes invalid.
+    
+    \ingroup models discrete_models
 */
 template<class BASE_MODEL, class BASE_MODEL_FACTORS_OF_VARIABLES>
 class ViewSubmodel :
@@ -408,8 +448,6 @@ public:
                         const auto fixedVarPosOffset = fixedVarPos_.size();
                         const auto confBufferOffset = confBuffer_.size();
                         
-                        
-
                         for(auto d=0; d<nNotFixed; ++d){
                             indexMapping_.push_back(notFixedPos[d]);
                         }
@@ -422,8 +460,6 @@ public:
                         for(auto a=0; a<arity; ++a){
                             confBuffer_.push_back(DiscreteLabel());
                         }
-
-                        std::cout<<"add partial with nNotFixed"<<nNotFixed<<"\n";
 
                         includedFactorsStorageIndex_[nFac_] = partiallyIncFactors_.size();
                         partiallyIncFactors_.push_back(PartiallyIncludedFactor(*this, baseFi, nNotFixed,
@@ -441,34 +477,77 @@ public:
             pFac.finish();
     }
 
+    /** \brief begin iterator to the variable indices
+        of the model
+    */
     VariableIdIter variableIdsBegin()const{
         return viMapping_.variableIdsBegin();
     }
 
+    /** \brief begin iterator to the variable indices
+        of the model
+    */
     VariableIdIter variableIdsEnd()const{
         return viMapping_.variableIdsEnd();
     }
 
+    /** \brief number of variables in the model
+
+        <b>Complexity:</b> O(1)
+
+    */
     uint64_t nVariables()const{
         return viMapping_.nVariables();
     }
+    /** \brief get the minimal variable id in the model 
+        
+        <b>Complexity:</b> O(1)
+
+        \warning 
+        - if the graphical model has no variables,
+            calling this function will have undefined behavior.
+
+    */
     Vi minVarId()const{
         return viMapping_.minVarId();
     }
+    /** \brief get the maximal variable id in the model
+
+        <b>Complexity:</b> O(1)
+
+        \warning 
+        - if the graphical model has no variables,
+            calling this function will have undefined behavior.
+    */
     Vi maxVarId()const{
         return viMapping_.maxVarId();
     }
+    /** \brief begin iterator to the factor indices
+        of the model
+    */
     FactorIdIter factorIdsBegin()const{
         return FactorIdIter(0);
     }
-
+    /** \brief end iterator of the factor indices
+        of the model
+    */
     FactorIdIter factorIdsEnd()const{
         return FactorIdIter(nFac_);
     }
-    LabelType nLabels(const Vi variabeId)const{
-        return baseModel_.nLabels(this->viToBaseVi(variabeId));
-    }
+    /** \brief get the number of labels for a certain
+        variable of the model
+        
+        \param vi : variable id of the variable 
+         for which the number of labels is returned.
 
+    */
+    LabelType nLabels(const Vi vi)const{
+        return baseModel_.nLabels(this->viToBaseVi(vi));
+    } 
+    /** \brief get the factor for a certain factor index.
+
+        \param fi : factor index
+    */
     FactorProxy operator[](const Fi fi) const {
         const Fi baseFi = includedFactors_[fi];
         FactorIncluding facIncType = baseFiIncluding_[baseFi];
@@ -508,17 +587,27 @@ public:
         return viMapping_.viToBaseVi(vi);
     }
 
+    /** \brief query if a base-model variable
+        is in the submodel
+
+        \param baseVi : variable index w.r.t. the base-model
+    */
     bool isInSubmodel(const Vi baseVi)const{
         return viMapping_.isInSubmodel(baseVi);
     }
 
+    /** \brief query if a factor of the base-model
+        is not included, partially included or fully included.
 
+        \param baseFi : factor index w.r.t. the base-model
+    */
     FactorIncluding baseFiIncluding(const Fi baseFi)const{
         return includedFactors_[baseFi];
     }
 
 
-
+    /** \brief get const reference to the base-model
+    */
     const BaseModel & baseModel()const{
         return baseModel_;
     }
@@ -530,6 +619,16 @@ public:
         return  baseModelLabels_;
     }
 
+    /** \brief compute const term. 
+
+        The constant term is the energy of 
+        all factors which are not included
+        in the sub-model (not even partially included).
+        If the base-model labels change (baseModelLabelMap)
+        the constant term will change.
+        \warning The const term is recomputed on every call.
+
+    */
     ValueType constTerm()const{
         ValueType constT = 0.0;
         SmallVector<DiscreteLabel> conf(maxArity_);

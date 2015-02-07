@@ -1,3 +1,9 @@
+/** \file modified_multiwaycut_model.hxx 
+    \brief  functionality for inferno::ModifiedMultiwayCut is implemented in this header.
+     NOT YET FINISHED!
+
+    \warning Not yet finished
+*/
 /// \cond
 #ifndef INFERNO_MODEL_MODIFIED_MULTIWAYCUT_MODEL_HXX
 #define INFERNO_MODEL_MODIFIED_MULTIWAYCUT_MODEL_HXX
