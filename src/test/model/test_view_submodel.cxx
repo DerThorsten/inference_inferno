@@ -56,9 +56,8 @@ BOOST_AUTO_TEST_CASE(TestViewSubmodel)
     // -- --  --
     //   |   |  
     BOOST_TEST_CHECKPOINT("setSubmodelVariables");
-    //submodel.setSubmodelVariables({1, 4, 5});
-    //BOOST_CHECK_EQUAL(submodel.nVariables(),3);
+    submodel.setSubmodelVariables({1, 4, 5});
+    BOOST_CHECK_EQUAL(submodel.nVariables(),3);
 
-    std::cout<<"end test\n";
 
 }

@@ -164,7 +164,7 @@ public:
     typedef typename BaseModel:: template VariableMap<DiscreteLabel> BaseModelLabelMap;
 
 
-    typedef typename BaseModel:: template VariableMap<FactorIncluding> IncludedFactorMap;
+    typedef typename BaseModel:: template FactorMap<FactorIncluding> IncludedFactorMap;
 
     ViewSubmodel(const BASE_MODEL & baseModel, const BASE_MODEL_FACTORS_OF_VARIABLES & baseModelFactorsOfVariables)
     :   baseModel_(baseModel),
@@ -216,8 +216,7 @@ public:
             const Vi baseVi = viToBaseVi(vi);
 
             // iterate over all factors for baseVi
-            for(const auto & baseFi : baseModelFacOfVars_[baseVi]){
-                std::cout<<"baseFi"<<baseFi<<"\n";
+            for(const auto  baseFi : baseModelFacOfVars_[baseVi]){
                 if(baseFiIncluding_[baseFi]==NotIncluded){
                     INFERNO_ASSERT_OP(baseFi,<,baseModel_.maxFactorId()+1);
                     const auto factor = baseModel_[baseFi];
@@ -227,21 +226,21 @@ public:
                     //   (not all vis of factors are included in this model)
                     // -factor is total included
                     //   (all vis are in included  )
-                    bool fullyIncluded = true;
-                    for(size_t a=0; a<arity; ++a){
-                        const auto baseVi = factor->vi(a);
-                        if(!isInSubmodel(baseVi)){
-                            fullyIncluded = false;
-                            break;
-                        }
-                    }
-                    if(fullyIncluded){
-                        baseFiIncluding_[baseFi] = FullyIncluded;
+                   bool fullyIncluded = true;
+                   for(size_t a=0; a<arity; ++a){
+                       const auto baseVi = factor->vi(a);
+                       if(!isInSubmodel(baseVi)){
+                           fullyIncluded = false;
+                           break;
+                       }
+                   }
+                   if(fullyIncluded){
+                       baseFiIncluding_[baseFi] = FullyIncluded;
 
-                    }
-                    else{
-                        baseFiIncluding_[baseFi] = PartialIncluded;
-                    }
+                   }
+                   else{
+                       //baseFiIncluding_[baseFi] = PartialIncluded;
+                   }
                 }
                 includedFactors_[nFac_] = baseFi;
                 ++nFac_;
