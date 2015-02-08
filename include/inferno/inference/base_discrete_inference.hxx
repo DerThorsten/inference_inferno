@@ -1,3 +1,9 @@
+/** \file base_discrete_inference.hxx 
+    \brief  Functionality which is shared between all inference algorithms
+    is implemented in this header.
+
+    \warning Not yet finished
+*/
 #ifndef INFERNO_INFERENCE_BASE_DISCRETE_INFERENCE_HXX
 #define INFERNO_INFERENCE_BASE_DISCRETE_INFERENCE_HXX
 
