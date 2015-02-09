@@ -47,8 +47,10 @@ public:
                    const VI_ITER viBegin, 
                    const VI_ITER viEnd)
     :   vis_(viBegin, viEnd),
-        vt_(vt){
+        vt_(vt),
+        arity_(vt->arity()){
 
+            INFERNO_ASSERT_OP(vis_.size(),==,vt_->arity());
     }
     const value_tables::DiscreteValueTableBase * valueTable()const{
         return vt_;
@@ -168,7 +170,8 @@ public:
     :   nVar_(nVar),
         numberOfLabels_(1, nLabes),
         valueTables_(),
-        factors_(){
+        factors_(),
+        maxArity_(0){
     }
     uint64_t addValueTable( value_tables::DiscreteValueTableBase * vt){
         valueTables_.push_back(vt);
@@ -177,12 +180,13 @@ public:
     template<class VI_ITER>
     uint64_t addFactor(const uint64_t vti , VI_ITER viBegin, VI_ITER viEnd){
         factors_.push_back(GeneralDiscreteGraphicalModelFactor(valueTables_[vti], viBegin, viEnd));
-        maxArity_  = std::max(size_t(std::distance(viBegin, viEnd)), maxArity_);
+        maxArity_  = std::max(factors_.back()->arity(), maxArity_);
         return factors_.size()-1;
     }
     template<class VI_T>
     uint64_t addFactor(const uint64_t vti , std::initializer_list<VI_T>  list){
         factors_.push_back(GeneralDiscreteGraphicalModelFactor(valueTables_[vti], list));
+        maxArity_  = std::max(factors_.back()->arity(), maxArity_);
         return factors_.size()-1;
     }
     size_t maxArity()const{
