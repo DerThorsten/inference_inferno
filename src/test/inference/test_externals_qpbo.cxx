@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(TestQpboInference)
     solver.infer();
 
     std::vector<LabelType> conf(nVar);
-    solver.conf(conf.begin());
+    solver.conf(conf);
 
 
 }

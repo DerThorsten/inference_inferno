@@ -4,6 +4,8 @@
 #-------------------------------------------------------------------------------------------------------------------
 
 FIND_PACKAGE(BENCHMARK REQUIRED)
+FIND_PACKAGE(Opengm REQUIRED)
+
 MESSAGE("BENCHMARK_INCLUDE_DIR" ${BENCHMARK_INCLUDE_DIR})
 include_directories(${BENCHMARK_INCLUDE_DIR})
 
@@ -18,3 +20,8 @@ ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 add_executable(benchmark benchmark.cxx )
 target_link_libraries(benchmark  ${BENCH_LIBS})
+
+
+
+add_executable(inferno_vs_opengm inferno_vs_opengm.cxx )
+target_link_libraries(inferno_vs_opengm  ${BENCH_LIBS})

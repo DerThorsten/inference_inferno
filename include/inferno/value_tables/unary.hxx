@@ -36,8 +36,8 @@ public:
     :   DiscreteValueTableBase(),
         values_(values){
     }
-    virtual ValueType eval(const LabelType *conf)const{
-        return values_[conf[0]];
+    virtual ValueType eval(const LabelType * conf)const{
+        return values_[*conf];
     }
     virtual ValueType eval(const LabelType l1)const{
         return values_[l1];

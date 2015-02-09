@@ -125,7 +125,7 @@ public:
 
     template<class GM_CONF, class ITER_FACTOR_CONF>
     void getFactorConf(
-        GM_CONF gmConf,
+        const GM_CONF & gmConf,
         ITER_FACTOR_CONF factorConf     
     )const{
         const auto arity = factor()->arity();

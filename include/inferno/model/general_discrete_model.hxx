@@ -20,7 +20,8 @@ public:
 
     GeneralDiscreteGraphicalModelFactor()
     :   vis_(),
-        vt_(NULL){
+        vt_(NULL),
+        arity_(0){
 
     }
 
@@ -36,7 +37,8 @@ public:
     GeneralDiscreteGraphicalModelFactor(const value_tables::DiscreteValueTableBase * vt,
                    std::initializer_list<VI_T> list )
     :   vis_(list),
-        vt_(vt){
+        vt_(vt),
+        arity_(vt->arity()){
 
     }
 
@@ -52,7 +54,7 @@ public:
         return vt_;
     }   
     size_t arity()const{
-        return vis_.size();
+        return arity_;
     }
     LabelType shape(const size_t d)const{
         return vt_->shape(d);
@@ -68,6 +70,7 @@ public:
 private:
     std::vector<Vi> vis_;
     const value_tables::DiscreteValueTableBase * vt_;
+    size_t arity_;
 
 };
 
@@ -174,6 +177,7 @@ public:
     template<class VI_ITER>
     uint64_t addFactor(const uint64_t vti , VI_ITER viBegin, VI_ITER viEnd){
         factors_.push_back(GeneralDiscreteGraphicalModelFactor(valueTables_[vti], viBegin, viEnd));
+        maxArity_  = std::max(size_t(std::distance(viBegin, viEnd)), maxArity_);
         return factors_.size()-1;
     }
     template<class VI_T>
@@ -181,12 +185,15 @@ public:
         factors_.push_back(GeneralDiscreteGraphicalModelFactor(valueTables_[vti], list));
         return factors_.size()-1;
     }
+    size_t maxArity()const{
+        return maxArity_;
+    }
 private:
     const uint64_t nVar_;
     std::vector<LabelType>              numberOfLabels_;
     std::vector<value_tables::DiscreteValueTableBase * >  valueTables_;
     std::vector<GeneralDiscreteGraphicalModelFactor>         factors_;
-    
+    size_t maxArity_;
 
 };
 

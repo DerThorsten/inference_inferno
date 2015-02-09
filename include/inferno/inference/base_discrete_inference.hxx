@@ -29,7 +29,7 @@ namespace inference{
     */
     class InferenceOptions{
     public:
-        InferenceOptions(m){
+        InferenceOptions(){
         }
     };
 

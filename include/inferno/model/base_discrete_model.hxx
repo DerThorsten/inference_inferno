@@ -195,7 +195,7 @@ public:
 
     /// \brief evaluate the energy of the model for a certain configuration
     template<class CONFIG>
-    double eval(CONFIG conf)const{
+    double eval(const CONFIG  &conf)const{
         double sum = 0.0;
         const size_t maxArity = model().maxArity();
         SmallVector<LabelType> confBuffer(maxArity);
@@ -203,7 +203,7 @@ public:
         auto fiterEnd = model().factorIdsEnd();
         for(;fiter!=fiterEnd; ++fiter){
             const auto factorId = *fiter;
-            auto factor = model()[factorId];
+            const auto factor = model()[factorId];
             
             // get the configuration of the factor
             factor->getFactorConf(conf, confBuffer.begin());
