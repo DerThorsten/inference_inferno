@@ -3,6 +3,7 @@
 
 #include <initializer_list>
 #include <iterator>
+#include <limits>
 
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/iterator/transform_iterator.hpp>
@@ -21,7 +22,6 @@ namespace inferno{
 /// \cond
 template<class ITER_TAG, bool IS_SORTED>
 struct MinElement;
-
 
 template<class ITER_TAG>
 struct MinElement<ITER_TAG, true>{
@@ -65,11 +65,6 @@ struct MaxElement<std::bidirectional_iterator_tag, true>{
         return end;
     }
 };
-
-
-
-
-
 /// \endcond
 
 
@@ -121,7 +116,7 @@ private:
 };
 
 
-
+/// \cond
 template<class MODEL>
 struct FactorIdToFactorProxy{
     typedef typename MODEL::FactorProxy result_type;
@@ -135,7 +130,7 @@ struct FactorIdToFactorProxy{
     }
     const MODEL * model_;
 };
-
+/// \endcond
 
 /** \brief Proxy class to use range based loop
     for models factor
@@ -164,7 +159,23 @@ private:
 
 
 
+/** \brief Base class for any discrete model class
+        implemented with the
+        <a href="http://en.wikipedia.org/wiki/Curiously_recurring_template_pattern"> CRT-pattern</a>.  
 
+        To create a new discrete model, one has to derive
+        from a this class, namely inferno::DiscreteGraphicalModelBase.
+        Here we use the  
+        <a href="http://en.wikipedia.org/wiki/Curiously_recurring_template_pattern"> 
+        curiously recurring template pattern (CRTP) </a>.
+        Therefore any class deriving from inferno::DiscreteGraphicalModelBase 
+        <b>must</b> implement a minimal API which consists of a few
+        typedefs, static members, and member functions.
+        In addition to the minimal API, a lot of additional member 
+        function <b>can</b> be implemented.
+        If these additional functions are not implemented, inferno::DiscreteGraphicalModelBase 
+        will provide default implementations.
+*/
 template<class MODEL>
 class DiscreteGraphicalModelBase{
 public:
@@ -174,25 +185,20 @@ public:
     typedef FactorIdToFactorProxy<MODEL> U; 
 
 
-
+    /// \deprecated
     template<class T>
     double eval(std::initializer_list<T> conf)const{
         return model().eval(conf.begin());
-    }//
+    }
 
 
 
-
+    /// \brief evaluate the energy of the model for a certain configuration
     template<class CONFIG>
     double eval(CONFIG conf)const{
-
-
-
         double sum = 0.0;
-
         const size_t maxArity = model().maxArity();
         SmallVector<LabelType> confBuffer(maxArity);
-
         auto fiter = model().factorIdsBegin();
         auto fiterEnd = model().factorIdsEnd();
         for(;fiter!=fiterEnd; ++fiter){
@@ -207,6 +213,15 @@ public:
         return sum;
     }
 
+    /** \brief get the maximum factor order of a model
+     
+        <b> Complexity:<b> O(|Factors|)
+
+        <b> Derived models should overload this function if
+        a better complexity can be achieved</b>
+
+
+    */
     size_t maxArity()const{
         size_t maxArity = 0;
         auto fiter = model().factorIdsBegin();
@@ -218,6 +233,49 @@ public:
         }
         return maxArity;
     }
+
+    /** \brief check if all variables have the same number of labels
+
+        <b> Complexity:<b> O(DiscreteGraphicalModelBase::minMaxNumberOfLabel) 
+
+        <b> Derived models should overload this function if
+        a better complexity can be achieved</b>
+    */
+    bool hasSimpleLabelSpace()const{
+        DiscreteLabel  minNumberOfLabels; 
+        DiscreteLabel  maxNumberOfLabels;
+        model().minMaxNumberOfLabel(minNumberOfLabels, maxNumberOfLabels);
+        return minNumberOfLabels == maxNumberOfLabels;
+    }
+
+
+    /** \brief get the minimal and maximal number of labels a 
+        variable can take.
+
+        <b> Complexity:<b> O(|Variables|)
+
+        <b> Derived models should overload this function if
+        a better complexity can be achieved</b>
+
+        This is not the min. and max. label a variable 
+        can take, but the min. and max. <b>number of labels </b>
+        which variables can take in the model.
+        Therefore it is the min. / max. over
+        DiscreteGraphicalModelBase::nLabels(vi) for all variables.
+
+        \warning If the model has no variables, the behavior
+        of this function is undefined
+    */
+    void minMaxNumberOfLabel(DiscreteLabel & minNumberOfLabels, DiscreteLabel & maxNumberOfLabels)const{
+        minNumberOfLabels = std::numeric_limits<DiscreteLabel>::max();
+        maxNumberOfLabels = 0;
+        for(const auto vi : model().variableIds()){
+            const DiscreteLabel lvi = model().nLabes(vi);
+            minNumberOfLabels = std::min(lvi, minNumberOfLabels);
+            maxNumberOfLabels = std::max(lvi, maxNumberOfLabels);
+        }   
+    }
+
 
     /// \brief number of variables in the graphical model
     uint64_t nVariables() const {

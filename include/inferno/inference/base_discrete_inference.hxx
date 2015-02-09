@@ -29,14 +29,12 @@ namespace inference{
     */
     class InferenceOptions{
     public:
-        InferenceOptions(const SemiRing sr = MinSum)
-        : semiRing(sr){
+        InferenceOptions(m){
         }
-        SemiRing semiRing;
     };
 
     /** \brief base class for any discrete inference class
-        implemented with
+        implemented with the
         <a href="http://en.wikipedia.org/wiki/Curiously_recurring_template_pattern"> CRT-pattern</a>.  
     
         Any discrete inference function should derive from
@@ -69,8 +67,8 @@ namespace inference{
 
             \warning This function must be implemented by INFERENCE.
         */
-        template<class OUT_ITER>
-        void conf(OUT_ITER);
+        template<class CONF_MAP>
+        void conf(CONF_MAP & confMap);
 
 
 

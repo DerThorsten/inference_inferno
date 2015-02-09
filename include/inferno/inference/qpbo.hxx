@@ -24,6 +24,30 @@ namespace inference{
     ///Option object for Qpbo
     struct QpboOptions : public InferenceOptions
     {
+        /** \brief Different Qpbo algorithm 
+            which can be used within Qpbo
+
+            \warning If an other value than QpboAlgorithm::Automatic is chosen,
+            it is the users responsibility that the choice is matching 
+            the model.
+            For example calling simple qpbo for a model with 
+            a factor order greater then two will lead to 
+            undefined behavior.
+        */
+        enum QpboAlgorithm{
+            /// Automatically select the most suitable Qpbo algorithm
+            Automatic  = 0,  
+            /// Simple Qpbo only for second order models with binary labels    
+            SimpleQpbo = 1,      
+            /// Higher order Qpbo for models with order up to 9 and binary labels
+            HigherOrderQpbo = 2,
+            /// Multilabel Qpbo  for second order models with binary labels
+            MultiLabelQpbo = 3  
+        };
+
+        /**  \brief Which qpbo algorithm should be used
+        */
+        QpboAlgorithm qpboAlgorithm_;
         /// using probeing technique
         bool useProbeing;
         /// \brief forcing strong persistency
@@ -35,9 +59,10 @@ namespace inference{
 
         /// \brief constructor
         QpboOptions() {
-           strongPersistency = true;
-           useImproveing = false;
-           useProbeing = false;
+            qpboAlgorithm_ = Automatic; 
+            strongPersistency = true;
+            useImproveing = false;
+            useProbeing = false;
         }
     };
 
@@ -49,10 +74,15 @@ namespace inference{
     */
     template<class MODEL>
     class Qpbo : public DiscreteInferenceBase<Qpbo<MODEL>, MODEL > {
+    private:
+        struct ModelInfo{
+            size_t maxArity;
+            DiscreteLabel minNumLabels;
+            DiscreteLabel maxNumLabels;
 
+        };
     public:
         typedef kolmogorov::qpbo::QPBO<ValueType> QpboSolver;
-        
         typedef MODEL Model;
         typedef QpboOptions Options;
 
@@ -65,8 +95,6 @@ namespace inference{
             value_( 1.0*std::numeric_limits<ValueType>::infinity()),
             hoe_()
         {
-            if(options_.semiRing != MinSum)
-                throw NotImplementedException("only MinSum is currently implemented");
 
             const auto maxArity = model_->maxArity();
             if(maxArity<=2){
@@ -113,6 +141,9 @@ namespace inference{
             
         }
 
+
+        
+
         ~Qpbo(){
             delete qpbo_;
         }
@@ -136,8 +167,8 @@ namespace inference{
 
         }
 
-        template<class OUT_ITER>
-        void conf(OUT_ITER configuration){
+        template<class CONF_MAP>
+        void conf(CONF_MAP & configuration){
             if(model_->denseVariableIds()){
                 const auto minVarId = model_->minVarId();
                 for(auto vi : model_->variableIds()){
@@ -147,7 +178,7 @@ namespace inference{
         }
 
     private:
-
+        
 
 
     private:
