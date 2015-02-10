@@ -17,6 +17,69 @@
 
 namespace inferno{
 
+/** \brief Factor class for the SparseDiscreteGraphicalModel
+*/
+class SparseDiscreteGraphicalModelFactor : public DiscreteFactorBase<SparseDiscreteGraphicalModelFactor> {
+public:
+
+
+    SparseDiscreteGraphicalModelFactor()
+    :   vis_(),
+        vt_(NULL),
+        arity_(0){
+
+    }
+
+    //SparseDiscreteGraphicalModelFactor & operator = (const SparseDiscreteGraphicalModelFactor & other){
+    //    if(this!= &other){
+    //        vis_ = other.vis_;
+    //        vt_ = other.vt_;
+    //    }
+    //    return *this;
+    //}
+
+    template<class VI_T>
+    SparseDiscreteGraphicalModelFactor(const value_tables::DiscreteValueTableBase * vt,
+                   std::initializer_list<VI_T> list )
+    :   vis_(list.begin(), list.end()),
+        vt_(vt),
+        arity_(vt->arity()){
+
+    }
+
+    template<class VI_ITER>
+    SparseDiscreteGraphicalModelFactor(const value_tables::DiscreteValueTableBase * vt,
+                   const VI_ITER viBegin, 
+                   const VI_ITER viEnd)
+    :   vis_(viBegin, viEnd),
+        vt_(vt),
+        arity_(vt->arity()){
+
+            INFERNO_ASSERT_OP(vis_.size(),==,vt_->arity());
+    }
+    const value_tables::DiscreteValueTableBase * valueTable()const{
+        return vt_;
+    }   
+    size_t arity()const{
+        return arity_;
+    }
+    LabelType shape(const size_t d)const{
+        return vt_->shape(d);
+    }
+    Vi vi(const size_t d)const{
+        return vis_[d];
+    }
+
+    /// \brief not part of the actual api
+    const std::vector<Vi> & visVector()const{
+        return vis_;
+    }
+private:
+    std::vector<Vi> vis_;
+    const value_tables::DiscreteValueTableBase * vt_;
+    size_t arity_;
+
+};
 
 
 
@@ -46,7 +109,7 @@ private:
           return  aPair.first;
         }
     };
-    typedef std::pair<GeneralDiscreteGraphicalModelFactor, Vti>     FacVtiPair; 
+    typedef std::pair<SparseDiscreteGraphicalModelFactor, Vti>     FacVtiPair; 
     typedef TakeFirst<Vi, FacVtiPair>                               FacStorageKeyAccessor;
     typedef TakeFirst<Vi, DiscreteLabel>                            NlStorageKeyAccessor;
 
@@ -63,7 +126,7 @@ public:
 
 
 
-    typedef const GeneralDiscreteGraphicalModelFactor * FactorProxy;
+    typedef const SparseDiscreteGraphicalModelFactor * FactorProxy;
     typedef FactorProxy FactorProxyRef;
 
     const static bool SortedVariableIds = false;
@@ -154,7 +217,7 @@ public:
         INFERNO_CHECK(factors_.find(fi)==factors_.end(), "factor already exists");
         INFERNO_CHECK(factorsOfValueTables_[vti].find(fi)==factorsOfValueTables_[vti].end(), "factor already exists in vti's factors");
         factorsOfValueTables_[vti].insert(fi);
-        factors_[fi] = FacVtiPair(GeneralDiscreteGraphicalModelFactor(valueTables_[vti], viBegin, viEnd),vti);
+        factors_[fi] = FacVtiPair(SparseDiscreteGraphicalModelFactor(valueTables_[vti], viBegin, viEnd),vti);
         for(const auto vi : factors_[fi].first.visVector()){
             factorsOfVariables_[vi].insert(fi);
         }
@@ -168,7 +231,7 @@ public:
         for(const auto vi : list){
             factorsOfVariables_[vi].insert(fi);
         }
-        factors_[fi] = FacVtiPair(GeneralDiscreteGraphicalModelFactor(valueTables_[vti],list),vti);
+        factors_[fi] = FacVtiPair(SparseDiscreteGraphicalModelFactor(valueTables_[vti],list),vti);
         return fi;
     }
 

@@ -7,11 +7,11 @@
 
 int main(){
 
-    const inferno::LabelType nLabes = 4;
+    const inferno::LabelType nLabels = 4;
     const inferno::Vi gridShape[2] = {64,48};
     const inferno::Vi nVar = gridShape[0]*gridShape[1];
 
-    inferno::GeneralDiscreteGraphicalModel model(nVar, nLabes);
+    inferno::GeneralDiscreteGraphicalModel model(nVar, nLabels);
     
     // random gen (just for this example)
     std::uniform_real_distribution<float> distribution(-1,1); //Values between -1 and 1
@@ -20,7 +20,7 @@ int main(){
    
     // vector to hold random numbers for unaries
     // (just for this example)
-    std::vector<inferno::ValueType> uVals(nLabes); 
+    std::vector<inferno::ValueType> uVals(nLabels); 
 
 
 
@@ -49,7 +49,7 @@ int main(){
         if(x+1 <gridShape[0]){
             // fill random numbers 
             // for for 2-orders
-            inferno::ValueMarray  val2Order({nLabes, nLabes});
+            inferno::ValueMarray  val2Order({nLabels, nLabels});
             for(auto & v : val2Order)
                 v = generator();
             // get the flat variable index
@@ -64,7 +64,7 @@ int main(){
         if(y+1 <gridShape[1]){
             // fill random numbers 
             // for for 2-orders
-            inferno::ValueMarray  val2Order({nLabes, nLabes});
+            inferno::ValueMarray  val2Order({nLabels, nLabels});
             for(auto & v : val2Order)
                 v = generator();
             // get the flat variable index

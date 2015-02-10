@@ -7,7 +7,7 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/value_tables/base_discrete_value_table.hxx"
-
+#include "inferno/utilities/small_vector.hxx"
 namespace inferno{
 
 
@@ -24,7 +24,7 @@ class  UnaryValueTable : public DiscreteValueTableBase{
 public:
     UnaryValueTable(const LabelType l)
     :   DiscreteValueTableBase(),
-        values_(l){
+        values_(size_t(l)){
     }
     template<class ITER>
     UnaryValueTable(ITER valBegin, ITER valEnd)
@@ -34,7 +34,7 @@ public:
     template<class T>
     UnaryValueTable(std::initializer_list<T> values)
     :   DiscreteValueTableBase(),
-        values_(values){
+        values_(values.begin(), values.end()){
     }
     virtual ValueType eval(const LabelType * conf)const{
         return values_[*conf];

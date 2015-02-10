@@ -11,46 +11,38 @@
 
 namespace inferno{
 
+class GeneralDiscreteGraphicalModel;
+
 
 /** \brief Factor class for the GeneralDiscreteGraphicalModel
 */
-class GeneralDiscreteGraphicalModelFactor : public DiscreteFactorBase<GeneralDiscreteGraphicalModelFactor> {
+template<class MODEL>
+class GeneralDiscreteGraphicalModelFactor : public DiscreteFactorBase<GeneralDiscreteGraphicalModelFactor<MODEL> > {
 public:
 
 
     GeneralDiscreteGraphicalModelFactor()
-    :   vis_(),
+    :   model_(NULL),
         vt_(NULL),
-        arity_(0){
+        arity_(0),
+        visOffset_(0){
 
     }
 
-    //GeneralDiscreteGraphicalModelFactor & operator = (const GeneralDiscreteGraphicalModelFactor & other){
-    //    if(this!= &other){
-    //        vis_ = other.vis_;
-    //        vt_ = other.vt_;
-    //    }
-    //    return *this;
-    //}
 
-    template<class VI_T>
-    GeneralDiscreteGraphicalModelFactor(const value_tables::DiscreteValueTableBase * vt,
-                   std::initializer_list<VI_T> list )
-    :   vis_(list),
+
+
+
+
+    GeneralDiscreteGraphicalModelFactor(const MODEL * model ,
+                                        const value_tables::DiscreteValueTableBase * vt,
+                                        const uint64_t visOffset, 
+                                        const size_t arity)
+    :   model_(model),
         vt_(vt),
-        arity_(vt->arity()){
+        visOffset_(visOffset),
+        arity_(arity){
 
-    }
-
-    template<class VI_ITER>
-    GeneralDiscreteGraphicalModelFactor(const value_tables::DiscreteValueTableBase * vt,
-                   const VI_ITER viBegin, 
-                   const VI_ITER viEnd)
-    :   vis_(viBegin, viEnd),
-        vt_(vt),
-        arity_(vt->arity()){
-
-            INFERNO_ASSERT_OP(vis_.size(),==,vt_->arity());
     }
     const value_tables::DiscreteValueTableBase * valueTable()const{
         return vt_;
@@ -59,19 +51,17 @@ public:
         return arity_;
     }
     LabelType shape(const size_t d)const{
-        return vt_->shape(d);
-    }
-    Vi vi(const size_t d)const{
-        return vis_[d];
+        return model_->facShape(visOffset_, d);
     }
 
-    /// \brief not part of the actual api
-    const std::vector<Vi> & visVector()const{
-        return vis_;
+    Vi vi(const size_t d)const{
+        return model_->facVis(visOffset_, d);
     }
+
 private:
-    std::vector<Vi> vis_;
+    const MODEL * model_;
     const value_tables::DiscreteValueTableBase * vt_;
+    uint64_t visOffset_;
     size_t arity_;
 
 };
@@ -89,12 +79,16 @@ private:
 class GeneralDiscreteGraphicalModel : 
 public DiscreteGraphicalModelBase<GeneralDiscreteGraphicalModel>{
 
-
+    friend class GeneralDiscreteGraphicalModelFactor<GeneralDiscreteGraphicalModel>;
+private:
+    typedef  GeneralDiscreteGraphicalModelFactor<GeneralDiscreteGraphicalModel> Ftype;
 public:
     typedef boost::counting_iterator<uint64_t> FactorIdIter;
     typedef boost::counting_iterator<Vi> VariableIdIter;
-    typedef const GeneralDiscreteGraphicalModelFactor * FactorProxy;
+    typedef const GeneralDiscreteGraphicalModelFactor<GeneralDiscreteGraphicalModel> * FactorProxy;
     typedef FactorProxy FactorProxyRef;
+
+
 
     const static bool SortedVariableIds = true;
     const static bool SortedFactorIds = true;
@@ -144,6 +138,21 @@ public:
     };
 
 
+    template<class CONFIG>
+    double eval(const CONFIG  &conf)const{
+        double sum = 0.0;
+        std::vector<LabelType> confBuffer(maxArity_);
+        for(size_t i=0; i<factors_.size(); ++i){
+            const Ftype & fac = factors_[i];
+            // get the configuration of the factor
+            fac.getFactorConf(conf, confBuffer.begin());
+            sum += fac.eval(confBuffer.data());
+        }
+        return sum;
+    }
+
+
+
     FactorIdIter factorIdsBegin()const{
         return FactorIdIter(0);
     }
@@ -179,24 +188,37 @@ public:
     }   
     template<class VI_ITER>
     uint64_t addFactor(const uint64_t vti , VI_ITER viBegin, VI_ITER viEnd){
-        factors_.push_back(GeneralDiscreteGraphicalModelFactor(valueTables_[vti], viBegin, viEnd));
-        maxArity_  = std::max(factors_.back()->arity(), maxArity_);
+        size_t arity=0;
+        const uint64_t visOffset = facVis_.size();
+        for( ;viBegin!=viEnd; ++viBegin){
+            facVis_.push_back(*viBegin);
+            ++arity;
+        }
+        factors_.push_back(GeneralDiscreteGraphicalModelFactor<GeneralDiscreteGraphicalModel>(this,valueTables_[vti], visOffset, arity));
+        maxArity_  = std::max(arity, maxArity_);
         return factors_.size()-1;
     }
     template<class VI_T>
     uint64_t addFactor(const uint64_t vti , std::initializer_list<VI_T>  list){
-        factors_.push_back(GeneralDiscreteGraphicalModelFactor(valueTables_[vti], list));
-        maxArity_  = std::max(factors_.back()->arity(), maxArity_);
-        return factors_.size()-1;
+        return this->addFactor(vti, list.begin(), list.end());
     }
     size_t maxArity()const{
         return maxArity_;
     }
 private:
+
+    Vi facVis(uint64_t index, const size_t v)const{
+        return facVis_[index + v];
+    }
+    DiscreteLabel facShape(uint64_t index, const size_t v)const{
+        return this->nLabels(facVis_[index + v]);
+    }
+
     const uint64_t nVar_;
     std::vector<LabelType>              numberOfLabels_;
     std::vector<value_tables::DiscreteValueTableBase * >  valueTables_;
-    std::vector<GeneralDiscreteGraphicalModelFactor>         factors_;
+    std::vector<GeneralDiscreteGraphicalModelFactor<GeneralDiscreteGraphicalModel> >         factors_;
+    std::vector<Vi> facVis_;
     size_t maxArity_;
 
 };

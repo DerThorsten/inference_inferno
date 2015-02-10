@@ -198,7 +198,7 @@ public:
     double eval(const CONFIG  &conf)const{
         double sum = 0.0;
         const size_t maxArity = model().maxArity();
-        SmallVector<LabelType> confBuffer(maxArity);
+        std::vector<LabelType> confBuffer(maxArity);
         auto fiter = model().factorIdsBegin();
         auto fiterEnd = model().factorIdsEnd();
         for(;fiter!=fiterEnd; ++fiter){
