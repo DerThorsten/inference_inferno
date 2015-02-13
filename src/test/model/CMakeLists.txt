@@ -25,3 +25,8 @@ add_test(test_sparse_model test_sparse_model)
 add_executable(test_view_submodel test_view_submodel.cxx )
 target_link_libraries(test_view_submodel ${TEST_LIBS})
 add_test(test_view_submodel test_view_submodel)
+
+
+add_executable(test_tl_model test_tl_model.cxx )
+target_link_libraries(test_tl_model ${TEST_LIBS})
+add_test(test_tl_model test_tl_model)
