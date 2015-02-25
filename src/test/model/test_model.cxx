@@ -5,11 +5,16 @@
 #include <iostream>
 
 #include "inferno/model/general_discrete_model.hxx"
+#include "inferno/model/general_discrete_tl_model.hxx"
+#include "inferno/model/sparse_discrete_model.hxx"
 #include "inferno/model/implicit_multicut_model.hxx"
+
+
 #include "inferno/value_tables/potts.hxx"
 #include "inferno/value_tables/unary.hxx"
-
 #define TEST_EPS 0.00001
+
+
 
 
 
@@ -104,6 +109,25 @@ BOOST_AUTO_TEST_CASE(TestImplicitMulticutModel)
         BOOST_CHECK_CLOSE(model.eval(conf), 4.0, TEST_EPS);
     }
 
+}
+
+
+BOOST_AUTO_TEST_CASE(TestDifferentTypesGrid)
+{
+    using namespace inferno;
+    typedef TlModel<
+        value_tables::UnaryValueTable,
+        value_tables::PottsValueTable
+    > TlModel;
+    typedef GeneralDiscreteGraphicalModel VModel;
+    typedef SparseDiscreteGraphicalModel  SModel;
+
+    const LabelType nLabes = 3;
+    const DiscreteLabel gridShape[2] = {3l,3l};
+    const Vi nVar = gridShape[0]*gridShape[1];
+
+    TlModel tlModel(nVar, nLabes);
+    VModel  vModel(nVar, nLabes);
 }
 
 

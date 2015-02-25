@@ -28,22 +28,23 @@ public:
         nl_(l),
         beta_(beta){
     }
-    virtual ValueType eval(const LabelType *conf)const{
+    ValueType eval(const LabelType *conf)const{
         return conf[0] == conf[1] ? 0.0 : beta_;
     }
-    virtual ValueType eval(const LabelType l1, const LabelType l2)const{
+    ValueType eval2(const LabelType l1, const LabelType l2)const{
         return l1==l2 ? 0 : beta_;
     }
-    virtual LabelType shape(const uint32_t d) const{
+    LabelType shape(const uint32_t d) const{
         return nl_;
     }
-    virtual uint32_t  arity()const{
+    uint32_t  arity()const{
         return 2;
     }
-    virtual bool isGeneralizedPotts() const{
+    bool isGeneralizedPotts() const{
         return true;
     }
-    virtual bool isPotts() const{
+    bool isPotts(ValueType & beta) const{
+        beta = beta_;
         return true;
     }
 private:

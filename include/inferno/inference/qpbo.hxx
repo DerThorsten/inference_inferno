@@ -111,15 +111,15 @@ namespace inference{
                         }
                         else if(arity == 1){
                             const int qpboVi0 = factor->vi(0)-minVarId;
-                            qpbo_->AddUnaryTerm(qpboVi0, factor->eval(0l), factor->eval(1l));
+                            qpbo_->AddUnaryTerm(qpboVi0, factor->eval1(0l), factor->eval1(1l));
                         }
                         else if(arity == 2){
                             const int qpboVi0 = factor->vi(0)-minVarId;
                             const int qpboVi1 = factor->vi(1)-minVarId;
 
                             qpbo_->AddPairwiseTerm(qpboVi0, qpboVi1,
-                                                   factor->eval(0,0), factor->eval(0,1),
-                                                   factor->eval(1,0), factor->eval(1,1));
+                                                   factor->eval2(0,0), factor->eval2(0,1),
+                                                   factor->eval2(1,0), factor->eval2(1,1));
                         }
                         else
                             throw RuntimeError("INTERNAL ERROR: model_.maxArity() must have a bug");

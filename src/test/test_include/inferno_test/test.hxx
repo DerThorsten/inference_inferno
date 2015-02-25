@@ -45,25 +45,25 @@
     } \
     if(arity==1){ \
         for(auto l=0; l < vt->shape(0); ++l) \
-            BOOST_CHECK_CLOSE(vt->eval(l), trueVt(l), TEST_EPS); \
+            BOOST_CHECK_CLOSE(vt->eval1(l), trueVt(l), TEST_EPS); \
     } \
     if(arity==2){ \
         for(auto l1=0; l1 < vt->shape(1); ++l1) \
         for(auto l0=0; l0 < vt->shape(0); ++l0) \
-            BOOST_CHECK_CLOSE(vt->eval(l0,l1), trueVt(l0,l1), TEST_EPS); \
+            BOOST_CHECK_CLOSE(vt->eval2(l0,l1), trueVt(l0,l1), TEST_EPS); \
     } \
     if(arity==3){ \
         for(auto l2=0; l2 < vt->shape(2); ++l2) \
         for(auto l1=0; l1 < vt->shape(1); ++l1) \
         for(auto l0=0; l0 < vt->shape(0); ++l0) \
-            BOOST_CHECK_CLOSE(vt->eval(l0,l1, l2), trueVt(l0,l1, l2), TEST_EPS); \
+            BOOST_CHECK_CLOSE(vt->eval3(l0,l1, l2), trueVt(l0,l1, l2), TEST_EPS); \
     } \
     if(arity==4){ \
         for(auto l3=0; l3 < vt->shape(3); ++l3) \
         for(auto l2=0; l2 < vt->shape(2); ++l2) \
         for(auto l1=0; l1 < vt->shape(1); ++l1) \
         for(auto l0=0; l0 < vt->shape(0); ++l0) \
-            BOOST_CHECK_CLOSE(vt->eval(l0,l1, l2, l3), trueVt(l0,l1, l2, l3), TEST_EPS); \
+            BOOST_CHECK_CLOSE(vt->eval4(l0,l1, l2, l3), trueVt(l0,l1, l2, l3), TEST_EPS); \
     } \
     if(arity==5){ \
         for(auto l4=0; l4 < vt->shape(4); ++l4) \
@@ -71,7 +71,7 @@
         for(auto l2=0; l2 < vt->shape(2); ++l2) \
         for(auto l1=0; l1 < vt->shape(1); ++l1) \
         for(auto l0=0; l0 < vt->shape(0); ++l0) \
-            BOOST_CHECK_CLOSE(vt->eval(l0,l1, l2, l3, l4), trueVt(l0,l1, l2, l3, l4), TEST_EPS); \
+            BOOST_CHECK_CLOSE(vt->eval5(l0,l1, l2, l3, l4), trueVt(l0,l1, l2, l3, l4), TEST_EPS); \
     } \
     std::vector<inferno::DiscreteLabel> shapeBuffer(arity); \
     vt->bufferShape(shapeBuffer.data()); \
@@ -85,7 +85,8 @@
         ++c; \
     } \
     /* no test / or very simple tests  for next functions */ \
-    const auto isPotts = vt->isPotts(); \
+    ValueType beta; \
+    const auto isPotts = vt->isPotts(beta); \
     const auto isGeneralizedPotts = vt->isGeneralizedPotts(); \
     if(isPotts && arity>=1 && arity<=4)\
         BOOST_CHECK_EQUAL(isPotts, isGeneralizedPotts); \
@@ -112,7 +113,7 @@
         const auto modelMaxVarId = model.maxVarId();\
         BOOST_REQUIRE_EQUAL(modelMinVarId,vis.front());\
         BOOST_REQUIRE_EQUAL(modelMaxVarId,vis.back());\
-         const auto realMin = *std::min_element(vis.begin(), vis.end());\
+        const auto realMin = *std::min_element(vis.begin(), vis.end());\
         const auto realMax = *std::max_element(vis.begin(), vis.end());\
         BOOST_REQUIRE_EQUAL(modelMinVarId,realMin);\
         BOOST_REQUIRE_EQUAL(modelMaxVarId,realMax);\

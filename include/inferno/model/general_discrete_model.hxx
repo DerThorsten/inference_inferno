@@ -47,7 +47,7 @@ public:
     const value_tables::DiscreteValueTableBase * valueTable()const{
         return vt_;
     }   
-    size_t arity()const{
+    uint32_t arity()const{
         return arity_;
     }
     LabelType shape(const size_t d)const{
@@ -99,8 +99,10 @@ public:
         table have been added.
     */
     ~GeneralDiscreteGraphicalModel(){
-        for(auto vt : valueTables_)
-            delete vt;
+        if(functionOwner_){
+            for(auto vt : valueTables_)
+                delete vt;
+        }
     }
 
 
@@ -137,7 +139,7 @@ public:
         }
     };
 
-
+    /*
     template<class CONFIG>
     double eval(const CONFIG  &conf)const{
         double sum = 0.0;
@@ -150,6 +152,63 @@ public:
         }
         return sum;
     }
+    */
+
+    template<class CONFIG>
+    double eval(const CONFIG  & conf)const{
+        double sum = 0.0;
+        switch(maxArity_){
+            case 1 :{
+                for(size_t i=0; i<factors_.size(); ++i){
+                    const Ftype & fac = factors_[i];
+                    sum += fac.eval1(conf[fac.vi(0)]);
+                }
+                return sum;
+            }
+            case 2 : {
+                for(size_t i=0; i<factors_.size(); ++i){
+                    const Ftype & fac = factors_[i];
+                    switch(fac.arity()){
+                        case 1:
+                            sum+= fac.eval1(conf[fac.vi(0)]);
+                            break;
+                        case 2:
+                            sum+= fac.eval2(conf[fac.vi(0)],conf[fac.vi(1)]);
+                            break;
+                    }
+                }
+                return sum;
+            }
+            case 3 : {
+                for(size_t i=0; i<factors_.size(); ++i){
+                    const Ftype & fac = factors_[i];
+                    const uint32_t arity = fac.arity();
+                    switch(arity){
+                        case 1:
+                            sum+= fac.eval1(conf[fac.vi(0)]);
+                            break;
+                        case 2:
+                            sum+= fac.eval2(conf[fac.vi(0)],conf[fac.vi(1)]);
+                            break;
+                        case 3:
+                            sum+= fac.eval3(conf[fac.vi(0)],conf[fac.vi(1)],conf[fac.vi(2)]);
+                            break;
+                    }
+                }
+                return sum;
+            }
+            default : {
+                std::vector<DiscreteLabel> confBuffer(maxArity_);
+                for(size_t i=0; i<factors_.size(); ++i){
+                    const Ftype & fac = factors_[i];
+                    fac.getFactorConf(conf, confBuffer.begin());
+                    sum += fac.eval(confBuffer.data());
+                }
+                return sum;
+            }
+        }
+    }
+
 
 
 
@@ -175,12 +234,13 @@ public:
     }
 
 
-    GeneralDiscreteGraphicalModel(const uint64_t nVar, const LabelType nLabes)
+    GeneralDiscreteGraphicalModel(const uint64_t nVar, const LabelType nLabes, const bool functionOwner = true)
     :   nVar_(nVar),
         numberOfLabels_(1, nLabes),
         valueTables_(),
         factors_(),
-        maxArity_(0){
+        maxArity_(0),
+        functionOwner_(functionOwner){
     }
     uint64_t addValueTable( value_tables::DiscreteValueTableBase * vt){
         valueTables_.push_back(vt);
@@ -220,6 +280,7 @@ private:
     std::vector<GeneralDiscreteGraphicalModelFactor<GeneralDiscreteGraphicalModel> >         factors_;
     std::vector<Vi> facVis_;
     size_t maxArity_;
+    bool functionOwner_;
 
 };
 

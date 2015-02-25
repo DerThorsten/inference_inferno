@@ -18,9 +18,6 @@ int main(){
     model.addFactor(0,2, 1.0);
     model.addFactor(1,3, 1.0);
 
-    for(auto fiter=model.factorIdsBegin(); fiter != model.factorIdsEnd(); ++fiter){
-        std::cout<<*fiter<<" "<<inferno::io::varibleIds(model[*fiter])<<"\n"<<inferno::io::valueTable(model[*fiter])<<"\n";
-    }
 
     typedef inferno::ImplicitMulticutModel          Model;
     typedef inferno::inference::Multicut<Model>     Solver;

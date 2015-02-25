@@ -25,3 +25,16 @@ target_link_libraries(benchmark  ${BENCH_LIBS})
 
 add_executable(inferno_vs_opengm inferno_vs_opengm.cxx )
 target_link_libraries(inferno_vs_opengm  ${BENCH_LIBS})
+
+add_executable(inferno_vs_opengm_unaries inferno_vs_opengm_unaries.cxx )
+target_link_libraries(inferno_vs_opengm_unaries  ${BENCH_LIBS})
+
+
+add_executable(inferno_vs_opengm_potts inferno_vs_opengm_potts.cxx )
+target_link_libraries(inferno_vs_opengm_potts  ${BENCH_LIBS})
+
+add_executable(just_unaries just_unaries.cxx )
+target_link_libraries(just_unaries  ${BENCH_LIBS})
+
+add_executable(nb nb.cxx )
+target_link_libraries(nb  ${BENCH_LIBS})

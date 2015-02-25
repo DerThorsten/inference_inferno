@@ -7,7 +7,7 @@
 
 #include <cstdint>
 #include <vector>
-
+#include <limits>
 
 #include "inferno/inferno.hxx"
 #include "inferno/utilities/shape_walker.hxx"
@@ -149,6 +149,7 @@ public:
         return size;
     }
 
+
     /** \brief evaluate an unary 1-ary value table for a given label
             (or 0-ary value table)
 
@@ -162,7 +163,7 @@ public:
 
         \returns : value at given configuration
     */
-    virtual ValueType eval(const L l0)const{
+    virtual ValueType eval1(const L l0)const{
         return this->eval(&l0);
     }
     /** \brief evaluate an binary / 2-ary value table for a given label
@@ -176,7 +177,7 @@ public:
 
         \returns : value at given configuration
     */
-    virtual ValueType eval(const L l0, const L l1)const{
+    virtual ValueType eval2(const L l0, const L l1)const{
         L conf[] = {l0, l1};
         return this->eval(conf);
     }
@@ -193,7 +194,7 @@ public:
 
         \returns : value at given configuration
     */
-    virtual ValueType eval(const L l0, const L l1, const L l2)const{
+    virtual ValueType eval3(const L l0, const L l1, const L l2)const{
         L conf[] = {l0, l1, l2};
         return this->eval(conf);
     }
@@ -210,7 +211,7 @@ public:
 
         \returns : value at given configuration
     */
-    virtual ValueType eval(const L l0, const L l1, const L l2, const L l3)const{
+    virtual ValueType eval4(const L l0, const L l1, const L l2, const L l3)const{
         L conf[] = {l0, l1, l2, l3};
         return this->eval(conf);
     }
@@ -228,11 +229,10 @@ public:
 
         \returns : value at given configuration
     */
-    virtual ValueType eval(const L l0, const L l1, const L l2, const L l3, const L l4)const{
+    virtual ValueType eval5(const L l0, const L l1, const L l2, const L l3, const L l4)const{
         L conf[] = {l0, l1, l2, l3, l4};
         return this->eval(conf);
     }
-
     /** \brief check if the value table encodes a generalized potts function.
         
         A generalized potts function is a 
@@ -361,6 +361,13 @@ public:
     }
 
     /** \brief Check if value table encodes a potts function.
+        
+        \param[out] beta : if the function is a potts 
+            function beta will be :  beta * (x_0!=x_1).
+            To be precise, beta is f(0,0) - f(1,0) in 
+            the second order case for a potts function.
+            If the function is not potts function
+            the value beta is not changed
 
         A potts function must have an arity >=2.
         All configurations where all labels are the 
@@ -369,8 +376,9 @@ public:
         are the same must have the same value.
         Therefore a potts function can have only
         two distinct values.
+
     */
-    virtual bool isPotts() const{
+    virtual bool isPotts(ValueType & beta) const{
         const auto arity = this->arity();
         if(arity == 1){
             return false;
@@ -378,11 +386,11 @@ public:
         else if(arity == 2){
             DiscreteLabel s[2];
             this->bufferShape(s);
-            const auto vAA = this->eval(0l,0l);
-            const auto vAB = this->eval(0l,1l);
+            const auto vAA = this->eval2(0l,0l);
+            const auto vAB = this->eval2(0l,1l);
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const auto val = this->eval(l0, l1);
+                const auto val = this->eval2(l0, l1);
                 if(l0==l1){
                     if(!fEq(val,vAA))
                         return false;
@@ -391,18 +399,19 @@ public:
                         return false;
                 }
             }
+            beta = vAB - vAA;
             return true;
         }
         else if(arity == 3){
             DiscreteLabel s[3];
             this->bufferShape(s);
-            const auto vAA = this->eval(0l,0l,0l);
-            const auto vAB = this->eval(0l,0l,1l);
+            const auto vAA = this->eval3(0l,0l,0l);
+            const auto vAB = this->eval3(0l,0l,1l);
 
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const auto val = this->eval(l0, l1, l2);
+                const auto val = this->eval3(l0, l1, l2);
                 if(l0==l1 && l0==l2){
                     if(!fEq(val,vAA))
                         return false;
@@ -411,19 +420,20 @@ public:
                         return false;
                 }
             }
+            beta = vAB - vAA;
             return true;
         }
         else if(arity == 4){
             DiscreteLabel s[4];
             this->bufferShape(s);
-            const auto vAA = this->eval(0l,0l,0l,0l);
-            const auto vAB = this->eval(0l,0l,0l,1l);
+            const auto vAA = this->eval4(0l,0l,0l,0l);
+            const auto vAB = this->eval4(0l,0l,0l,1l);
 
             for(DiscreteLabel l3=0; l3 < s[3]; ++l3)
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const auto val = this->eval(l0, l1, l2, l3);
+                const auto val = this->eval4(l0, l1, l2, l3);
                 if(l0==l1 && l0==l2 && l0==l3){
                     if(!fEq(val,vAA))
                         return false;
@@ -432,20 +442,21 @@ public:
                         return false;
                 }
             }
+            beta = vAB - vAA;
             return true;
         }
         else if(arity == 5){
             DiscreteLabel s[5];
             this->bufferShape(s);
-            const auto vAA = this->eval(0l,0l,0l,0l,0l);
-            const auto vAB = this->eval(0l,0l,0l,0l,1l);
+            const auto vAA = this->eval5(0l,0l,0l,0l,0l);
+            const auto vAB = this->eval5(0l,0l,0l,0l,1l);
 
             for(DiscreteLabel l4=0; l4 < s[4]; ++l4)
             for(DiscreteLabel l3=0; l3 < s[3]; ++l3)
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const auto val = this->eval(l0, l1, l2, l3, l4);
+                const auto val = this->eval5(l0, l1, l2, l3, l4);
                 if(l0==l1 && l0==l2 && l0==l3 && l0==l4){
                     if(!fEq(val,vAA))
                         return false;
@@ -454,6 +465,7 @@ public:
                         return false;
                 }
             }
+            beta = vAB - vAA;
             return true;
         }
         else{
@@ -474,6 +486,7 @@ public:
                         return false;
                 }
             }
+            beta = vAB - vAA;
             return true;
         }
     }
@@ -484,6 +497,99 @@ public:
     }
     ConfRange confs()const{
         return ConfRange(this);
+    }
+
+
+    ValueType argmin(DiscreteLabel * conf)const{
+        const size_t arity = this->arity();
+        ValueType minVal = std::numeric_limits<ValueType>::infinity();
+        if(arity == 1){
+            const DiscreteLabel s[1] = {this->shape(0)};
+            for(DiscreteLabel l0=0; l0<s[0]; ++l0){
+                const ValueType v = this->eval1(l0);
+                if(v<minVal){
+                    conf[0] = l0;
+                    minVal = v;
+                }
+            }
+        }
+        else if(arity == 2){
+            DiscreteLabel s[2];
+            this->bufferShape(s);
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                const ValueType v = this->eval2(l0, l1);
+                if(v<minVal){
+                    conf[0] = l0;
+                    conf[1] = l1;
+                    minVal = v;
+                }
+            }
+        }
+        else if(arity == 3){
+            DiscreteLabel s[3];
+            this->bufferShape(s);
+            for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                const ValueType v = this->eval3(l0, l1, l2);
+                if(v<minVal){
+                    conf[0] = l0;
+                    conf[1] = l1;
+                    conf[2] = l2;
+                    minVal = v;
+                }
+            }
+        }
+        else if(arity == 4){
+            DiscreteLabel s[4];
+            this->bufferShape(s);
+            for(DiscreteLabel l3=0; l3 < s[3]; ++l3)
+            for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                const ValueType v = this->eval4(l0, l1, l2, l3);
+                if(v<minVal){
+                    conf[0] = l0;
+                    conf[1] = l1;
+                    conf[2] = l2;
+                    conf[3] = l3;
+                    minVal = v;
+                }
+            }
+        }
+        else if(arity == 5){
+            DiscreteLabel s[5];
+            this->bufferShape(s);
+            for(DiscreteLabel l4=0; l4 < s[4]; ++l4)
+            for(DiscreteLabel l3=0; l3 < s[3]; ++l3)
+            for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                const ValueType v = this->eval5(l0, l1, l2, l3, l4);
+                if(v<minVal){
+                    conf[0] = l0;
+                    conf[1] = l1;
+                    conf[2] = l2;
+                    conf[3] = l3;
+                    conf[4] = l4;
+                    minVal = v;
+                }
+            }
+        }
+        else { // (arity >= 6)
+            const int64_t nConf = this->size();
+            ConfIterator<ShapeFunctor> confIter(ShapeFunctor(this), arity, nConf);
+            ConfIterator<ShapeFunctor> confEnd = confIter.getEnd();
+            for( ; confIter != confEnd; ++confIter){
+                const ValueType v = this->eval(confIter->data());
+                if(v<minVal){
+                    for(auto a=0; a<arity; ++a)
+                        conf[a] = confIter->data()[a];
+                    minVal = v;
+                }
+            }
+        }
     }
 
 
@@ -530,13 +636,10 @@ public:
     */
     virtual void bufferValueTable(ValueType * buffer)const{
         const size_t arity = this->arity();
-        if(arity == 0){
-            buffer[0] = this->eval(0l);
-        }
-        else if(arity == 1){
+        if(arity == 1){
             const DiscreteLabel s[1] = {this->shape(0)};
             for(DiscreteLabel l0=0; l0<s[0]; ++l0){
-                buffer[l0] = this->eval(l0);
+                buffer[l0] = this->eval1(l0);
             }
         }
         else if(arity == 2){
@@ -545,7 +648,7 @@ public:
             this->bufferShape(s);
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] = this->eval(l0, l1);
+                buffer[c] = this->eval2(l0, l1);
                 ++c;
             }
         }
@@ -556,7 +659,7 @@ public:
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] = this->eval(l0, l1, l2);
+                buffer[c] = this->eval3(l0, l1, l2);
                 ++c;
             }
         }
@@ -568,7 +671,7 @@ public:
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] = this->eval(l0, l1, l2, l3);
+                buffer[c] = this->eval4(l0, l1, l2, l3);
                 ++c;
             }
         }
@@ -581,7 +684,7 @@ public:
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] = this->eval(l0, l1, l2, l3, l4);
+                buffer[c] = this->eval5(l0, l1, l2, l3, l4);
                 ++c;
             }
         }
@@ -599,6 +702,12 @@ public:
 
         }
     }
+
+    virtual std::pair<uint64_t, uint64_t > serializationSize()const{
+        return std::pair<uint64_t, uint64_t >(1+this->arity(),this->size());
+    } 
+
+
 };
 
 

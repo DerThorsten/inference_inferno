@@ -300,8 +300,8 @@ typename Multicut<MODEL>::LPIndexType Multicut<MODEL>::getNeighborhood
 
       const auto factor = gm_[fi];
       const auto arity = factor->arity();
-
-      if(arity>2 && ! factor->valueTable()->isPotts()){ // Generalized Potts
+      ValueType beta;
+      if(arity>2 && ! factor->valueTable()->isPotts(beta)){ // Generalized Potts
          higherOrderTerms.push_back(HigherOrderTerm(fi, false, 0));      
          for(size_t i=0; i<arity;++i) {
             for(size_t j=0; j<i;++j) {
@@ -323,8 +323,8 @@ typename Multicut<MODEL>::LPIndexType Multicut<MODEL>::getNeighborhood
 
       const auto factor = gm_[fi];
       const auto arity = factor->arity();
-
-      if(arity>2 && factor->valueTable()->isPotts()) { //Higher order Potts
+      ValueType beta;
+      if(arity>2 && factor->valueTable()->isPotts(beta)) { //Higher order Potts
          higherOrderTerms.push_back(HigherOrderTerm(fi, true, 0));  
          std::vector<LPIndexType> lpIndexVector;
          //Find spanning tree vor the variables nb(f) using edges that already exist.
@@ -386,9 +386,6 @@ Multicut<MODEL>::Multicut
    ) : gm_(gm), options_(para) , bound_(-std::numeric_limits<double>::infinity()), infinity_(1e8), integerMode_(false),
        EPS_(1e-7)
 {
-   if(para.semiRing != MinSum) {
-      throw RuntimeError("This implementation does only supports Min-Plus-Semiring.");
-   } 
    if(options_.reductionMode_<0 ||options_.reductionMode_>3) {
       throw RuntimeError("Reduction Mode has to be 1, 2 or 3!");
    } 
@@ -451,8 +448,8 @@ Multicut<MODEL>::Multicut
          const Vi node = factor->vi(0);
          for(DiscreteLabel i=0; i<gm_.nLabels(node); ++i) {
             for(DiscreteLabel j=0; j<gm_.nLabels(node); ++j) {
-               if(i==j) values[node*numberOfTerminals_+i] += (1.0/(numberOfTerminals_-1)-1) * factor->eval(j);
-               else     values[node*numberOfTerminals_+i] += (1.0/(numberOfTerminals_-1))   * factor->eval(j);
+               if(i==j) values[node*numberOfTerminals_+i] += (1.0/(numberOfTerminals_-1)-1) * factor->eval1(j);
+               else     values[node*numberOfTerminals_+i] += (1.0/(numberOfTerminals_-1))   * factor->eval1(j);
             }
          }
       }

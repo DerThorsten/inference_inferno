@@ -75,34 +75,34 @@ public:
     ValueType eval(const LabelType * conf)const{
         return factor()->valueTable()->eval(conf);
     }
-    ValueType eval(const LabelType l0)const{
-        return factor()->valueTable()->eval(l0);
+    ValueType eval1(const LabelType l0)const{
+        return factor()->valueTable()->eval1(l0);
     }
 
-    ValueType eval(const LabelType l0, 
+    ValueType eval2(const LabelType l0, 
                          const LabelType l1)const{
-        return factor()->valueTable()->eval(l0, l1);
+        return factor()->valueTable()->eval2(l0, l1);
     }
 
-    ValueType eval(const LabelType l0, 
-                         const LabelType l1, 
-                         const LabelType l2)const{
-        return factor()->valueTable()->eval(l0, l1, l2);
+    ValueType eval3(const LabelType l0, 
+                    const LabelType l1, 
+                    const LabelType l2)const{
+        return factor()->valueTable()->eval3(l0, l1, l2);
     }
 
-    ValueType eval(const LabelType l0, 
-                         const LabelType l1, 
-                         const LabelType l2, 
-                         const LabelType l3)const{
-        return factor()->valueTable()->eval(l0, l1, l2, l3);
+    ValueType eval4(const LabelType l0, 
+                    const LabelType l1, 
+                    const LabelType l2, 
+                    const LabelType l3)const{
+        return factor()->valueTable()->eval4(l0, l1, l2, l3);
     }
 
-    ValueType eval(const LabelType l0, 
+    ValueType eval5(const LabelType l0, 
                          const LabelType l1, 
                          const LabelType l2, 
                          const LabelType l3,
                          const LabelType l4)const{
-        return factor()->valueTable()->eval(l0, l1, l2, l3, l4);
+        return factor()->valueTable()->eval5(l0, l1, l2, l3, l4);
     }
     size_t arity()const{
         return factor()->valueTable()->arity();
@@ -111,11 +111,11 @@ public:
         return factor()->valueTable()->size();
     }
 
-    virtual void bufferShape(DiscreteLabel * buffer)const{
+    void bufferShape(DiscreteLabel * buffer)const{
         return factor()->valueTable()->bufferShape(buffer);
     }
 
-    virtual void bufferValueTable(ValueType * buffer)const{
+    void bufferValueTable(ValueType * buffer)const{
         return factor()->valueTable()->bufferValueTable(buffer);
     }
 

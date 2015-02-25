@@ -32,7 +32,8 @@ BOOST_AUTO_TEST_CASE(TestUnaryValueTable)
 
         // run tests
         INFERNO_TEST_VT(vt, trueVt);
-        BOOST_CHECK_EQUAL(vt->isPotts(),false);
+        ValueType beta;
+        BOOST_CHECK_EQUAL(vt->isPotts(beta),false);
         BOOST_CHECK_EQUAL(vt->isGeneralizedPotts(),false);
 
     }
@@ -46,8 +47,9 @@ BOOST_AUTO_TEST_CASE(TestUnaryValueTable)
         for(size_t i=0; i<4; ++i)
             trueVt(i) = data[i];
         // run tests
+        ValueType beta;
         INFERNO_TEST_VT(vt, trueVt);
-        BOOST_CHECK_EQUAL(vt->isPotts(),false);
+        BOOST_CHECK_EQUAL(vt->isPotts(beta),false);
         BOOST_CHECK_EQUAL(vt->isGeneralizedPotts(),false);
 
     }
@@ -61,8 +63,9 @@ BOOST_AUTO_TEST_CASE(TestUnaryValueTable)
         trueVt(1) =  1.0;
 
         // run tests
+        ValueType beta;
         INFERNO_TEST_VT(vt, trueVt);
-        BOOST_CHECK_EQUAL(vt->isPotts(),false);
+        BOOST_CHECK_EQUAL(vt->isPotts(beta),false);
         BOOST_CHECK_EQUAL(vt->isGeneralizedPotts(),false);
 
     }
@@ -88,8 +91,9 @@ BOOST_AUTO_TEST_CASE(TestPottsValueTable)
             trueVt(i, i) = 0;
 
         // run tests
+        ValueType betat;
         INFERNO_TEST_VT(vt, trueVt);
-        BOOST_CHECK_EQUAL(vt->isPotts(),true);
+        BOOST_CHECK_EQUAL(vt->isPotts(betat),true);
         BOOST_CHECK_EQUAL(vt->isGeneralizedPotts(),true);
 
     }
@@ -112,9 +116,9 @@ BOOST_AUTO_TEST_CASE(TestExplicitValueTable)
         // to test
         Vtb * vt = new Vt(trueVt);
 
-        // run tests
+        ValueType beta;
         INFERNO_TEST_VT(vt, trueVt);
-        BOOST_CHECK_EQUAL(vt->isPotts(),false);
+        BOOST_CHECK_EQUAL(vt->isPotts(beta),false);
         BOOST_CHECK_EQUAL(vt->isGeneralizedPotts(),false);
 
     }
@@ -129,8 +133,9 @@ BOOST_AUTO_TEST_CASE(TestExplicitValueTable)
         Vtb * vt = new Vt(trueVt);
 
         // run tests
+        ValueType beta;
         INFERNO_TEST_VT(vt, trueVt);
-        BOOST_CHECK_EQUAL(vt->isPotts(),false);
+        BOOST_CHECK_EQUAL(vt->isPotts(beta),false);
         BOOST_CHECK_EQUAL(vt->isGeneralizedPotts(),false);
 
     }
@@ -144,8 +149,9 @@ BOOST_AUTO_TEST_CASE(TestExplicitValueTable)
         Vtb * vt = new Vt(trueVt);
 
         // run tests
+        ValueType beta;
         INFERNO_TEST_VT(vt, trueVt);
-        BOOST_CHECK_EQUAL(vt->isPotts(),true);
+        BOOST_CHECK_EQUAL(vt->isPotts(beta),true);
         BOOST_CHECK_EQUAL(vt->isGeneralizedPotts(),true);
     }
     // 2. constant
@@ -158,8 +164,9 @@ BOOST_AUTO_TEST_CASE(TestExplicitValueTable)
         Vtb * vt = new Vt(trueVt);
 
         // run tests
+        ValueType beta;
         INFERNO_TEST_VT(vt, trueVt);
-        BOOST_CHECK_EQUAL(vt->isPotts(),true);
+        BOOST_CHECK_EQUAL(vt->isPotts(beta),true);
         BOOST_CHECK_EQUAL(vt->isGeneralizedPotts(),true);
     }
     // 3. order potts
@@ -172,8 +179,9 @@ BOOST_AUTO_TEST_CASE(TestExplicitValueTable)
         Vtb * vt = new Vt(trueVt);
 
         // run tests
+        ValueType beta;
         INFERNO_TEST_VT(vt, trueVt);
-        BOOST_CHECK_EQUAL(vt->isPotts(),true);
+        BOOST_CHECK_EQUAL(vt->isPotts(beta),true);
         BOOST_CHECK_EQUAL(vt->isGeneralizedPotts(),true);
 
     }
@@ -197,8 +205,9 @@ BOOST_AUTO_TEST_CASE(TestExplicitViewValueTable)
         Vtb * vt = new Vt(view);
 
         // run tests
+        ValueType beta;
         INFERNO_TEST_VT(vt, trueVt);
-        BOOST_CHECK_EQUAL(vt->isPotts(),false);
+        BOOST_CHECK_EQUAL(vt->isPotts(beta),false);
         BOOST_CHECK_EQUAL(vt->isGeneralizedPotts(),false);
 
     }
@@ -214,8 +223,9 @@ BOOST_AUTO_TEST_CASE(TestExplicitViewValueTable)
         Vtb * vt = new Vt(view);
 
         // run tests
+        ValueType beta;
         INFERNO_TEST_VT(vt, trueVt);
-        BOOST_CHECK_EQUAL(vt->isPotts(),false);
+        BOOST_CHECK_EQUAL(vt->isPotts(beta),false);
         BOOST_CHECK_EQUAL(vt->isGeneralizedPotts(),false);
 
     }
@@ -230,8 +240,9 @@ BOOST_AUTO_TEST_CASE(TestExplicitViewValueTable)
         Vtb * vt = new Vt(view);
 
         // run tests
+        ValueType beta;
         INFERNO_TEST_VT(vt, trueVt);
-        BOOST_CHECK_EQUAL(vt->isPotts(),true);
+        BOOST_CHECK_EQUAL(vt->isPotts(beta),true);
         BOOST_CHECK_EQUAL(vt->isGeneralizedPotts(),true);
     }
     // 2. constant
@@ -245,8 +256,9 @@ BOOST_AUTO_TEST_CASE(TestExplicitViewValueTable)
         Vtb * vt = new Vt(view);
 
         // run tests
+        ValueType beta;
         INFERNO_TEST_VT(vt, trueVt);
-        BOOST_CHECK_EQUAL(vt->isPotts(),true);
+        BOOST_CHECK_EQUAL(vt->isPotts(beta),true);
         BOOST_CHECK_EQUAL(vt->isGeneralizedPotts(),true);
     }
     // 3. order potts
@@ -260,8 +272,9 @@ BOOST_AUTO_TEST_CASE(TestExplicitViewValueTable)
         Vtb * vt = new Vt(view);
 
         // run tests
+        ValueType beta;
         INFERNO_TEST_VT(vt, trueVt);
-        BOOST_CHECK_EQUAL(vt->isPotts(),true);
+        BOOST_CHECK_EQUAL(vt->isPotts(beta),true);
         BOOST_CHECK_EQUAL(vt->isGeneralizedPotts(),true);
 
     }

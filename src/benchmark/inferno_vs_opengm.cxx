@@ -1,6 +1,7 @@
 #include <benchmark/benchmark.h>
 
 #include "inferno/inferno.hxx"
+#include "inferno/model/general_discrete_tl_model.hxx"
 #include "inferno/model/general_discrete_model.hxx"
 #include "inferno/value_tables/potts.hxx"
 #include "inferno/value_tables/unary.hxx"
@@ -25,7 +26,7 @@
 // Define another benchmark
 static void PottsBenchmarkInferno(benchmark::State& state) {
 
-    //state.PauseTiming();
+    state.PauseTiming();
 
     const inferno::LabelType nLabels = state.range_y();
     const inferno::Vi gridShape[2] = {state.range_x(),state.range_x()};
@@ -89,21 +90,184 @@ static void PottsBenchmarkInferno(benchmark::State& state) {
 
     //inferno::GeneralDiscreteGraphicalModel::VariableMap<inferno::DiscreteLabel>  labels(model, 0);
     inferno::ValueType res = 0;
-    //state.ResumeTiming();
+    
     std::vector<inferno::DiscreteLabel> labels(model.nVariables(),0);
+    state.ResumeTiming();
     while (state.KeepRunning()){
         res += model.eval(labels);
+    }
+
+}
+// Define another benchmark
+static void PottsBenchmarkInfernoMem(benchmark::State& state) {
+
+    state.PauseTiming();
+
+    const inferno::LabelType nLabels = state.range_y();
+    const inferno::Vi gridShape[2] = {state.range_x(),state.range_x()};
+    const inferno::Vi nVar = gridShape[0]*gridShape[1];
+    std::vector<inferno::ValueType> uVals(nLabels); 
+    std::uniform_real_distribution<float> distribution(-1,1); //Values between -1 and 1
+    std::mt19937 engine; // Mersenne twister MT19937
+    auto generator = std::bind(distribution, engine);
+
+
+    inferno::GeneralDiscreteGraphicalModel model(nVar, nLabels, false);
+
+    const auto nUnaries = nVar; 
+    const auto n2Order  = ((gridShape[0]-1) * gridShape[1]) + ((gridShape[1]-1) * gridShape[0]);
+    const auto sU = sizeof(inferno::value_tables::UnaryViewValueTable);
+    const auto sSO = sizeof(inferno::value_tables::PottsValueTable);
+
+
+    const auto memsize = (sU + sizeof(inferno::ValueType)*nLabels )*nUnaries + sSO*n2Order;
+    uint8_t * memh = new uint8_t[memsize];
+    uint8_t * mem = memh;
+
+    // unary factors
+    for(auto y=0; y< gridShape[1]; ++y)
+    for(auto x=0; x< gridShape[0]; ++x){
+        
+        // get the flat variable index
+        const inferno::Vi vi = x + y*gridShape[0];
+        //std::cout<<"vi "<<vi<<"\n";
+        // fill random numbers 
+        // for unaries
+        for(auto & v : uVals){
+            v = generator();
+        }
+        // add the value table which stores the unary function to the model
+        const inferno::ValueType * data = reinterpret_cast<const inferno::ValueType *>(mem+sU);
+        auto vti = model.addValueTable(new (mem) inferno::value_tables::UnaryViewValueTable(nLabels, data) );
+        mem += sU + sizeof(inferno::ValueType)*nLabels;
+
+        // add the factor connected to the just added value table
+        // and the 1 variable indices 
+        auto fi = model.addFactor(vti ,{vi});
+    }
+
+
+    // second order
+    for(auto y=0; y< gridShape[1]; ++y)
+    for(auto x=0; x< gridShape[0]; ++x){
+        if(x+1 <gridShape[0]){
+            // get the flat variable index
+            const inferno::Vi vi0 = x + y*gridShape[0];
+            const inferno::Vi vi1 = x + 1 + y*gridShape[0];
+            // add the value table to the model
+            auto vti = model.addValueTable(new(mem) inferno::value_tables::PottsValueTable(nLabels, 1.0));
+            mem += sSO;
+            // add the factor connected to the just added value table
+            // and the 2 variable indices 
+            auto fi = model.addFactor(vti ,{vi0, vi1});
+        }
+        if(y+1 <gridShape[1]){
+            // get the flat variable index
+            const inferno::Vi vi0 = x + y*gridShape[0];
+            const inferno::Vi vi1 = x + (1 + y)*gridShape[0];
+            // add the value table which encodes the second order function to the model
+            auto vti = model.addValueTable(new(mem) inferno::value_tables::PottsValueTable(nLabels, 1.0));
+            mem += sSO;
+            // add the factor connected to the just added value table
+            // and the 2 variable indices 
+            auto fi = model.addFactor(vti ,{vi0, vi1});
+        }
+    }
+
+
+
+    //inferno::GeneralDiscreteGraphicalModel::VariableMap<inferno::DiscreteLabel>  labels(model, 0);
+    inferno::ValueType res = 0;
+    
+    std::vector<inferno::DiscreteLabel> labels(model.nVariables(),0);
+    state.ResumeTiming();
+    while (state.KeepRunning()){
+        res += model.eval(labels);
+    }
+    delete[] memh;
+
+}
+// Define another benchmark
+static void PottsBenchmarkInfernoTl(benchmark::State& state) {
+
+    state.PauseTiming();
+
+    const inferno::LabelType nLabels = state.range_y();
+    const inferno::Vi gridShape[2] = {state.range_x(),state.range_x()};
+    const inferno::Vi nVar = gridShape[0]*gridShape[1];
+    std::vector<inferno::ValueType> uVals(nLabels); 
+    std::uniform_real_distribution<float> distribution(-1,1); //Values between -1 and 1
+    std::mt19937 engine; // Mersenne twister MT19937
+    auto generator = std::bind(distribution, engine);
+
+
+    inferno::TlModel<inferno::value_tables::PottsValueTable, inferno::value_tables::UnaryValueTable> model(nVar, nLabels);
+
+    // unary factors
+    for(auto y=0; y< gridShape[1]; ++y)
+    for(auto x=0; x< gridShape[0]; ++x){
+        
+        // get the flat variable index
+        const inferno::Vi vi = x + y*gridShape[0];
+
+        // fill random numbers 
+        // for unaries
+        for(auto & v : uVals)
+            v = generator();
+        // add the value table which stores the unary function to the model
+        auto vti = model.addValueTable(inferno::value_tables::UnaryValueTable(uVals.begin(), uVals.end()) );
+
+
+        // add the factor connected to the just added value table
+        // and the 1 variable indices 
+        auto fi = model.addFactor(vti ,{vi});
+    }
+
+
+    // second order
+    for(auto y=0; y< gridShape[1]; ++y)
+    for(auto x=0; x< gridShape[0]; ++x){
+
+        if(x+1 <gridShape[0]){
+            // get the flat variable index
+            const inferno::Vi vi0 = x + y*gridShape[0];
+            const inferno::Vi vi1 = x + 1 + y*gridShape[0];
+            // add the value table to the model
+            auto vti = model.addValueTable(inferno::value_tables::PottsValueTable(nLabels, 1.0));
+            // add the factor connected to the just added value table
+            // and the 2 variable indices 
+            auto fi = model.addFactor(vti ,{vi0, vi1});
+        }
+        if(y+1 <gridShape[1]){
+            // get the flat variable index
+            const inferno::Vi vi0 = x + y*gridShape[0];
+            const inferno::Vi vi1 = x + (1 + y)*gridShape[0];
+            // add the value table which encodes the second order function to the model
+            auto vti = model.addValueTable(inferno::value_tables::PottsValueTable(nLabels, 1.0));
+            // add the factor connected to the just added value table
+            // and the 2 variable indices 
+            auto fi = model.addFactor(vti ,{vi0, vi1});
+        }
+    }
+
+
+
+    //inferno::GeneralDiscreteGraphicalModel::VariableMap<inferno::DiscreteLabel>  labels(model, 0);
+    inferno::ValueType res = 0;
+    std::vector<inferno::DiscreteLabel> labels(model.nVariables(),0);
+    state.ResumeTiming();
+    while (state.KeepRunning()){
+        res += model.eval(labels.begin());
     }
 
 }
 
 
 
-
 // Define another benchmark
 static void PottsBenchmarkOpengm(benchmark::State& state) {
 
-    //state.PauseTiming();
+    state.PauseTiming();
 
     const inferno::LabelType nLabels = state.range_y();
     const inferno::Vi gridShape[2] = {state.range_x(),state.range_x()};
@@ -142,8 +306,12 @@ static void PottsBenchmarkOpengm(benchmark::State& state) {
     typedef opengm::DiscreteSpace<size_t, size_t> Space;
     typedef opengm::GraphicalModel<double, opengm::Adder, Typelist    , Space> Model;
     std::vector<size_t> spaceVec(nVar,nLabels);
+
+
+
     Space space(spaceVec.begin(), spaceVec.end());
     Model gm(space);
+
     
 
 
@@ -162,6 +330,7 @@ static void PottsBenchmarkOpengm(benchmark::State& state) {
         size_t variableIndices[] = { size_t(x + y*gridShape[0])};
         gm.addFactor(fid, variableIndices, variableIndices + 1);
     }
+
 
     for(auto y=0; y< gridShape[1]; ++y)
     for(auto x=0; x< gridShape[0]; ++x){
@@ -188,16 +357,18 @@ static void PottsBenchmarkOpengm(benchmark::State& state) {
 
     std::vector<size_t> labels(gm.numberOfVariables(), 0);
     inferno::ValueType res = 0;
-    //state.ResumeTiming();
-
+    
+    state.ResumeTiming();
     while (state.KeepRunning()){
         res += gm.evaluate(labels);
     }
 
 }
 
-BENCHMARK(PottsBenchmarkOpengm)->RangePair(8, 2000, 2, 8);
-BENCHMARK(PottsBenchmarkInferno)->RangePair(8, 2000, 2, 8);
+BENCHMARK(PottsBenchmarkOpengm)->RangePair(8, 400, 2, 2000);
+BENCHMARK(PottsBenchmarkInfernoMem)->RangePair(8, 400, 2, 2000);
+//BENCHMARK(PottsBenchmarkInferno)->RangePair(8, 2000, 2, 2);
+//BENCHMARK(PottsBenchmarkInfernoTl)->RangePair(8, 2000, 2,2);
 
 
 

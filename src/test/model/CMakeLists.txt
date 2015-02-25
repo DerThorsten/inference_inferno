@@ -30,3 +30,8 @@ add_test(test_view_submodel test_view_submodel)
 add_executable(test_tl_model test_tl_model.cxx )
 target_link_libraries(test_tl_model ${TEST_LIBS})
 add_test(test_tl_model test_tl_model)
+
+
+add_executable(test_tl_model2 test_tl_model2.cxx )
+target_link_libraries(test_tl_model2 ${TEST_LIBS})
+add_test(test_tl_model2 test_tl_model2)
