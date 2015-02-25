@@ -8,7 +8,8 @@ set(INFERNO_EXTERNALS_ROOT_DIR "" CACHE PATH "INFERNO EXTERNALS root dir (instal
 FIND_PATH(INFERNO_EXTERNALS_INCLUDE_DIR
   inferno_externals/inferno_externals_path.hxx
   HINTS ${INFERNO_EXTERNALS_ROOT_DIR}/include
-        ${INFERNO_EXTERNALS_ROOT_DIR}/include
+        /home/tbeier/inst/include
+        ${HOME}/include
   PATHS ENV C_INCLUDE_PATH
         ENV C_PLUS_INCLUDE_PATH
         ENV INCLUDE_PATH
@@ -20,7 +21,8 @@ IF(WITH_QPBO)
         NAMES 
              inferno-external-qpbo-shared libinferno-external-qpbo-shared 
         HINTS 
-            ${INFERNO_EXTERNALS_ROOT_DIR}/lib/inferno_externals    
+            ${INFERNO_EXTERNALS_ROOT_DIR}/lib/inferno_externals
+            /home/tbeier/inst/lib/inferno_externals        
         PATHS 
             ENV LIBRARY_PATH                       #unix
             ENV LIBRARY_PATH/inferno_externals     #unix

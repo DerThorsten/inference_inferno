@@ -39,6 +39,7 @@ constexpr int getSaveIndex( int i, int NFunctionTypes)
 namespace detail_tl_model{
 namespace functors{
     struct ValueTable{
+        ValueTable(){}
         typedef const value_tables::DiscreteValueTableBase * result_type;
         template<class VT>
         result_type operator()(const VT & vt)const{
@@ -222,7 +223,7 @@ public:
     ValueType eval4(const DiscreteLabel l0, const DiscreteLabel l1,
                     const DiscreteLabel l2, const DiscreteLabel l3,
                     const DiscreteLabel l4)const{
-        const detail_tl_model::functors::Eval4 f{l0,l1,l2,l3,l4};
+        const detail_tl_model::functors::Eval5 f{l0,l1,l2,l3,l4};
         return callFunctor(f);
     }
 
