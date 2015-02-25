@@ -111,7 +111,6 @@ namespace functors{
         const DiscreteLabel  l0_,l1_,l2_,l3_,l4_;
     };
     struct IsPotts{
-        IsPotts(){}
         typedef bool result_type;
         template<class VT>
         result_type operator()(const VT & vt)const{

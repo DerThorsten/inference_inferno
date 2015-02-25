@@ -21,7 +21,8 @@ ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 add_executable(benchmark benchmark.cxx )
 target_link_libraries(benchmark  ${BENCH_LIBS})
 
-
+add_executable(inferno_vs_opengm2 inferno_vs_opengm2.cxx )
+target_link_libraries(inferno_vs_opengm2  ${BENCH_LIBS})
 
 add_executable(inferno_vs_opengm inferno_vs_opengm.cxx )
 target_link_libraries(inferno_vs_opengm  ${BENCH_LIBS})
