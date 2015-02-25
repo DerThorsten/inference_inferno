@@ -590,6 +590,7 @@ public:
                 }
             }
         }
+        return minVal;
     }
 
 
