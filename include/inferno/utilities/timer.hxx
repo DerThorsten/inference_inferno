@@ -64,14 +64,19 @@ private:
 template<class FUNCTOR>
 class Timing {
 public:
-   typedef FUNCTOR Functor;
+    typedef FUNCTOR Functor;
 
-   Timing(Functor, const size_t = 1);
-   const std::vector<double>& times() const;
+    Timing(Functor, const size_t = 1, const size_t = 1);
+    const std::vector<double>& times() const;
 
+    double mean()const{return m_;}
+    double stdev()const{return stdev_;}
+    std::string name()const{return name_;}
 private:
-   Functor functor_;
-   std::vector<double> times_;
+    std::vector<double> times_;
+    std::string name_;
+    double m_;
+    double stdev_;
 };
 
 inline Timer::Timer()
@@ -134,21 +139,32 @@ inline double Timer::elapsedTime() const {
 template<class FUNCTOR>
 inline Timing<FUNCTOR>::Timing(
    FUNCTOR functor,
-   const size_t repetitions
+   const size_t repetitions,
+   const size_t innerRepetitions
 )
-:  functor_(functor), 
-   times_(std::vector<double>()) 
+:  times_(std::vector<double>()) 
 {
-   if(repetitions < 1) {
-      throw std::runtime_error("The number of repetition must be at least 1.");
-   }
-   for(size_t j=0; j<repetitions; ++j) {
-      inferno::Timer timer;
-      timer.tic();
-      functor_();
-      timer.toc();
-      times_.push_back(timer.elapsedTime());
-   }
+    name_  = functor.name();
+    if(repetitions < 1) {
+        throw std::runtime_error("The number of repetition must be at least 1.");
+    }
+    for(size_t j=0; j<repetitions; ++j) {
+        inferno::Timer timer;
+        timer.tic();
+        for(size_t jj=0; jj<innerRepetitions; ++jj){
+            functor();
+        }
+        timer.toc();
+        times_.push_back(timer.elapsedTime()/double(innerRepetitions));
+    }
+
+    const double sum = std::accumulate(std::begin(times_), std::end(times_), 0.0);
+    m_ =  sum / times_.size();
+    double accum = 0.0;
+    std::for_each (std::begin(times_), std::end(times_), [&](const double d) {
+        accum += (d - m_) * (d - m_);
+    });
+    stdev_ = sqrt(accum / (times_.size()-1));
 }
 
 template<class FUNCTOR>

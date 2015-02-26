@@ -17,6 +17,8 @@ else(CMAKE_COMPILER_IS_GNUCXX)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 
+add_executable(new_benchmark new_benchmark.cxx )
+target_link_libraries(new_benchmark  ${BENCH_LIBS})
 
 add_executable(benchmark benchmark.cxx )
 target_link_libraries(benchmark  ${BENCH_LIBS})
