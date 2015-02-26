@@ -15,12 +15,12 @@ namespace models{
 
 namespace detail_implicit_potts_model{
 
-    class  HybridFunction : public DiscreteValueTableBase{
+    class  HybridFunction : public inferno::value_tables::DiscreteValueTableBase{
     public:
         HybridFunction(const DiscreteLabel nl,
                        const uint8_t arity, 
                        const ValueType * data)
-        :   DiscreteValueTableBase(),
+        :   inferno::value_tables::DiscreteValueTableBase(),
             nl_(nl),
             arity_(arity),
             data_(data){
@@ -45,11 +45,11 @@ namespace detail_implicit_potts_model{
             return arity_;
         }
         bool isGeneralizedPotts() const{
-            return order == 2 ? true : false;   
+            return arity_ == 2 ? true : false;   
         }
         bool isPotts(ValueType & beta) const{
-            beta = data[0];
-            return order == 2 ? true : false;
+            beta = data_[0];
+            return arity_ == 2 ? true : false;
         }
     private:
         const DiscreteLabel nl_;
@@ -101,7 +101,7 @@ public:
         return d==0? u_ : v_;
     }
     bool isGeneralizedPotts() const{
-        return isGeneralizedPotts.isPotts(beta); 
+        return hybridFunction_.isGeneralizedPotts(); 
     }
     bool isPotts(ValueType & beta) const{
         return hybridFunction_.isPotts(beta);
@@ -171,17 +171,43 @@ public:
 
     ImplicitPottsModel(const uint64_t nVar, const DiscreteLabel nl)
     :   nVar_(nVar),
-        nl_(nl)
+        nl_(nl),
         edges_(),
         beta_(),
         unaries_(nVar*nl, 0.0){
     }   
+    template<class VAL_ITER>
+    uint64_t addUnaryFactor(const Vi u,VAL_ITER valBegin, VAL_ITER valEnd){
+        std::copy(valBegin, valEnd, unaries_.begin() + u*nl_ );
+        return u;
+    }
 
     uint64_t addPottsFactor(const Vi u, const Vi v, const ValueType beta){
         edges_.push_back(u);
         edges_.push_back(v);
         beta_.push_back(beta);
         return nVar_ + beta_.size()-1;
+    }
+
+    template<class CONF>
+    ValueType eval(const CONF & conf)const{
+        ValueType val = 0.0;
+        for(Vi vi=0; vi<nVar_; ++vi){
+            //if(vi%10==0)
+            //    std::cout<<"vi "<<vi<<"\n";
+            val += unaries_[(vi*nl_) +conf[vi]];
+        }
+        for(size_t e=0; e<beta_.size(); ++e){
+            const Vi uu = e*2;
+            const Vi vv = uu+1;
+            //if(e%10==0)
+            //    std::cout<<"e "<<e<<"\n";
+            if(conf[edges_[uu]] != conf[edges_[vv]]){
+                val += beta_[e];
+            }
+        }
+        //std::cout<<"RES "<<val<<"\n";
+        return val;
     }
 
     uint64_t maxArity()const{
@@ -205,14 +231,14 @@ public:
         // unary
         if(factorId<nVar_){
             const size_t offset =  factorId*nl_;
-            return FactorProxy(nl, 1,unaries_.data() + offset, factorId);
+            return FactorProxy(nl_, 1,unaries_.data() + offset, factorId);
         }
         // 2 order potts
         else{
             const size_t edgeIndex = factorId - nVar_;
             const Vi uu = edgeIndex*2;
             const Vi vv = uu+1;
-            return FactorProxy(nl, 2,beta_.data() + edgesIndex, edges_[uu],edges_[vv]);
+            return FactorProxy(nl_, 2,beta_.data() + edgeIndex, edges_[uu],edges_[vv]);
         }
     }
 

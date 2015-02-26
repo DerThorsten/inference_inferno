@@ -1,6 +1,6 @@
 import numpy
 
-rns = numpy.random.rand(1000)
+rns = numpy.random.randint(2147483647, size=1000)
 
 for  rn in rns:
     print rn,","

@@ -111,6 +111,13 @@ public:
         return factor()->valueTable()->size();
     }
 
+    bool isPotts(ValueType & val)const{
+        return factor()->valueTable()->isPotts(val);
+    }
+    bool isGeneralizedPotts()const{
+        return factor()->valueTable()->isGeneralizedPotts();
+    }
+
     void bufferShape(DiscreteLabel * buffer)const{
         return factor()->valueTable()->bufferShape(buffer);
     }

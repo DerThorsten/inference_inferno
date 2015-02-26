@@ -33,12 +33,16 @@ namespace inferno{
 
     class BenchmarkPotts{
 
-        void setup(){
+        void setup(
+            
+        ){
 
         }
+
         bp::tuple run(){
 
         }
+
         void cleanup(){
 
         }
