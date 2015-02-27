@@ -131,7 +131,7 @@ private:
     uint64_t nVar_;
     std::vector<Vi> edges_;
     std::vector<ValueType> beta_;
-
+    std::vector<ValueType> unaries_;
 
 };
 
