@@ -233,6 +233,9 @@ public:
         return variabeId >= numberOfLabels_.size() ? numberOfLabels_[0] : numberOfLabels_[variabeId]; 
     }
 
+    Vti nValueTables()const{
+        return valueTables_.size();
+    }
 
     GeneralDiscreteGraphicalModel(const uint64_t nVar, const LabelType nLabes, const bool functionOwner = true)
     :   nVar_(nVar),
@@ -251,9 +254,14 @@ public:
         size_t arity=0;
         const uint64_t visOffset = facVis_.size();
         for( ;viBegin!=viEnd; ++viBegin){
-            facVis_.push_back(*viBegin);
+            const Vi vi = *viBegin;
+            INFERNO_CHECK_OP(nLabels(vi),==,valueTables_[vti]->shape(arity),
+                "number of labels does not match value tables shape");
+            facVis_.push_back(vi);
             ++arity;
         }
+        INFERNO_CHECK_OP(arity,==,valueTables_[vti]->arity(),
+            "dist(viBegin,viEnd) does not match vt's arity");
         factors_.push_back(GeneralDiscreteGraphicalModelFactor<GeneralDiscreteGraphicalModel>(this,valueTables_[vti], visOffset, arity));
         maxArity_  = std::max(arity, maxArity_);
         return factors_.size()-1;

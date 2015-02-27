@@ -1,4 +1,4 @@
-#define PY_ARRAY_UNIQUE_SYMBOL inferno_core_PyArray_API
+#define PY_ARRAY_UNIQUE_SYMBOL inferno_inference_PyArray_API
 //#define NO_IMPORT_ARRAY
 
 
@@ -30,26 +30,12 @@ namespace inferno{
 
     namespace bp = boost::python;
 
-    //void translateStdRuntimeError(const RuntimeError & e){
-    //    PyErr_SetString(PyExc_RuntimeError, e.what());
-    //}
+    void exportDiscreteInferenceBase();
 
-    
-    void exportSmallVector();
-    void exportModel();
-    void exportFactor();
-    void exportStdVector();
-
-   
-    void exportCore(){
-
-        //bp::register_exception_translator<RuntimeError>(&translateStdRuntimeError);
-        
-        exportSmallVector();
-        exportFactor();
-        exportModel();
-        exportStdVector();
+    void exportInference(){
+        exportDiscreteInferenceBase();
     }
+
 
     
 }
@@ -58,7 +44,7 @@ namespace inferno{
 
 
 // export my module
-BOOST_PYTHON_MODULE_INIT(core) {
+BOOST_PYTHON_MODULE_INIT(inference) {
 
     namespace bp = boost::python;
     // Do not change next 4 lines
@@ -70,6 +56,6 @@ BOOST_PYTHON_MODULE_INIT(core) {
     // No not change 4 line above
 
 
-	inferno::exportCore();
+    inferno::exportInference();
 
 }

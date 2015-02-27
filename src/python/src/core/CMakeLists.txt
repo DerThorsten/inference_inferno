@@ -3,6 +3,7 @@ SET(MOD_SRC
     factor.cxx 
     model.cxx
     small_vector.cxx
+    stdVector.cxx
 )
 SET(MOD_EXTRA_LIBS inferno )
 
