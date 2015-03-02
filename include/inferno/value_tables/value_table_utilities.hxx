@@ -75,6 +75,37 @@ namespace value_tables{
         }
     }
 
+    template<class VT>
+    inline void fallBackFacToVarMsg(
+        const VT * vt,
+        const ValueType ** inMsgs,
+        ValueType ** outMsgs        
+    ){
+        const auto arity = vt->arity();
+        if(arity == 1){
+            throw RuntimeError("facToVarMsg must not be called on value tables with arity<2");
+        }
+        else if(arity == 2){
+            // get shape
+            DiscreteLabel s[2];
+            vt->bufferShape(s);
+            
+            // initialize 
+            for(auto a=0; a<2 ; ++a)
+                std::fill(outMsgs[a], outMsgs[a]+s[a], std::numeric_limits<ValueType>::infinity());
+
+            // minimize
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                const ValueType facVal = vt->eval2(l0, l1);
+                outMsgs[0][l0] = std::min(outMsgs[0][l0], facVal + inMsgs[1][l1]);
+                outMsgs[1][l1] = std::min(outMsgs[1][l1], facVal + inMsgs[0][l0]);
+            }
+        }
+        else{
+            throw NotImplementedException("computing messages for orders >=3 is not yet implemented");
+        }
+    }
 }
 }
 

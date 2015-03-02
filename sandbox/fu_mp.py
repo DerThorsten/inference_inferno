@@ -4,7 +4,7 @@ import vigra
 
 numpy.random.seed(7)
 
-nVar = 20*10
+nVar = 40*10
 nLabels = 100
 model = inferno.models.GeneralDiscreteGraphicalModel(nVar, nLabels)
 
@@ -23,7 +23,7 @@ fiRange = model.addFactors(vtiRange, vis)
 # Potts 2-ORDER
 ####################################################
 # add explicit 2-order functions
-nSecondOrder = 50 * nVar 
+nSecondOrder = 5 * nVar 
 # add potts factors
 vis = numpy.random.randint(nVar,size=[nSecondOrder,2])
 vv = numpy.where(vis[:,0]!=vis[:,1])
@@ -41,18 +41,17 @@ fiRange = model.addFactors(vtiRange, numpy.array(vis))
 ####################################################
 # EXPLICIT 2-ORDER
 ####################################################
-# add explicit 2-order functions
-#nSecondOrder = 10 * nVar 
-## add potts factors
-#vis = numpy.random.randint(nVar,size=[nSecondOrder,2])
-#vv = numpy.where(vis[:,0]!=vis[:,1])
-#vis = vis[vv[0],:]
-#nSecondOrder = vis.shape[0]
-#
-#
-#vals = numpy.random.rand(nSecondOrder,nLabels,nLabels)
-#vtiRange = model.addExplicitValueTables(vals)
-#fiRange = model.addFactors(vtiRange, numpy.array(vis))
+nSecondOrder = 10 * nVar 
+# add potts factors
+vis = numpy.random.randint(nVar,size=[nSecondOrder,2])
+vv = numpy.where(vis[:,0]!=vis[:,1])
+vis = vis[vv[0],:]
+nSecondOrder = vis.shape[0]
+
+
+vals = numpy.random.rand(nSecondOrder,nLabels,nLabels)
+vtiRange = model.addExplicitValueTables(vals)
+fiRange = model.addFactors(vtiRange, numpy.array(vis))
 
 
 
@@ -60,12 +59,12 @@ fiRange = model.addFactors(vtiRange, numpy.array(vis))
 
 
 opts = inferno.inference.messagePassingOptions(model)
-opts['damping'] = 0.5
-opts['nSteps'] = long(20)
+opts['damping'] = 0.98
+opts['nSteps'] = long(50)
 
 print opts
 
-verbVisitor = inferno.inference.verboseVisitor(model,1,False)
+verbVisitor = inferno.inference.verboseVisitor(model,10,False)
 inf = inferno.inference.messagePassing(model, opts)
 
 

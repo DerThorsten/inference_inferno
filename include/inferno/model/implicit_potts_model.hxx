@@ -51,6 +51,9 @@ namespace detail_implicit_potts_model{
             beta = data_[0];
             return arity_ == 2 ? true : false;
         }
+        void facToVarMsg(const ValueType ** inMsgs, ValueType ** outMsgs)const{
+            inferno::value_tables::pottsFacToVarMsg(nl_, data_[0], inMsgs, outMsgs);
+        }
     private:
         const DiscreteLabel nl_;
         const uint8_t arity_;

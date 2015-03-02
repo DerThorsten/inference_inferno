@@ -48,7 +48,7 @@ public:
         return true;
     }
 
-    virtual void facToVarMsg(const ValueType ** inMsgs, ValueType ** outMsgs)const{
+    void facToVarMsg(const ValueType ** inMsgs, ValueType ** outMsgs)const{
         pottsFacToVarMsg(nl_, beta_, inMsgs, outMsgs);
     }
 private:

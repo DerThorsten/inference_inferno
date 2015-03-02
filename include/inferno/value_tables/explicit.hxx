@@ -65,6 +65,9 @@ public:
     virtual void bufferValueTable(inferno::ValueType * buffer)const{
         std::copy(storage_.begin(), storage_.end(), buffer);
     }
+    virtual void facToVarMsg(const ValueType ** inMsgs, ValueType ** outMsgs)const{
+        fallBackFacToVarMsg(this,inMsgs,outMsgs);
+    }
 private:
     STORAGE storage_;
 };
