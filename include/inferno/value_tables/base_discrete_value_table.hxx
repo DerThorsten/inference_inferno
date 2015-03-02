@@ -1,4 +1,4 @@
-/** \file factors_of_variables.hxx 
+/** \file base_discrete_value_table.hxx 
     \brief inferno::value_tables::DiscreteValueTableBase
     is implemented in this header. 
 */
