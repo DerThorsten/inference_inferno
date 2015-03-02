@@ -55,7 +55,6 @@ namespace inferno{
     template<class T, unsigned int A>
     vigra::TinyVector<int, 2> 
     addExplicitValueTables(GeneralDiscreteGraphicalModel & model,  
-                          const DiscreteLabel nl,
                           const vigra::NumpyArray<A, T>  & values  
     ){
         Vti start = model.nValueTables();

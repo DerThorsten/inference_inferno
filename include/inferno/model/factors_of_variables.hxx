@@ -19,6 +19,62 @@ namespace inferno{
 
 
 /** \brief Container one can access
+    the variables which are connected to a 
+    certain variable.
+    This relation is stored for all 
+    variables within this container.
+
+    \warning It is highly recommended that
+    any model should specialize this call,
+    if this relation is already part
+    of the model, or can be computed on the fly
+    without any overhead.
+
+*/
+template<class MODEL>
+class VariablesNeighbours{
+
+public:
+    typedef MODEL Model;
+    typedef VectorSet<Vi> ViSet;
+    typedef ViSet VariableNeighbours;
+
+    VariablesNeighbours(const Model & model)
+    : storage_(model){
+        for(const auto fi : model.factorIds()){
+            const auto factor = model[fi];
+            const auto arity = factor->arity();
+
+            for(uint32_t va=0; va<arity-1; ++va){
+                const auto viA = factor->vi(va);
+                for(uint32_t vb=va+1; vb<arity; ++vb){
+                    const auto viB = factor->vi(vb);
+                    storage_[viA].insert(viB);
+                    storage_[viB].insert(viA);
+                }
+            }
+        };
+    };
+
+    const VariableNeighbours & operator[](const Vi vi)const{
+        return storage_[vi];
+    }
+    
+    const VariableNeighbours & operator[](const Vi vi){
+        return storage_[vi];
+    }
+
+
+private:
+    typedef typename Model:: template VariableMap<VariableNeighbours>  Storage;
+
+    Storage storage_;
+};
+
+
+
+
+/** \brief Container one can access
     the factors which are connected to a 
     certain variable.
     This relation is stored for all 
@@ -80,7 +136,7 @@ template<class MODEL>
 class FactorsOfMultipleVariables{
 private:
     typedef MODEL Model;
-    typedef FactorsOfVariable<Model> FactorsOfVars;
+    typedef FactorsOfVariables<Model> FactorsOfVars;
     typedef typename Model:: template FactorMap<unsigned char> UsedFac;
     typedef std::vector<Fi>::const_iterator const_iterator;
 

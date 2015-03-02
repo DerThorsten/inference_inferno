@@ -619,10 +619,16 @@ public:
 
     /** \brief 
             copy the complete value table in 
-            a buffer
-     
+            a buffer.
+
+        This function is similar to bufferValueTable,
+        but instead of copying the values
+        to the buffer, the value for each label of this
+        value table is added to the value of the buffer.
+
+
         This is mainly to avoid virtual calls
-        and get the complete shape with a single
+        and get the complete value table with a single
         virtual call if this function is overloaded.
 
         \warning
@@ -700,13 +706,183 @@ public:
                 buffer[c] = this->eval(confIter->data());
                 ++c;
             }
+        }
+    }
 
+    /** \brief 
+            Add the complete value table in 
+            a buffer
+     
+        This is mainly to avoid virtual calls
+        and get the complete accumulation with a single
+        virtual call if this function is overloaded.
+
+        \warning
+            The buffer must be preallocated and 
+            must hold at least DiscreteValueTableBase::size
+            values
+
+        \warning
+            This default implementation itself
+            has multiple virtual calls
+    */
+    virtual void addToBuffer(ValueType * buffer)const{
+        const size_t arity = this->arity();
+        if(arity == 1){
+            const DiscreteLabel s[1] = {this->shape(0)};
+            for(DiscreteLabel l0=0; l0<s[0]; ++l0){
+                buffer[l0] += this->eval1(l0);
+            }
+        }
+        else if(arity == 2){
+            int64_t c=0;
+            DiscreteLabel s[2];
+            this->bufferShape(s);
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                buffer[c] += this->eval2(l0, l1);
+                ++c;
+            }
+        }
+        else if(arity == 3){
+            int64_t c=0;
+            DiscreteLabel s[3];
+            this->bufferShape(s);
+            for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                buffer[c] += this->eval3(l0, l1, l2);
+                ++c;
+            }
+        }
+        else if(arity == 4){
+            int64_t c=0;
+            DiscreteLabel s[4];
+            this->bufferShape(s);
+            for(DiscreteLabel l3=0; l3 < s[3]; ++l3)
+            for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                buffer[c] += this->eval4(l0, l1, l2, l3);
+                ++c;
+            }
+        }
+        else if(arity == 5){
+            int64_t c=0;
+            DiscreteLabel s[5];
+            this->bufferShape(s);
+            for(DiscreteLabel l4=0; l4 < s[4]; ++l4)
+            for(DiscreteLabel l3=0; l3 < s[3]; ++l3)
+            for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                buffer[c] += this->eval5(l0, l1, l2, l3, l4);
+                ++c;
+            }
+        }
+        else { // (arity >= 6)
+            const int64_t nConf = this->size();
+            ConfIterator<ShapeFunctor> confIter(ShapeFunctor(this), arity, nConf);
+            ConfIterator<ShapeFunctor> confEnd = confIter.getEnd();
+            int64_t c=0;
+            for( ; confIter != confEnd; ++confIter){
+                buffer[c] += this->eval(confIter->data());
+                ++c;
+            }
+        }
+    }
+
+    /** \brief 
+            Add the complete value table in 
+            a buffer
+     
+        This is mainly to avoid virtual calls
+        and get the complete accumulation with a single
+        virtual call if this function is overloaded.
+
+        \warning
+            The buffer must be preallocated and 
+            must hold at least DiscreteValueTableBase::size
+            values
+
+        \warning
+            This default implementation itself
+            has multiple virtual calls
+    */
+
+    virtual void addWeightedToBuffer(ValueType * buffer, const ValueType w)const{
+        const size_t arity = this->arity();
+        if(arity == 1){
+            const DiscreteLabel s[1] = {this->shape(0)};
+            for(DiscreteLabel l0=0; l0<s[0]; ++l0){
+                buffer[l0] += w * this->eval1(l0);
+            }
+        }
+        else if(arity == 2){
+            int64_t c=0;
+            DiscreteLabel s[2];
+            this->bufferShape(s);
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                buffer[c] += w * this->eval2(l0, l1);
+                ++c;
+            }
+        }
+        else if(arity == 3){
+            int64_t c=0;
+            DiscreteLabel s[3];
+            this->bufferShape(s);
+            for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                buffer[c] += w * this->eval3(l0, l1, l2);
+                ++c;
+            }
+        }
+        else if(arity == 4){
+            int64_t c=0;
+            DiscreteLabel s[4];
+            this->bufferShape(s);
+            for(DiscreteLabel l3=0; l3 < s[3]; ++l3)
+            for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                buffer[c] += w * this->eval4(l0, l1, l2, l3);
+                ++c;
+            }
+        }
+        else if(arity == 5){
+            int64_t c=0;
+            DiscreteLabel s[5];
+            this->bufferShape(s);
+            for(DiscreteLabel l4=0; l4 < s[4]; ++l4)
+            for(DiscreteLabel l3=0; l3 < s[3]; ++l3)
+            for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                buffer[c] += w * this->eval5(l0, l1, l2, l3, l4);
+                ++c;
+            }
+        }
+        else { // (arity >= 6)
+            const int64_t nConf = this->size();
+            ConfIterator<ShapeFunctor> confIter(ShapeFunctor(this), arity, nConf);
+            ConfIterator<ShapeFunctor> confEnd = confIter.getEnd();
+            int64_t c=0;
+            for( ; confIter != confEnd; ++confIter){
+                buffer[c] += w * this->eval(confIter->data());
+                ++c;
+            }
         }
     }
 
     virtual std::pair<uint64_t, uint64_t > serializationSize()const{
         return std::pair<uint64_t, uint64_t >(1+this->arity(),this->size());
     } 
+
+
+
+
 
 
 };

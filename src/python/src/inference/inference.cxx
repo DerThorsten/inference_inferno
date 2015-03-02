@@ -31,8 +31,10 @@ namespace inferno{
     namespace bp = boost::python;
 
     void exportDiscreteInferenceBase();
-
+    void exportVisitors();
     void exportInference(){
+        
+        exportVisitors();
         exportDiscreteInferenceBase();
     }
 

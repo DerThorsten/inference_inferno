@@ -38,11 +38,13 @@ namespace inferno{
 
     }
     
+
     void exportStdVector(){
 
 
         exportStdVectorT<uint8_t>("VectorUInt8");
-
+        exportStdVectorT<int64_t>("VectorInt64");
+        exportStdVectorT<double>("VectorDouble");
     }
 }
 

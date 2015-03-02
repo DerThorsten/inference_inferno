@@ -1,5 +1,6 @@
 SET(MOD_SRC 
     inference.cxx 
+    visitors.cxx
     base_discrete_inference.cxx
 )
 

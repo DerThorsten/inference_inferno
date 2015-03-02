@@ -83,6 +83,18 @@
  }
 
 
+
+#define INFERNO_CHECK_NUMBER(number) \
+   { \
+   std::stringstream s; \
+   s << "Inferno assertion failed in file " << __FILE__ \
+   << ", line " << __LINE__ << std::endl; \
+    if(std::isnan(number))\
+        throw std::runtime_error(s.str()+" number is nan"); \
+    if(std::isinf(number))\
+        throw std::runtime_error(s.str()+"number is inf");\
+    }
+
 #ifdef NDEBUG
     #ifdef INFERNO_DEBUG 
         #define INFERNO_DO_DEBUG

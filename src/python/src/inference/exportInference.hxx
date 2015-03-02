@@ -19,7 +19,7 @@ namespace export_helper{
         typedef MODEL Model;
         typedef typename MODEL :: template VariableMap<DiscreteLabel> Conf;
         typedef inference::DiscreteInferenceBase<MODEL> BaseInf;
-        typedef inference::Visitor<MODEL>  VisitorType;
+        typedef typename BaseInf::Visitor  VisitorType;
 
 
         std::string name()const{
@@ -30,11 +30,16 @@ namespace export_helper{
             this->get_override("infer")(visitor);
         }
         // get result
-        ValueType conf(Conf & conf ){
-            return this->get_override("conf")(conf);
+        void conf(Conf & conf ){
+            this->get_override("__conf")(conf);
         }
+
+        DiscreteLabel label(const Vi vi ) {
+           return this->get_override("label")(vi);
+        }
+
         // get model
-        Model & model() const{
+        const Model & model() const{
             return this->get_override("model")();
         }
         // stop inference (via visitor)
@@ -42,7 +47,7 @@ namespace export_helper{
             this->get_override("stopInference")();
         }
 
-
+        
 
 
 

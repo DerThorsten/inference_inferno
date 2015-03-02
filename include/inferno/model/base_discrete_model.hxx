@@ -241,11 +241,15 @@ public:
         <b> Derived models should overload this function if
         a better complexity can be achieved</b>
     */
-    bool hasSimpleLabelSpace()const{
+    bool hasSimpleLabelSpace(DiscreteLabel & l)const{
         DiscreteLabel  minNumberOfLabels; 
         DiscreteLabel  maxNumberOfLabels;
         model().minMaxNumberOfLabel(minNumberOfLabels, maxNumberOfLabels);
-        return minNumberOfLabels == maxNumberOfLabels;
+        if(minNumberOfLabels == maxNumberOfLabels){
+            l = minNumberOfLabels;
+            return true;
+        }
+        return false;
     }
 
 
@@ -270,7 +274,7 @@ public:
         minNumberOfLabels = std::numeric_limits<DiscreteLabel>::max();
         maxNumberOfLabels = 0;
         for(const auto vi : model().variableIds()){
-            const DiscreteLabel lvi = model().nLabes(vi);
+            const DiscreteLabel lvi = model().nLabels(vi);
             minNumberOfLabels = std::min(lvi, minNumberOfLabels);
             maxNumberOfLabels = std::max(lvi, maxNumberOfLabels);
         }   

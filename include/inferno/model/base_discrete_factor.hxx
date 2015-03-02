@@ -126,6 +126,14 @@ public:
         return factor()->valueTable()->bufferValueTable(buffer);
     }
 
+    void addToBuffer(ValueType * buffer)const{
+        return factor()->valueTable()->addToBuffer(buffer);
+    }
+
+    void addWeightedToBuffer(ValueType * buffer, const ValueType w)const{
+        return factor()->valueTable()->addWeightedToBuffer(buffer, w);
+    }
+
     const FACTOR * operator ->()const{
         return static_cast<const FACTOR *>(this); 
     }

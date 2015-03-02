@@ -38,19 +38,28 @@ public:
     };
 
     typedef MODEL Model;
-
+    typedef typename MODEL:: template VariableMap<DiscreteLabel> Conf;
 
     Movemaker(const Model &); 
     template<class StateIterator>
 
+    /// \todo remove this function and use energy
     ValueType value() const{
+        return energy_;
+    }
+
+    ValueType energy() const{
         return energy_;
     }
 
     template<class IndexIterator, class StateIterator>
     ValueType valueAfterMove(IndexIterator, IndexIterator, StateIterator);
 
-    DiscreteLabel state(const size_t vi) const{
+    DiscreteLabel state(const Vi vi) const{
+        return state_[vi];
+    }
+
+    DiscreteLabel label(const Vi vi) const{
         return state_[vi];
     }
 
@@ -62,21 +71,30 @@ public:
     template<class IndexIterator>
     ValueType moveOptimally(IndexIterator, IndexIterator);
 
+    void conf(Conf & confMap){
+        for(const auto vi: model_.variableIds())
+            confMap[vi] = state_[vi];
+    }
+
+    const FactorsOfVariables<Model> & factorsOfVariabes()const{
+        return factorsOfVariables_;
+    }
+
 private:
-    typedef typename MODEL:: template VariableMap<DiscreteLabel> VarMap;
+
 
 
     template<class FactorIndexIterator>
-    ValueType evaluateFactors(FactorIndexIterator, FactorIndexIterator, const std::vector<DiscreteLabel>&) const;
+    ValueType evaluateFactors(FactorIndexIterator, FactorIndexIterator, const std::vector<DiscreteLabel>&) ;
 
     const Model & model_;
     FactorsOfVariables<Model> factorsOfVariables_;
-    VarMap state_;
-    VarMap stateBuffer_; // always equal to state_ (invariant)
-    VarMap bestStateBuffer_; // used in moveOptimaly
+    Conf state_;
+    Conf stateBuffer_; // always equal to state_ (invariant)
+    Conf bestStateBuffer_; // used in moveOptimaly
     ValueType energy_; // energy of state state_ (invariant)
 
-    inferno::SmallVector<DiscreteLabel> currentFState_,destFState_; // buffers for the factors  configs
+    std::vector<DiscreteLabel> currentFState_,destFState_; // buffers for the factors  configs
 
     inferno::FactorsOfMultipleVariables<Model> facToRecomp_;
 };
@@ -98,9 +116,11 @@ Movemaker<MODEL>::Movemaker
    destFState_(),
    facToRecomp_(model, factorsOfVariables_)
 {
+    std::cout<<"mm . start\n";
     const auto maxArity = model_.maxArity();
     currentFState_.resize(maxArity);
     destFState_.resize(maxArity);
+    std::cout<<"mm . end\n";
 }
 
 
@@ -111,7 +131,7 @@ void Movemaker<MODEL>::initialize
    const CONF_MAP & conf
 ) {
    energy_ = model_.eval(conf); 
-   for (const auto vi : model_.varibleIds()) {
+   for (const auto vi : model_.variableIds()) {
       state_[vi] = conf[vi];
       stateBuffer_[vi] = conf[vi];
    }
@@ -283,7 +303,7 @@ Movemaker<MODEL>::evaluateFactors
     FactorIndexIterator begin,
     FactorIndexIterator end,
     const std::vector<DiscreteLabel>& state
-) const {
+)  {
     ValueType value = ValueType(0.0);
     for(; begin != end; ++begin) {
         const auto fi = *begin;
