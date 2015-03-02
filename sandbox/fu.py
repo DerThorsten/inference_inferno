@@ -2,6 +2,8 @@ import inferno
 import numpy
 import vigra
 
+numpy.random.seed(42)
+
 nVar = 50
 nLabels = 3
 model = inferno.models.GeneralDiscreteGraphicalModel(nVar, nLabels)

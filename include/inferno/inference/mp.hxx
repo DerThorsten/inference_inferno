@@ -239,6 +239,11 @@ namespace inference{
                     msg_.facToVarMsg(fi, 1, bi)
                 };
 
+                factor->valueTable()->facToVarMsg(varToFac, facToVar);
+
+                /*
+
+               
 
                 // init outgoing messages
                 for(auto i=0;i<2;++i)
@@ -257,6 +262,7 @@ namespace inference{
                         facToVar[i][conf[i]] = std::min(facToVar[i][conf[i]], vals[i]);
                     }
                 }
+                */
                 ///for(auto l=0; l<nLabels_;++l){
                 //    INFERNO_CHECK_NUMBER(facToVar[0][l]);
                 //    INFERNO_CHECK_NUMBER(facToVar[1][l]);

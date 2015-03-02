@@ -876,9 +876,84 @@ public:
         }
     }
 
-    virtual std::pair<uint64_t, uint64_t > serializationSize()const{
-        return std::pair<uint64_t, uint64_t >(1+this->arity(),this->size());
-    } 
+
+    virtual void facToVarMsg(const ValueType ** inMsgs, ValueType ** outMsgs)const{
+        const auto arity = this->arity();
+        if(arity == 1){
+            const DiscreteLabel s[1] = {this->shape(0)};
+            for(DiscreteLabel l0=0; l0<s[0]; ++l0){
+                outMsgs[0][l0] = inMsgs[0][l0];
+            }
+        }
+        else if(arity == 2){
+            // get shape
+            DiscreteLabel s[2];
+            this->bufferShape(s);
+            
+            // initialize 
+            for(auto a=0; a<2 ; ++a)
+                std::fill(outMsgs[a], outMsgs[a]+s[a], std::numeric_limits<ValueType>::infinity());
+
+            // minimize
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                const ValueType facVal = this->eval2(l0, l1);
+                outMsgs[0][l0] = std::min(outMsgs[0][l0], facVal + inMsgs[1][l1]);
+                outMsgs[1][l1] = std::min(outMsgs[1][l1], facVal + inMsgs[0][l0]);
+            }
+        }
+        else{
+            throw NotImplementedException("computing messages for orders >=3 is not yet implemented");
+        }
+        /*
+        else if(arity == 3){
+            int64_t c=0;
+            DiscreteLabel s[3];
+            this->bufferShape(s);
+            for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                buffer[c] += w * this->eval3(l0, l1, l2);
+                ++c;
+            }
+        }
+        else if(arity == 4){
+            int64_t c=0;
+            DiscreteLabel s[4];
+            this->bufferShape(s);
+            for(DiscreteLabel l3=0; l3 < s[3]; ++l3)
+            for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                buffer[c] += w * this->eval4(l0, l1, l2, l3);
+                ++c;
+            }
+        }
+        else if(arity == 5){
+            int64_t c=0;
+            DiscreteLabel s[5];
+            this->bufferShape(s);
+            for(DiscreteLabel l4=0; l4 < s[4]; ++l4)
+            for(DiscreteLabel l3=0; l3 < s[3]; ++l3)
+            for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
+            for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
+            for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
+                buffer[c] += w * this->eval5(l0, l1, l2, l3, l4);
+                ++c;
+            }
+        }
+        else { // (arity >= 6)
+            const int64_t nConf = this->size();
+            ConfIterator<ShapeFunctor> confIter(ShapeFunctor(this), arity, nConf);
+            ConfIterator<ShapeFunctor> confEnd = confIter.getEnd();
+            int64_t c=0;
+            for( ; confIter != confEnd; ++confIter){
+                buffer[c] += w * this->eval(confIter->data());
+                ++c;
+            }
+        }
+        */
+    }
 
 
 
