@@ -47,8 +47,8 @@ namespace inference{
             const ValueType e = inf->energy();
             const ValueType lb = inf->lowerBound();
             std::cout<<std::left<<std::setw(9)<<"Begin"<<std::right<<std::setw(8)<<i_
-                    <<"   Energy  "<<std::setw(8)<<std::scientific<<std::setprecision(7)<<e
-                    <<"   LowerBound   "<<std::setw(8)<<std::scientific<<std::setprecision(7)<<lb<<"\n"
+                    <<"   Energy  "<<std::setw(8)<<std::showpos<<std::scientific<<std::setprecision(7)<<e
+                    <<"   LowerBound   "<<std::setw(8)<<std::showpos<<std::scientific<<std::setprecision(7)<<lb<<"\n"
                 ;
         }
         void visit(BaseInf * inf){
@@ -57,8 +57,8 @@ namespace inference{
                 const ValueType lb = inf->lowerBound();
 
                 std::cout<<std::left<<std::setw(9)<<"Iteration"<<std::right<<std::setw(8)<<i_
-                    <<"   Energy  "<<std::setw(8)<<std::scientific<<std::setprecision(7)<<e
-                    <<"   LowerBound   "<<std::setw(8)<<std::scientific<<std::setprecision(7)<<lb<<nlFlag_
+                    <<"   Energy  "<<std::setw(8)<<std::showpos<<std::scientific<<std::setprecision(7)<<e
+                    <<"   LowerBound   "<<std::setw(8)<<std::showpos<<std::scientific<<std::setprecision(7)<<lb<<nlFlag_
                 ;
             }
             ++i_;
@@ -69,8 +69,8 @@ namespace inference{
             if(nlFlag_=='\r')
                 std::cout<<"\n";
             std::cout<<std::left<<std::setw(9)<<"End"<<std::right<<std::setw(8)<<i_
-                    <<"   Energy  "<<std::setw(8)<<std::scientific<<std::setprecision(7)<<e
-                    <<"   LowerBound   "<<std::setw(8)<<std::scientific<<std::setprecision(7)<<lb<<"\n"
+                    <<"   Energy  "<<std::setw(8)<<std::showpos<<std::scientific<<std::setprecision(7)<<e
+                    <<"   LowerBound   "<<std::setw(8)<<std::showpos<<std::scientific<<std::setprecision(7)<<lb<<"\n"
                 ;
         }
         VisitorType & visitor(){

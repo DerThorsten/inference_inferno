@@ -4,7 +4,7 @@ import vigra
 
 numpy.random.seed(7)
 
-nVar = 100*10
+nVar = 20*10
 nLabels = 100
 model = inferno.models.GeneralDiscreteGraphicalModel(nVar, nLabels)
 
@@ -61,7 +61,7 @@ fiRange = model.addFactors(vtiRange, numpy.array(vis))
 
 opts = inferno.inference.messagePassingOptions(model)
 opts['damping'] = 0.5
-opts['nSteps'] = 20
+opts['nSteps'] = long(20)
 
 print opts
 
