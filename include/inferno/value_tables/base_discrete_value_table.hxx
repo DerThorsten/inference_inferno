@@ -11,7 +11,8 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/utilities/shape_walker.hxx"
-
+#include "inferno/value_tables/value_table_utilities.hxx"
+    
 namespace inferno{
 
 /** \namespace inferno::value_tables 

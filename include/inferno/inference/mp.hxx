@@ -7,6 +7,8 @@
 #ifndef INFERNO_INFERENCE_MP_HXX
 #define INFERNO_INFERENCE_MP_HXX
 
+#include "boost/format.hpp"
+
 #include "inferno/inferno.hxx"
 #include "inferno/utilities/delegate.hxx"
 #include "inferno/inference/base_discrete_inference.hxx"
@@ -213,7 +215,7 @@ namespace inference{
                 for(const auto vi : model_.variableIds()){
                     sendVarToFac(vi,bi);
                 }
-                std::cout<<"convergence  "<<convergence_<<"\n";
+                //std::cout<<"convergence  "<<convergence_<<"\n";
                 if(visitor!=NULL)
                     visitor->visit(this);
             }

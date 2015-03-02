@@ -2,8 +2,10 @@ import inferno
 import numpy
 import vigra
 
-nVar = 640*48
-nLabels = 10
+numpy.random.seed(7)
+
+nVar = 100*10
+nLabels = 100
 model = inferno.models.GeneralDiscreteGraphicalModel(nVar, nLabels)
 
 
@@ -11,51 +13,60 @@ model = inferno.models.GeneralDiscreteGraphicalModel(nVar, nLabels)
 # EXPLICIT UNARY
 ####################################################
 # add explicit unary functions
-vals = numpy.random.rand(nVar,nLabels)*0.5
+vals = numpy.random.rand(nVar,nLabels)*5.0
 vtiRange = model.addExplicitValueTables( vals)
 # add potts factors
 vis = numpy.arange(nVar)
 fiRange = model.addFactors(vtiRange, vis)
 
 ####################################################
-# EXPLICIT 2-ORDER
+# Potts 2-ORDER
 ####################################################
-# add explicit unary functions
-
-nSecondOrder = 20 * nVar 
+# add explicit 2-order functions
+nSecondOrder = 50 * nVar 
 # add potts factors
 vis = numpy.random.randint(nVar,size=[nSecondOrder,2])
 vv = numpy.where(vis[:,0]!=vis[:,1])
 vis = vis[vv[0],:]
 nSecondOrder = vis.shape[0]
-print "ss",numpy.sum(vis[:,0]==vis[:,1])
 
-vals = numpy.random.rand(nSecondOrder,nLabels,nLabels)
-vtiRange = model.addExplicitValueTables(vals)
+
+vals = (numpy.random.rand(nSecondOrder)-0.5)
+vtiRange = model.addPottsValueTables(nLabels, vals)
 fiRange = model.addFactors(vtiRange, numpy.array(vis))
 
 
 
 
+####################################################
+# EXPLICIT 2-ORDER
+####################################################
+# add explicit 2-order functions
+#nSecondOrder = 10 * nVar 
+## add potts factors
+#vis = numpy.random.randint(nVar,size=[nSecondOrder,2])
+#vv = numpy.where(vis[:,0]!=vis[:,1])
+#vis = vis[vv[0],:]
+#nSecondOrder = vis.shape[0]
+#
+#
+#vals = numpy.random.rand(nSecondOrder,nLabels,nLabels)
+#vtiRange = model.addExplicitValueTables(vals)
+#fiRange = model.addFactors(vtiRange, numpy.array(vis))
 
 
-Opt  = inferno.inference.InferenceOptions
-
-opt = Opt()
-opt['damping'] = 1.0;
-
-opt2 = Opt()
-opt2['subOpt'] = opt
-print opt
-print opt2
 
 
-defOpt = inferno.inference.messagePassingOptions(model)
 
-print "defOpt",defOpt
+
+opts = inferno.inference.messagePassingOptions(model)
+opts['damping'] = 0.5
+opts['nSteps'] = 20
+
+print opts
 
 verbVisitor = inferno.inference.verboseVisitor(model,1,False)
-inf = inferno.inference.messagePassing(model)
+inf = inferno.inference.messagePassing(model, opts)
 
 
 

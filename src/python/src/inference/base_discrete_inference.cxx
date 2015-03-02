@@ -65,22 +65,6 @@ namespace inferno{
 
 
     void setOpt(inference::InferenceOptions & options, const std::string & key, bp::object obj){
-        std::cout<<"set option val of key "<<key<<"\n";
-
-        {
-            bp::extract<double> e(obj);
-            if(e.check()){
-                options.set(key, e());
-                return ;
-            }
-        }
-        {
-            bp::extract<float> e(obj);
-            if(e.check()){
-                options.set(key, e());
-                return ;
-            }
-        }
         {
             bp::extract<int64_t> e(obj);
             if(e.check()){
@@ -95,6 +79,21 @@ namespace inferno{
                 return ;
             }
         }
+        {
+            bp::extract<double> e(obj);
+            if(e.check()){
+                options.set(key, e());
+                return ;
+            }
+        }
+        {
+            bp::extract<float> e(obj);
+            if(e.check()){
+                options.set(key, e());
+                return ;
+            }
+        }
+        
         {
             bp::extract<std::string> e(obj);
             if(e.check()){

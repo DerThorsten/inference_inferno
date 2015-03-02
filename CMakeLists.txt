@@ -30,6 +30,7 @@ ADD_DEFINITIONS(-std=c++11)
 
 
 OPTION(BUILD_BENCHMARK "Build Benchmark" OFF)
+OPTION(BUILD_PYTHON_PACKAGE "Build Benchmark" OFF)
 
 #-------------------------------------------------------------------------------------------------------------------
 # enable_testing
