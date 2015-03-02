@@ -119,25 +119,12 @@ namespace inferno{
         {
 
             typedef inference::InferenceOptions InfOpts;
-            //bp::class_<std::map<std::string, double> >("MapDouble")
-            //    .def(bp::map_indexing_suite<std::map<std::string, double> >() );
-            //bp::class_<std::map<std::string, int64_t> >("MapInt64")
-            //    .def(bp::map_indexing_suite<std::map<std::string, int64_t> >() );
-            //bp::class_<std::map<std::string, std::string> >("MapString")
-            //    .def(bp::map_indexing_suite<std::map<std::string, std::string> >() );
-            //bp::class_<std::map<std::string, InfOpts> >("MapInferenceOptions")
-            //    .def(bp::map_indexing_suite<std::map<std::string, InfOpts> >() );
-                
 
 
 
             bp::class_<InfOpts>("InferenceOptions",bp::init<>())
                 .def("__setitem__",&setOpt)
                 .def("__str__",&InfOpts::asString)
-                //.def_readwrite("stringOptions", &InfOpts::stringOptions)
-                //.def_readwrite("intOptions", &InfOpts::intOptions)
-                //.def_readwrite("floatOptions", &InfOpts::floatOptions)
-                //.def_readwrite("subOptions", &InfOpts::subOptions)
             ;
         }
         const std::string baseClsName = std::string("DiscreteInferenceBase") + modelName;
