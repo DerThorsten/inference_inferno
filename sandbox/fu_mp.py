@@ -4,7 +4,7 @@ import vigra
 
 numpy.random.seed(7)
 
-nVar = 40*100
+nVar = 40*40
 nLabels = 100
 model = inferno.models.GeneralDiscreteGraphicalModel(nVar, nLabels)
 

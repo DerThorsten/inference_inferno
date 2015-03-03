@@ -74,6 +74,7 @@ private:
 
 
 
+
 /** \brief Container one can access
     the factors which are connected to a 
     certain variable.
@@ -121,6 +122,76 @@ private:
     Storage storage_;
 };
 
+/** \brief Container one can access
+    the factors which are connected to a 
+    certain variable.
+    This relation is stored for all 
+    variables within this container.
+
+    \warning It is highly recommended that
+    any model should specialize this call,
+    if this relation is already part
+    of the model, or can be computed on the fly
+    without any overhead.
+
+*/
+template<class MODEL>
+class HigherOrderAndUnaryFactorsOfVariables{
+
+public:
+    typedef MODEL Model;
+    typedef VectorSet<Fi> FiSet;
+    typedef FiSet HigherOrderFactorsOfVariable;
+    typedef FiSet UnaryFactorsOfVariable;
+
+    struct Facs{
+    public:
+        void insert(const Fi fi, const uint32_t arity){
+            if(arity == 1){
+                unaryFactors_.insert(fi);
+            }
+            else{
+                higherOrderFactors_.insert(fi);
+            }
+        }
+        const UnaryFactorsOfVariable & unaryFactors()const{
+            return unaryFactors_;
+        }
+        const HigherOrderFactorsOfVariable & higherOrderFactors()const{
+            return higherOrderFactors_;
+        }
+
+    private:
+        UnaryFactorsOfVariable unaryFactors_;
+        HigherOrderFactorsOfVariable higherOrderFactors_;
+    };
+
+    HigherOrderAndUnaryFactorsOfVariables(const Model & model)
+    : storage_(model){
+        for(const auto fi : model.factorIds()){
+            const auto factor = model[fi];
+            const auto arity = factor->arity();
+            for(auto v=0; v<arity; ++v){
+                storage_[factor->vi(v)].insert(fi, arity);
+            };
+        };
+    };
+
+    const Facs & operator[](const Vi vi)const{
+        return storage_[vi];
+    }
+    
+    const Facs & operator[](const Vi vi){
+        return storage_[vi];
+    }
+
+
+private:
+    typedef typename Model:: template VariableMap<Facs>  Storage;
+
+    Storage storage_;
+};
+
 
 /** \brief Data-structure to access all factors
     which are connected to a set of variables.
@@ -136,7 +207,7 @@ template<class MODEL>
 class FactorsOfMultipleVariables{
 private:
     typedef MODEL Model;
-    typedef FactorsOfVariables<Model> FactorsOfVars;
+    typedef HigherOrderAndUnaryFactorsOfVariables<Model> FactorsOfVars;
     typedef typename Model:: template FactorMap<unsigned char> UsedFac;
     typedef std::vector<Fi>::const_iterator const_iterator;
 
