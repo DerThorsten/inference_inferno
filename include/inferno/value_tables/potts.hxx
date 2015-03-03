@@ -57,6 +57,90 @@ private:
 };
 
 
+class  L1ValueTable : public DiscreteValueTableBase{
+public:
+    L1ValueTable(const LabelType l,  const ValueType beta)
+    :   DiscreteValueTableBase(),
+        nl_(l),
+        beta_(beta){
+    }
+    ValueType eval2(const LabelType l1, const LabelType l2)const{
+        return beta_*std::abs(l1-l2);
+    }
+    ValueType eval(const LabelType *conf)const{
+        return this->eval2(conf[0], conf[1]);
+    }
+    LabelType shape(const uint32_t d) const{
+        return nl_;
+    }
+    uint32_t  arity()const{
+        return 2;
+    }
+    bool isGeneralizedPotts() const{
+        return nl_ == 2 ? true : false;
+    }
+    bool isPotts(ValueType & beta) const{
+        if(nl_==2){
+            beta = beta_;
+            return true;
+        }
+        return false;
+    }
+
+    void facToVarMsg(const ValueType ** inMsgs, ValueType ** outMsgs)const{
+        //simple2OrderFacToVarMsg(this,nl_,inMsgs, outMsgs);
+        l1FacToVarMsg(this, nl_, beta_, inMsgs, outMsgs);
+    }
+private:
+    LabelType nl_;
+    ValueType beta_;
+};
+
+
+class  TruncatedL1ValueTable : public DiscreteValueTableBase{
+public:
+    TruncatedL1ValueTable(const LabelType l,  const ValueType beta, const ValueType truncateAt)
+    :   DiscreteValueTableBase(),
+        nl_(l),
+        beta_(beta),
+        truncateAt_(truncateAt){
+    }
+    ValueType eval2(const LabelType l1, const LabelType l2)const{
+        const ValueType r =  beta_*std::abs(l1-l2);
+        return r > truncateAt_ ? truncateAt_ : r;
+    }
+    ValueType eval(const LabelType *conf)const{
+        return this->eval2(conf[0], conf[1]);
+    }
+    LabelType shape(const uint32_t d) const{
+        return nl_;
+    }
+    uint32_t  arity()const{
+        return 2;
+    }
+    bool isGeneralizedPotts() const{
+        return nl_ == 2 ? true : false;
+    }
+    bool isPotts(ValueType & beta) const{
+        if(nl_==2){
+            beta = beta_;
+            return true;
+        }
+        return false;
+    }
+
+    void facToVarMsg(const ValueType ** inMsgs, ValueType ** outMsgs)const{
+        //simple2OrderFacToVarMsg(this,nl_,inMsgs, outMsgs);
+        truncatedL1FacToVarMsg(this, nl_, beta_,truncateAt_, inMsgs, outMsgs);
+    }
+private:
+    LabelType nl_;
+    ValueType beta_;
+    ValueType truncateAt_;
+};
+
+
+
 } // end namespace value_tables
 } // end namespace inferno
 

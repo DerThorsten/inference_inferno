@@ -152,7 +152,8 @@ namespace inferno{
             bp::def("icm", & inference::inferenceFactory<Inference>,
                 (
                     bp::arg("model"),
-                    bp::arg("options") = inference::InferenceOptions()
+                    bp::arg("options") = inference::InferenceOptions(),
+                    bp::arg("checkOptions") = true
                 ),
                 CustWardPost< 0,1 ,RetValPolNewObj>()  
             );
@@ -168,7 +169,8 @@ namespace inferno{
             bp::def("messagePassing", & inference::inferenceFactory< Inference>,
                 (
                     bp::arg("model"),
-                    bp::arg("options") = inference::InferenceOptions()
+                    bp::arg("options") = inference::InferenceOptions(),
+                    bp::arg("checkOptions") = true
                 ),
                 CustWardPost< 0,1 ,RetValPolNewObj>()  
             );

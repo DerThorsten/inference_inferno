@@ -8,7 +8,9 @@
 
 #include <iostream>
 #include <iomanip>
+#include <set>
 #include <map>
+#include <string>
 
 #include <boost/any.hpp> 
     
@@ -33,12 +35,17 @@ namespace inference{
         typedef std::pair<AnyTypeInfo, boost::any>   P;
 
         InferenceOptions()
-        :   empty_(true),
+        :   checkOptions_(false),
             storage_()
         {
 
         }
-
+        void checkOptions(const bool check){
+            checkOptions_ = check;
+        }
+        bool checkOptions()const{
+            return checkOptions_;
+        }
         // FLOATS
         void set(const std::string & name, const double val){
             storage_[name] = P(DoubleType, static_cast<double>(val));
@@ -150,25 +157,67 @@ namespace inference{
         }
 
         template<class T, class DEFAULT_VAL>
-        void getOption(const std::string & key, const DEFAULT_VAL & defaultVal, T & val)const{
+        bool getOption(const std::string & key, const DEFAULT_VAL & defaultVal, T & val)const{
             const auto i = storage_.find(key);
             if(i==storage_.end()){
                 val = defaultVal;
+                return false;
             }
             else{
                 val = get<T>(key);
+                return true;
             }
         }
 
+        template<class T, class DEFAULT_VAL>
+        bool getOption(
+            const std::string & key, 
+            const DEFAULT_VAL & defaultVal, 
+            T & val,
+            std::set<std::string> & keys
+        )const{
+            const auto i = storage_.find(key);
+            if(i==storage_.end()){
+                val = defaultVal;
+                return false;
+            }
+            else{
+                keys.erase(key);
+                val = get<T>(key);
+                return true;
+            }
+        }
+
+        std::set<std::string> keys()const{
+            std::set<std::string> ret;
+            for(const auto & kv : storage_)
+                ret.insert(kv.first);
+            return ret;
+        }
 
         std::string asString()const{
             std::stringstream ss;
             printToStream(ss);
             return ss.str();
         }
+        template<class INF>
+        void checkForLeftovers(const std::set<std::string> & keys)const{
+            if(!keys.empty()){
+                std::stringstream ss;
+                ss<<"\nThe following option(s) are set but must not be used within the desired algorithm:\n\n";
+                for(const auto & key  : keys){
+                    ss<<" - "<<key<<"\n";
+                }
+                ss<<"\nHere is a list of the allowed options with their default values\n";
+                auto  dOpt = InferenceOptions();
+                INF::defaultOptions(dOpt);
+                dOpt.printToStream(ss);
+                throw RuntimeError(ss.str());
+            }
+        }
 
     private:
-        bool empty_;
+        bool checkOptions_;
         mutable std::map<std::string, std::pair<AnyTypeInfo, boost::any> > storage_;
     };
 }

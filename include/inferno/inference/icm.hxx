@@ -37,6 +37,7 @@ namespace inference{
 
         }
 
+
         Icm(const Model & model, const InferenceOptions & infParam = InferenceOptions())
         :   BaseInf(),
             model_(model),

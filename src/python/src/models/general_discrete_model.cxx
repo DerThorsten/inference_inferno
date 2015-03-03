@@ -51,6 +51,33 @@ namespace inferno{
         return vigra::TinyVector<int, 2>(start, model.nValueTables());
     }
 
+    template<class T>
+    vigra::TinyVector<int, 2> 
+    addL1ValueTables(GeneralDiscreteGraphicalModel & model,  
+                        const DiscreteLabel nl,
+                        const vigra::NumpyArray<1, T>  & betas
+    ){
+        Vti start = model.nValueTables();
+        for(size_t i=0; i<betas.shape(0); ++i){
+            model.addValueTable(new value_tables::L1ValueTable(nl, betas(i)));
+        }
+        return vigra::TinyVector<int, 2>(start, model.nValueTables());
+    }
+
+    template<class T>
+    vigra::TinyVector<int, 2> 
+    addTruncatedL1ValueTables(GeneralDiscreteGraphicalModel & model,  
+                        const DiscreteLabel nl,
+                        const vigra::NumpyArray<1, T>  & betas,
+                        const vigra::NumpyArray<1, T>  & truncateAts
+    ){
+        Vti start = model.nValueTables();
+        for(size_t i=0; i<betas.shape(0); ++i){
+            model.addValueTable(new value_tables::TruncatedL1ValueTable(nl, betas(i), truncateAts(i)));
+        }
+        return vigra::TinyVector<int, 2>(start, model.nValueTables());
+    }
+
 
     template<class T, unsigned int A>
     vigra::TinyVector<int, 2> 
@@ -116,6 +143,11 @@ namespace inferno{
             .def("addPottsValueTables",vigra::registerConverters(&addPottsValueTables<float>))
             .def("addPottsValueTables",vigra::registerConverters(&addPottsValueTables<double>))
 
+            .def("addL1ValueTables",vigra::registerConverters(&addL1ValueTables<float>))
+            .def("addL1ValueTables",vigra::registerConverters(&addL1ValueTables<double>))
+
+            .def("addTruncatedL1ValueTables",vigra::registerConverters(&addTruncatedL1ValueTables<float>))
+            .def("addTruncatedL1ValueTables",vigra::registerConverters(&addTruncatedL1ValueTables<double>))
 
             .def("addExplicitValueTables",vigra::registerConverters(&addExplicitValueTables<float ,2>)) // 1-order
             .def("addExplicitValueTables",vigra::registerConverters(&addExplicitValueTables<double,2>))

@@ -87,6 +87,7 @@ namespace inference{
         // stop inference (via visitor)
         virtual void stopInference() = 0;
 
+       
 
 
         // OPTIONAL INTERFACE
@@ -131,8 +132,10 @@ namespace inference{
     template<class CONCRETE_CLASS>
     DiscreteInferenceBase< typename CONCRETE_CLASS::Model > * inferenceFactory(
         const typename CONCRETE_CLASS::Model & model,
-        const InferenceOptions & options
+        InferenceOptions & options,
+        const bool checkOptions 
     ){
+        options.checkOptions(checkOptions);
         return new CONCRETE_CLASS(model, options);
     }
 

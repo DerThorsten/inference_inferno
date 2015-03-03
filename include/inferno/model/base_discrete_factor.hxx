@@ -119,20 +119,25 @@ public:
     }
 
     void bufferShape(DiscreteLabel * buffer)const{
-        return factor()->valueTable()->bufferShape(buffer);
+        factor()->valueTable()->bufferShape(buffer);
     }
 
     void bufferValueTable(ValueType * buffer)const{
-        return factor()->valueTable()->bufferValueTable(buffer);
+        factor()->valueTable()->bufferValueTable(buffer);
     }
 
     void addToBuffer(ValueType * buffer)const{
-        return factor()->valueTable()->addToBuffer(buffer);
+        factor()->valueTable()->addToBuffer(buffer);
     }
 
     void addWeightedToBuffer(ValueType * buffer, const ValueType w)const{
-        return factor()->valueTable()->addWeightedToBuffer(buffer, w);
+        factor()->valueTable()->addWeightedToBuffer(buffer, w);
     }
+
+    void facToVarMsg(const ValueType ** inMsgs, ValueType ** outMsgs)const{
+        factor()->valueTable()->facToVarMsg(inMsgs,outMsgs);
+    }
+
 
     const FACTOR * operator ->()const{
         return static_cast<const FACTOR *>(this); 

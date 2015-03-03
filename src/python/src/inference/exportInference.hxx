@@ -46,11 +46,6 @@ namespace export_helper{
         void stopInference(){
             this->get_override("stopInference")();
         }
-
-        
-
-
-
     };
 
 }

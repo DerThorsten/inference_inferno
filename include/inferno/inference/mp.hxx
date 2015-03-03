@@ -94,7 +94,7 @@ namespace inference{
                 offset += nMsgOut*2*nLabels_;
                 //INFERNO_CHECK_OP(offset,<,msgStorage_.size(),"");
             }
-            lastVarOffset_ = offset;
+            //lastVarOffset_ = offset;
             for(const auto fi : model_.factorIds()){
                 const auto factor = model_[fi];
                 const auto arity = factor->arity();
@@ -137,7 +137,7 @@ namespace inference{
         ReverseMsgIndex reverseMsgIndex_;
         std::vector<ValueType> msgStorage_;
         DiscreteLabel nLabels_;
-        uint64_t lastVarOffset_;
+        // uint64_t lastVarOffset_;
     };
 
 
@@ -161,8 +161,16 @@ namespace inference{
             }
             Options(const InferenceOptions & options)
             {
-                options.getOption("damping", 0.95, damping_);
-                options.getOption("nSteps", 1000, nSteps_);
+                if(options.checkOptions()){
+                    auto keys = options.keys();
+                    options.getOption("damping", 0.95, damping_,keys);
+                    options.getOption("nSteps", 1000, nSteps_,keys);
+                    options. template checkForLeftovers<Self>(keys);
+                }
+                else{
+                    options.getOption("damping", 0.95, damping_);
+                    options.getOption("nSteps", 1000, nSteps_);
+                }
             }
             ValueType damping_;
             uint64_t nSteps_;
@@ -173,6 +181,8 @@ namespace inference{
             options.set("damping",opt.damping_);
             options.set("nSteps",opt.nSteps_);
         }
+
+ 
 
         MessagePassing(const Model & model, const InferenceOptions & infParam = InferenceOptions())
         :   BaseInf(),
@@ -226,49 +236,18 @@ namespace inference{
         }
 
         void sendFacToVar(const Fi fi, const uint8_t bi){
-
             const auto factor = model_[fi];
             if(factor->arity()>1){
                 const Vi vis[2] = {factor->vi(0),factor->vi(1)};
-                // get incoming messages
                 const ValueType * varToFac[2] ={
                     msg_.varToFacMsg(vis[0], msg_.factorsMi(fi,0), bi),
                     msg_.varToFacMsg(vis[1], msg_.factorsMi(fi,1), bi)
                 };   
-                // get outcoming messages         
                 ValueType * facToVar[2] ={
                     msg_.facToVarMsg(fi, 0, bi),
                     msg_.facToVarMsg(fi, 1, bi)
                 };
-
-                factor->valueTable()->facToVarMsg(varToFac, facToVar);
-
-                /*
-
-               
-
-                // init outgoing messages
-                for(auto i=0;i<2;++i)
-                    std::fill(facToVar[i], facToVar[i]+nLabels_, std::numeric_limits<ValueType>::infinity());
-
-
-
-                DiscreteLabel conf[2];
-                for(conf[1]=0; conf[1]<nLabels_; ++conf[1])
-                for(conf[0]=0; conf[0]<nLabels_; ++conf[0]){
-                    const ValueType facVal = factor->eval2(conf[0], conf[1]);
-                    //INFERNO_CHECK_NUMBER(facVal);
-                    const ValueType vals[2] = {facVal + varToFac[1][conf[1]],facVal + varToFac[0][conf[0]]};
-                    for(auto i=0;i<2;++i){
-                        //INFERNO_CHECK_NUMBER(vals[i]);
-                        facToVar[i][conf[i]] = std::min(facToVar[i][conf[i]], vals[i]);
-                    }
-                }
-                */
-                ///for(auto l=0; l<nLabels_;++l){
-                //    INFERNO_CHECK_NUMBER(facToVar[0][l]);
-                //    INFERNO_CHECK_NUMBER(facToVar[1][l]);
-                //}
+                factor->facToVarMsg(varToFac, facToVar);
             }
         }
         void sendVarToFac(const Vi vi, const uint8_t bi){
