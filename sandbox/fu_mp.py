@@ -41,8 +41,8 @@ if False:
 # Trunc. L1 2-ORDER
 ####################################################
 # add truncate l1 2-order functions
-if True:
-    nSecondOrder = 50 * nVar 
+if False:
+    nSecondOrder = 5 * nVar 
     # add potts factors
     vis = numpy.random.randint(nVar,size=[nSecondOrder,2])
     vv = numpy.where(vis[:,0]!=vis[:,1])
@@ -97,8 +97,8 @@ if False:
 
 
 opts = inferno.inference.messagePassingOptions(model)
-opts['damping'] = 0.98
-opts['nSteps'] = long(5)
+opts['damping'] = 0.5
+opts['nSteps'] = long(50)
 
 print opts
 
