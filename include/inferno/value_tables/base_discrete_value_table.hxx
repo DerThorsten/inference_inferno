@@ -618,6 +618,22 @@ public:
             buffer[i] = this->shape(i);
     }
 
+    /** \brief sum up the shape
+
+        This function is useful when
+        calculating the required 
+        space for all factor to 
+        variable messages for a certain factor
+    */
+    virtual uint64_t accumulateShape()const{
+        const size_t arity = this->arity();
+        uint64_t res = 0;
+        for(size_t i=0; i<arity; ++i)
+            res += this->shape(i);
+        return res;
+    }
+
+
     /** \brief 
             copy the complete value table in 
             a buffer.

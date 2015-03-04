@@ -9,11 +9,17 @@
 
 #include "boost/format.hpp"
 
+#ifdef WITH_OPENMP
+#include <omp.h>
+#endif
+
 #include "inferno/inferno.hxx"
 #include "inferno/utilities/delegate.hxx"
 #include "inferno/inference/base_discrete_inference.hxx"
 #include "inferno/inference/utilities/movemaker.hxx"
 #include "inferno/model/factors_of_variables.hxx"
+
+
 namespace inferno{
 
 
@@ -44,40 +50,42 @@ namespace inference{
             nLabels_()
         {
             INFERNO_CHECK(model_.hasSimpleLabelSpace(nLabels_),"only for simple label spaces");
-            INFERNO_CHECK_OP(model_.maxArity(),==,2,"only for 2.-order models");
+            //INFERNO_CHECK_OP(model_.maxArity(),==,2,"only for 2.-order models");
+
+            const bool simpleLabelSpace = model_.hasSimpleLabelSpace(nLabels_);
+
 
             uint64_t nFacToVar = 0;
+            uint64_t msgSpace = 0;
             // count messages
             for(const auto fi : model_.factorIds()){
                 const auto factor = model_[fi];
                 const auto arity = factor->arity();
                 if(arity>1){
                     nFacToVar +=arity;
+                    msgSpace += factor->accumulateShape();
                 }
             }
-            const uint64_t nMsg = 2*nFacToVar;
 
-            //std::cout<<" allocating space : " << (nMsg*nLabels_*sizeof(ValueType)*8)/(1024.0 * 1024.0) <<" MB \n";
-            msgStorage_.resize(nMsg*nLabels_,0.0);
-            msgPtrs_.reserve(nMsg);
+            msgStorage_.resize(2*msgSpace,0.0);
+            msgPtrs_.reserve(2*nFacToVar);
 
             // setup offsets
             uint64_t vOffset = 0;
             uint64_t mIndex = 0;
 
             for(auto vi: model_.variableIds()){              
+                const DiscreteLabel nl = model_.nLabels(vi);
                 const auto & facsOfVar = factorsOfVariables_[vi];
                 varToFacOffset_[vi] = mIndex;
-                size_t nMsgOut = 0;
                 for(auto fi : facsOfVar.higherOrderFactors()){
                     const auto factor = model_[fi];
                     if(factor->arity()>1){
-                        msgPtrs_.push_back(Msg{msgStorage_.data()+ vOffset +nMsgOut*nLabels_, NULL});
-                        ++nMsgOut;
+                        msgPtrs_.push_back(Msg{msgStorage_.data()+ vOffset , NULL});
+                        vOffset += nl;
                         ++mIndex;
                     }
                 }
-                vOffset += nMsgOut*nLabels_;
             }
 
             for(const auto fi : model_.factorIds()){
@@ -89,32 +97,22 @@ namespace inference{
 
                         // find out at which position fi is in hfacs
                         const Vi vi = factor->vi(a);
+                        const DiscreteLabel nl = model_.nLabels(vi);
                         const auto  & hfacs = factorsOfVariables_[vi].higherOrderFactors();
-                        INFERNO_CHECK(hfacs.find(fi)!=hfacs.end(),"");
                         const auto pos = std::distance(hfacs.begin(), hfacs.find(fi));
 
-                        // get the message at pos  
                         auto  & varToFacMsgHolder = msgPtrs_[varToFacOffset_[vi]+pos];
 
-                        //INFERNO_CHECK_OP(hfacs[pos], ==, fi, "internal error");
-
-                        const auto facToVarMsgHolder  = Msg{msgStorage_.data()+ vOffset +a*nLabels_, varToFacMsgHolder.msg_};
+                        const auto facToVarMsgHolder  = Msg{msgStorage_.data()+ vOffset, varToFacMsgHolder.msg_};
                         varToFacMsgHolder.oMsg_ = facToVarMsgHolder.msg_;
                         msgPtrs_.push_back(facToVarMsgHolder);
+                        vOffset += nl;
                     }
                     facToVarOffset_[fi] = mIndex;
-                    mIndex += arity;
-                    vOffset += arity*nLabels_;
-
+                    mIndex += arity; 
                 }
             }
-
-            //INFERNO_CHECK_OP(vOffset,==,msgStorage_.size(),"hups");
         }
-
-        // uint64_t nVarToFac(const Vi vi)const{
-        //     return factorsOfVariables_[vi].higherOrderFactors().size();
-        // }
 
         ValueType * facToVarMsg(const Fi fi, const size_t mi){
             const uint64_t offset = facToVarOffset_[fi];
@@ -122,7 +120,7 @@ namespace inference{
             return msgPtrs_[offset + mi].msg_;
         }
 
-        ValueType * oppositeToFacToVarMsg(const Fi fi, const size_t mi){
+        ValueType * oppToFacToVarMsg(const Fi fi, const size_t mi){
             const uint64_t offset = facToVarOffset_[fi];
             INFERNO_CHECK(msgPtrs_[offset + mi].oMsg_!=NULL, "");
             return msgPtrs_[offset + mi].oMsg_;
@@ -135,7 +133,7 @@ namespace inference{
             return msgPtrs_[offset + mi].msg_;
         }
 
-        ValueType * opposideToVarToFacMsg(const Vi vi, const size_t mi){
+        ValueType * oppToVarToFacMsg(const Vi vi, const size_t mi){
             const uint64_t offset = varToFacOffset_[vi];
             INFERNO_CHECK(msgPtrs_[offset + mi].oMsg_!=NULL, "");
             return msgPtrs_[offset + mi].oMsg_;
@@ -171,33 +169,40 @@ namespace inference{
         typedef typename MODEL:: template VariableMap<uint8_t> UIn8VarMap;
 
         typedef SimpleMessageStoring<MODEL> MsgStorage;
+        typedef typename std::iterator_traits<typename MODEL::FactorIdIter>::iterator_category FactorIdIterCategory;
+        typedef typename std::iterator_traits<typename MODEL::VariableIdIter>::iterator_category VariableIdIterCategory;
 
         struct Options{
             Options(){
                 damping_  = 0.95;
                 nSteps_  = 1000;
+                nThreads_ = 0; 
             }
             Options(const InferenceOptions & options)
             {
                 if(options.checkOptions()){
                     auto keys = options.keys();
-                    options.getOption("damping", 0.95, damping_,keys);
-                    options.getOption("nSteps", 1000, nSteps_,keys);
+                    options.getOption("damping", 0.95, damping_, keys);
+                    options.getOption("nSteps", 1000, nSteps_, keys);
+                    options.getOption("nThreads", 0, nThreads_, keys);
                     options. template checkForLeftovers<Self>(keys);
                 }
                 else{
                     options.getOption("damping", 0.95, damping_);
                     options.getOption("nSteps", 1000, nSteps_);
+                    options.getOption("nThreads", 0, nThreads_);
                 }
             }
             ValueType damping_;
             uint64_t nSteps_;
+            uint64_t nThreads_;
         };
 
         static void defaultOptions(InferenceOptions & options){
             Options opt;
             options.set("damping",opt.damping_);
             options.set("nSteps",opt.nSteps_);
+            options.set("nThreads",opt.nThreads_);
         }
 
  
@@ -208,16 +213,30 @@ namespace inference{
             options_(infParam),
             factorsOfVariables_(model),
             msg_(model,factorsOfVariables_),
-            nLabels_(),
+            maxNumLabels_(),
             sMsgBuffer_(),
             sBelBuffer_(),
             conf_(model),
             stopInference_(false)
         {
+            DiscreteLabel minNumLabels;
+            model_.minMaxNLabels(minNumLabels, maxNumLabels_);
 
-            nLabels_ = msg_.nLabels();
-            sMsgBuffer_.resize(nLabels_);
-            sBelBuffer_.resize(nLabels_);
+            #ifdef WITH_OPENMP
+                if(options_.nThreads_!=1){
+                    if(options_.nThreads_!=0)
+                        omp_set_num_threads(options_.nThreads_);
+                    size_t usedThreads = omp_get_max_threads(); 
+                    sMsgBuffer_.resize(maxNumLabels_*usedThreads);
+                }
+                else{
+                    sMsgBuffer_.resize(maxNumLabels_);
+                }
+            #else 
+                sMsgBuffer_.resize(maxNumLabels_);
+            #endif
+
+
             for(const auto vi : model_.variableIds())
                 conf_[vi]  = 0;
         }
@@ -235,44 +254,168 @@ namespace inference{
             // outer loop
             for(size_t i=0; i<options_.nSteps_; ++i){
                 convergence_ = 0;
-                // factor to variable message
-                //std::cout<<"send fac to var \n";
-                for(const auto fi : model_.factorIds()){
-                    //std::cout<<"    -fi "<<fi<<"\n";
-                    sendFacToVar(fi);
+
+                // SEND FAC TO VAR
+                if(options_.nThreads_ == 1){
+                    sendFacToVarNonParallel();
+                }
+                else{
+                    #ifdef WITH_OPENMP
+                    sendFacToVarParallel(FactorIdIterCategory());
+                    #else 
+                    sendFacToVarNonParallel();
+                    #endif
                 }
 
-                //std::cout<<"send var to fac \n";
-                // variable to factor message
-                for(const auto vi : model_.variableIds()){
-                    sendVarToFac(vi);
+                // SEND VAR TO FAC
+                if(options_.nThreads_ == 1){
+                    sendVarToFacNonParallel();
                 }
-                //std::cout<<"convergence  "<<convergence_<<"\n";
+                else{
+                    #ifdef WITH_OPENMP
+                    sendVarToFacParallel(VariableIdIterCategory());
+                    #else 
+                    sendVarToFacNonParallel();
+                    #endif
+                }
+
+
                 if(visitor!=NULL)
                     visitor->visit(this);
             }
-
 
             if(visitor!=NULL)
                 visitor->end(this);
         }
 
-        void sendFacToVar(const Fi fi){
-            const auto factor = model_[fi];
-            if(factor->arity()>1){
-                ValueType * facToVar[2] ={
-                    msg_.facToVarMsg(fi, 0),
-                    msg_.facToVarMsg(fi, 1)
-                };
-                const ValueType * varToFac[2] ={
-                    msg_.oppositeToFacToVarMsg(fi, 0),
-                    msg_.oppositeToFacToVarMsg(fi, 1)
-                }; 
-                factor->facToVarMsg(varToFac, facToVar);
+
+        template<class ITER_TAG>
+        void sendVarToFacParallel(const ITER_TAG tag){
+            ValueType sum = 0.0;
+            #pragma omp parallel  reduction(+:sum)
+            {
+                for(auto varIter = model_.variableIdsBegin(); varIter< model_.variableIdsEnd(); ++varIter){
+                    #pragma omp single nowait 
+                    {
+                        sum += sendVarToFac(*varIter);
+                    }
+                }
+            }
+            convergence_ = sum;
+        }
+        void sendVarToFacParallel(const std::random_access_iterator_tag tag){
+            ValueType sum = 0.0;
+            #pragma omp parallel for reduction(+:sum)
+                for(auto varIter = model_.variableIdsBegin(); varIter< model_.variableIdsEnd(); ++varIter){
+                    sum+=sendVarToFac(*varIter);
+            }
+            convergence_ = sum;
+        }
+        void sendVarToFacNonParallel(){
+            ValueType sum = 0.0;
+            for(auto varIter = model_.variableIdsBegin(); varIter< model_.variableIdsEnd(); ++varIter){
+                sum += sendVarToFac(*varIter);
+            }
+            convergence_ = sum;
+        }
+
+
+
+        template<class ITER_TAG>
+        void sendFacToVarParallel(const ITER_TAG tag){
+            #pragma omp parallel
+            {
+                for(auto facIter = model_.factorIdsBegin(); facIter!=model_.factorIdsEnd(); ++facIter){
+                    #pragma omp single nowait 
+                    {
+                        sendFacToVar(*facIter);
+                    }
+                }
             }
         }
-        void sendVarToFac(const Vi vi){
+        void sendFacToVarParallel(const std::random_access_iterator_tag tag){
+            #pragma omp parallel for
+            for(auto facIter = model_.factorIdsBegin(); facIter<model_.factorIdsEnd(); ++facIter){
+                const auto fi = *facIter;
+                sendFacToVar(fi);
+            }
+        }
+        void sendFacToVarNonParallel(){
+            for(auto facIter = model_.factorIdsBegin(); facIter<model_.factorIdsEnd(); ++facIter){
+                const auto fi = *facIter;
+                sendFacToVar(fi);
+            }
+        }
+
+
+
+        void sendFacToVar(const Fi fi){
+            const auto factor = model_[fi];
+            const auto arity  = factor->arity();
+
+            #define SEND_FAC_TO_VAR_MS(ARITY) \
+                ValueType * facToVar[ARITY]; \
+                const ValueType * varToFac[ARITY]; \
+                for(auto i=0; i<ARITY; ++i){ \
+                    facToVar[i] = msg_.facToVarMsg(fi, i); \
+                    varToFac[i] = msg_.oppToFacToVarMsg(fi, i); \
+                } \
+                factor->facToVarMsg(varToFac, facToVar); \
+                break
+
+            switch(arity){
+                case 1 : {break;}
+                case 2 : {
+                    ValueType * facToVar[2] = {msg_.facToVarMsg(fi, 0), msg_.facToVarMsg(fi, 1)};
+                    const ValueType * varToFac[2] = {msg_.oppToFacToVarMsg(fi, 0), msg_.oppToFacToVarMsg(fi, 1)}; 
+                    factor->facToVarMsg(varToFac, facToVar);
+                    break;
+                }
+                case  3 : {SEND_FAC_TO_VAR_MS( 3);}
+                case  4 : {SEND_FAC_TO_VAR_MS( 4);}
+                case  5 : {SEND_FAC_TO_VAR_MS( 5);}
+                case  6 : {SEND_FAC_TO_VAR_MS( 6);}
+                case  7 : {SEND_FAC_TO_VAR_MS( 7);}
+                case  8 : {SEND_FAC_TO_VAR_MS( 8);}
+                case  9 : {SEND_FAC_TO_VAR_MS( 9);}
+                case 10 : {SEND_FAC_TO_VAR_MS(10);}
+                case 11 : {SEND_FAC_TO_VAR_MS(11);}
+                case 12 : {SEND_FAC_TO_VAR_MS(12);}
+                case 13 : {SEND_FAC_TO_VAR_MS(13);}
+                case 14 : {SEND_FAC_TO_VAR_MS(14);}
+                case 15 : {SEND_FAC_TO_VAR_MS(15);}
+                case 16 : {SEND_FAC_TO_VAR_MS(16);}
+                default : {
+                    std::vector<ValueType *>       facToVar(arity);
+                    std::vector<const ValueType *> varToFac(arity);
+                    for(auto i=0; i<arity; ++i){ 
+                        facToVar[i] = msg_.facToVarMsg(fi, i); 
+                        varToFac[i] = msg_.oppToFacToVarMsg(fi, i); 
+                    } 
+                    factor->facToVarMsg(varToFac.data(), facToVar.data()); 
+                    break;
+                }
+
+                #undef SEND_FAC_TO_VAR_MS
+            }
+
+
             
+        }
+        ValueType sendVarToFac(const Vi vi){
+            
+            #ifdef WITH_OPENMP
+                const auto tid = omp_get_thread_num();
+                auto buffer  =  sMsgBuffer_.data() +  (options_.nThreads_!= 1 ? tid*maxNumLabels_ : 0);
+            #else
+                auto buffer  =  sMsgBuffer_.data();
+            #endif
+
+            ValueType res = 0.0;
+
+            // how many labels
+            const DiscreteLabel nl = model_.nLabels(vi);
+
             // how many higher order factors
             // has this variable (higher order includes order = 2)
             const auto & uFacs = factorsOfVariables_[vi].unaryFactors();
@@ -281,125 +424,55 @@ namespace inference{
             if(uFacs.size() + hoFacs.size() > 0 ){
 
                 // fill buffer
-                std::fill(sMsgBuffer_.begin(), sMsgBuffer_.end(), 0.0);
+                std::fill(buffer, buffer + nl, 0.0);
 
                 // unary factors
                 for(const auto fi : uFacs)
-                    model_[fi]->addToBuffer(sMsgBuffer_.data());
+                    model_[fi]->addToBuffer(buffer);
 
                 // nHigher order factors
                 const auto nHo = hoFacs.size();
                 for(size_t i=0; i<nHo; ++i){
                     // get the factor msg
-                    const auto facToVar = msg_.opposideToVarToFacMsg(vi,i);
-                    for(DiscreteLabel l=0; l<nLabels_; ++l)
-                        sMsgBuffer_[l] +=facToVar[l]; 
+                    const auto facToVar = msg_.oppToVarToFacMsg(vi,i);
+                    for(DiscreteLabel l=0; l<nl; ++l)
+                        buffer[l] +=facToVar[l]; 
                 }
 
                 // all msg are summed up now
                 // therefore sMsgBuffer is 
                 // the actual belief vector
-                const auto & belief  = sMsgBuffer_;
-                auto bBegin = belief.begin();
-                conf_[vi] = std::distance( bBegin,std::min_element(bBegin,belief.end()));
+                conf_[vi] = std::distance(buffer, std::min_element(buffer,buffer+nl));
                 
                 // compute outgoing messages
                 // - we subtract a single varToFac msg 
                 //   from belief vector 
                 for(size_t i=0; i<nHo; ++i){
                     // get the factor msg
-                    const auto facToVar = msg_.opposideToVarToFacMsg(vi,i);
+                    const auto facToVar = msg_.oppToVarToFacMsg(vi,i);
                     auto varToFac = msg_.varToFacMsg(vi,i);
 
                     // calculate the mean of the new message
                     ValueType mean = 0.0;
-                    for(DiscreteLabel l=0; l<nLabels_; ++l){
-                        mean += (belief[l] - facToVar[l]);
+                    for(DiscreteLabel l=0; l<nl; ++l){
+                        mean += (buffer[l] - facToVar[l]);
                     }
-                    mean/=nLabels_;
+                    mean/=nl;
 
                     // substract the mean and damp
-                    for(DiscreteLabel l=0; l<nLabels_; ++l){
+                    for(DiscreteLabel l=0; l<nl; ++l){
                         const ValueType oldValue = varToFac[l];
-                        const ValueType newUndampedValue = (belief[l] - facToVar[l]) - mean;
+                        const ValueType newUndampedValue = (buffer[l] - facToVar[l]) - mean;
                         const ValueType newDampedValue = options_.damping_ * oldValue + (1.0 - options_.damping_)*newUndampedValue;
                         varToFac[l] = newDampedValue;
 
                         // convergence accumulation
                         const ValueType diff = oldValue-newDampedValue;
-                        convergence_ += diff*diff;
+                        res += diff*diff;
                     }
                 }
             }
-
-            
-
-            /*
-            const auto facsOfVar = factorsOfVariables_[vi];
-            std::fill(sMsgBuffer_.begin(), sMsgBuffer_.end(), 0.0);
-            for(const auto fi : facsOfVar){
-                const auto factor = model_[fi];
-                const auto arity = factor->arity();
-
-                if(arity==1){
-                    factor->addToBuffer(sMsgBuffer_.data());
-                }
-                else if(arity>1){
-                    const auto vi0 = factor->vi(0);
-                    const auto vi1 = factor->vi(1);
-                    //INFERNO_CHECK(vi0==vi || vi1==vi,"");
-                    const ValueType * m = msg_.facToVarMsg(fi, vi0 == vi ? 0 : 1);
-                    for(DiscreteLabel l=0; l<nLabels_; ++l){
-                        sMsgBuffer_[l] += m[l];
-                    }
-                }
-            }
-            auto msgIndex = 0;
-
-            // sum is tidy
-            ValueType minVal = std::numeric_limits<ValueType>::infinity();
-            DiscreteLabel minLabel = 0;
-            for(DiscreteLabel l=0; l<nLabels_; ++l){
-                if(sMsgBuffer_[l]<minVal){
-                    minVal = sMsgBuffer_[l];
-                    minLabel = l;
-                }
-            }
-            conf_[vi] = minLabel;
-
-            for(const auto fi : facsOfVar){
-                const auto factor = model_[fi];
-                const auto arity = factor->arity();
-                if(arity>1){
-                    const auto vi0 = factor->vi(0);
-                    const auto vi1 = factor->vi(1);
-                    //INFERNO_CHECK(vi0==vi || vi1==vi,"");
-                    const ValueType * ftv = msg_.facToVarMsg(fi, vi0 == vi ? 0 : 1);
-                    ValueType  * vtf = msg_.varToFacMsg(vi, msgIndex);
-                    ValueType mean = 0;
-                    for(DiscreteLabel l=0; l<nLabels_; ++l){
-                        mean += (sMsgBuffer_[l]  -ftv[l]);
-                    }
-                    //INFERNO_CHECK_NUMBER(mean);
-                    mean/=nLabels_;
-                    //INFERNO_CHECK_NUMBER(mean);
-
-                    for(DiscreteLabel l=0; l<nLabels_; ++l){
-                        const ValueType oldValue = vtf[l];
-                        const ValueType newVal  = (sMsgBuffer_[l]  -ftv[l]) - mean;
-                        //INFERNO_CHECK_NUMBER(oldValue);
-                        //INFERNO_CHECK_NUMBER(newVal);
-                        const ValueType diff = oldValue-newVal;
-                        convergence_ += diff*diff;
-                        //INFERNO_CHECK_NUMBER(NAN);
-                        //INFERNO_CHECK_NUMBER(convergence_);
-                        //INFERNO_CHECK_NUMBER(options_.damping_);
-                        vtf[l] = options_.damping_ * oldValue + (1.0 - options_.damping_)*newVal;
-                    }
-                    ++msgIndex;
-                }
-            }
-            */
+            return res;
         }
 
 
@@ -440,7 +513,7 @@ namespace inference{
         Options options_;
         HigherOrderAndUnaryFactorsOfVariables<Model> factorsOfVariables_;
         MsgStorage msg_;
-        DiscreteLabel nLabels_;
+        DiscreteLabel maxNumLabels_;
         std::vector<ValueType> sMsgBuffer_;
         std::vector<ValueType> sBelBuffer_;
         Conf conf_;

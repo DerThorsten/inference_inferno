@@ -4,8 +4,8 @@ import vigra
 
 numpy.random.seed(7)
 
-nVar = 40*40
-nLabels = 100
+nVar = 640*480
+nLabels = 10
 model = inferno.models.GeneralDiscreteGraphicalModel(nVar, nLabels)
 
 
@@ -13,7 +13,7 @@ model = inferno.models.GeneralDiscreteGraphicalModel(nVar, nLabels)
 # EXPLICIT UNARY
 ####################################################
 # add explicit unary functions
-vals = numpy.random.rand(nVar,nLabels)*5.0
+vals = numpy.random.rand(nVar,nLabels)
 vtiRange = model.addExplicitValueTables( vals)
 # add potts factors
 vis = numpy.arange(nVar)
@@ -60,7 +60,7 @@ if False:
 ####################################################
 # add explicit 2-order functions
 if True:
-    nSecondOrder = 50 * nVar 
+    nSecondOrder = 4 * nVar 
     # add potts factors
     vis = numpy.random.randint(nVar,size=[nSecondOrder,2])
     vv = numpy.where(vis[:,0]!=vis[:,1])
@@ -76,18 +76,20 @@ if True:
 
 
 ####################################################
-# EXPLICIT 2-ORDER
+# EXPLICIT 3-ORDER
 ####################################################
 if False:
-    nSecondOrder = 10 * nVar 
+    nSecondOrder = 50*nVar 
     # add potts factors
-    vis = numpy.random.randint(nVar,size=[nSecondOrder,2])
+    vis = numpy.random.randint(nVar,size=[nSecondOrder,3])
     vv = numpy.where(vis[:,0]!=vis[:,1])
+    vis = vis[vv[0],:]
+    vv = numpy.where(vis[:,1]!=vis[:,2])
     vis = vis[vv[0],:]
     nSecondOrder = vis.shape[0]
     
     
-    vals = numpy.random.rand(nSecondOrder,nLabels,nLabels)
+    vals = numpy.random.rand(nSecondOrder,nLabels,nLabels,nLabels)-0.5
     vtiRange = model.addExplicitValueTables(vals)
     fiRange = model.addFactors(vtiRange, numpy.array(vis))
 
@@ -97,9 +99,9 @@ if False:
 
 
 opts = inferno.inference.messagePassingOptions(model)
-opts['damping'] = 0.5
-opts['nSteps'] = long(50)
-
+opts['damping'] = 0.99
+opts['nSteps'] = long(20)
+opts['nThreads'] = 0
 print opts
 
 verbVisitor = inferno.inference.verboseVisitor(model,1,False)
@@ -109,6 +111,7 @@ inf = inferno.inference.messagePassing(model, opts, True)
 
 with vigra.Timer("inf"):
     inf.infer(verbVisitor.visitor())
+    print "inf is done"
 
 with vigra.Timer("conf"):
     c =  inf.conf()

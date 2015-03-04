@@ -138,6 +138,9 @@ public:
         factor()->valueTable()->facToVarMsg(inMsgs,outMsgs);
     }
 
+    uint64_t accumulateShape()const{
+        return factor()->valueTable()->accumulateShape();
+    }
 
     const FACTOR * operator ->()const{
         return static_cast<const FACTOR *>(this); 

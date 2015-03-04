@@ -236,7 +236,7 @@ public:
 
     /** \brief check if all variables have the same number of labels
 
-        <b> Complexity:<b> O(DiscreteGraphicalModelBase::minMaxNumberOfLabel) 
+        <b> Complexity:<b> O(DiscreteGraphicalModelBase::minMaxNLabels) 
 
         <b> Derived models should overload this function if
         a better complexity can be achieved</b>
@@ -244,7 +244,7 @@ public:
     bool hasSimpleLabelSpace(DiscreteLabel & l)const{
         DiscreteLabel  minNumberOfLabels; 
         DiscreteLabel  maxNumberOfLabels;
-        model().minMaxNumberOfLabel(minNumberOfLabels, maxNumberOfLabels);
+        model().minMaxNLabels(minNumberOfLabels, maxNumberOfLabels);
         if(minNumberOfLabels == maxNumberOfLabels){
             l = minNumberOfLabels;
             return true;
@@ -270,7 +270,7 @@ public:
         \warning If the model has no variables, the behavior
         of this function is undefined
     */
-    void minMaxNumberOfLabel(DiscreteLabel & minNumberOfLabels, DiscreteLabel & maxNumberOfLabels)const{
+    void minMaxNLabels(DiscreteLabel & minNumberOfLabels, DiscreteLabel & maxNumberOfLabels)const{
         minNumberOfLabels = std::numeric_limits<DiscreteLabel>::max();
         maxNumberOfLabels = 0;
         for(const auto vi : model().variableIds()){
