@@ -4,7 +4,7 @@ import vigra
 
 numpy.random.seed(7)
 
-nVar = 640*480
+nVar = 64*4
 nLabels = 10
 model = inferno.models.GeneralDiscreteGraphicalModel(nVar, nLabels)
 
@@ -68,7 +68,7 @@ if True:
     nSecondOrder = vis.shape[0]
 
 
-    vals = (numpy.random.rand(nSecondOrder)-0.5)
+    vals = (numpy.random.rand(nSecondOrder)+0.5)*0.01
     vtiRange = model.addPottsValueTables(nLabels, vals)
     fiRange = model.addFactors(vtiRange, numpy.array(vis))
 
@@ -78,7 +78,7 @@ if True:
 ####################################################
 # EXPLICIT 3-ORDER
 ####################################################
-if False:
+if True:
     nSecondOrder = 50*nVar 
     # add potts factors
     vis = numpy.random.randint(nVar,size=[nSecondOrder,3])
@@ -89,7 +89,7 @@ if False:
     nSecondOrder = vis.shape[0]
     
     
-    vals = numpy.random.rand(nSecondOrder,nLabels,nLabels,nLabels)-0.5
+    vals = numpy.random.rand(nSecondOrder,nLabels,nLabels,nLabels)*0.01
     vtiRange = model.addExplicitValueTables(vals)
     fiRange = model.addFactors(vtiRange, numpy.array(vis))
 
@@ -99,9 +99,10 @@ if False:
 
 
 opts = inferno.inference.messagePassingOptions(model)
-opts['damping'] = 0.99
-opts['nSteps'] = long(20)
+opts['damping'] = 0.2
+opts['nSteps'] = long(2000)
 opts['nThreads'] = 0
+opts['eps'] =  1.0e-09
 print opts
 
 verbVisitor = inferno.inference.verboseVisitor(model,1,False)

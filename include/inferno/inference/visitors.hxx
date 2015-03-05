@@ -27,11 +27,12 @@ namespace inference{
         typedef typename VisitorType::Conf Conf;
         typedef typename VisitorType::BeginCallBack BeginCallBack;
         typedef typename VisitorType::VisitCallBack VisitCallBack;
+        typedef typename VisitorType::LoggingCallBack LoggingCallBack;
         typedef typename VisitorType::EndCallBack EndCallBack;
 
         VerboseVisitor(
-            const uint64_t printNth = 10,
-            const bool singleLine = true
+            const uint64_t printNth,
+            const bool singleLine
         )
         :   visitor_(),
             printNth_(printNth),
@@ -41,6 +42,7 @@ namespace inference{
            visitor_.beginCallBack = BeginCallBack:: template from_method<SelfType,&SelfType::begin>(this);
            visitor_.visitCallBack = VisitCallBack:: template from_method<SelfType,&SelfType::visit>(this);
            visitor_.endCallBack   = EndCallBack::   template from_method<SelfType,&SelfType::end>(this);     
+           visitor_.loggingCallBack   = LoggingCallBack::   template from_method<SelfType,&SelfType::logging>(this);     
         }
 
         void begin(BaseInf * inf){
@@ -58,10 +60,21 @@ namespace inference{
 
                 std::cout<<std::left<<std::setw(9)<<"Iteration"<<std::right<<std::setw(8)<<i_
                     <<"   Energy  "<<std::setw(8)<<std::showpos<<std::scientific<<std::setprecision(7)<<e
-                    <<"   LowerBound   "<<std::setw(8)<<std::showpos<<std::scientific<<std::setprecision(7)<<lb<<nlFlag_
-                ;
+                    <<"   LowerBound   "<<std::setw(8)<<std::showpos<<std::scientific<<std::setprecision(7)<<lb;
+                if(!logging_.empty()){
+                    std::cout<<"  ";
+                }
+                for(const auto & kv : logging_){
+                    std::cout<<kv.first<<"   "<<std::setw(7)<<std::showpos<<std::scientific<<std::setprecision(6)<<kv.second<<"  \n";
+                }
+                std::cout<<nlFlag_;
             }
             ++i_;
+        }
+        void logging(BaseInf * inf, const std::string & name, const ValueType value){
+            if(i_==0 || (i_ % printNth_==0)){
+                logging_[name] = value;
+            }
         }
         void end(BaseInf * inf){
             const ValueType e = inf->energy();
@@ -77,6 +90,7 @@ namespace inference{
             return visitor_;
         }
     private:
+        std::map<std::string, ValueType > logging_;
         VisitorType visitor_;
         uint64_t printNth_;
         uint64_t i_;

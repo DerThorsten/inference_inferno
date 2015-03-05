@@ -49,9 +49,6 @@ namespace inference{
             varToFacOffset_(model,std::numeric_limits<uint64_t>::max()),
             nLabels_()
         {
-            INFERNO_CHECK(model_.hasSimpleLabelSpace(nLabels_),"only for simple label spaces");
-            //INFERNO_CHECK_OP(model_.maxArity(),==,2,"only for 2.-order models");
-
             const bool simpleLabelSpace = model_.hasSimpleLabelSpace(nLabels_);
 
 
@@ -116,31 +113,29 @@ namespace inference{
 
         ValueType * facToVarMsg(const Fi fi, const size_t mi){
             const uint64_t offset = facToVarOffset_[fi];
-            INFERNO_CHECK(msgPtrs_[offset + mi].msg_!=NULL, "");
             return msgPtrs_[offset + mi].msg_;
         }
 
         ValueType * oppToFacToVarMsg(const Fi fi, const size_t mi){
             const uint64_t offset = facToVarOffset_[fi];
-            INFERNO_CHECK(msgPtrs_[offset + mi].oMsg_!=NULL, "");
             return msgPtrs_[offset + mi].oMsg_;
         }
 
-
         ValueType * varToFacMsg(const Vi vi, const size_t mi){
             const uint64_t offset = varToFacOffset_[vi];
-            INFERNO_CHECK(msgPtrs_[offset + mi].msg_!=NULL, "");
             return msgPtrs_[offset + mi].msg_;
         }
 
         ValueType * oppToVarToFacMsg(const Vi vi, const size_t mi){
             const uint64_t offset = varToFacOffset_[vi];
-            INFERNO_CHECK(msgPtrs_[offset + mi].oMsg_!=NULL, "");
             return msgPtrs_[offset + mi].oMsg_;
         }
 
         DiscreteLabel nLabels()const{
             return nLabels_;
+        }
+        uint64_t nMsg()const{
+            return msgPtrs_.size();
         }
 
     private:
@@ -167,42 +162,54 @@ namespace inference{
         typedef typename BaseInf::Visitor Visitor;
         typedef typename MODEL:: template VariableMap<DiscreteLabel> Conf;
         typedef typename MODEL:: template VariableMap<uint8_t> UIn8VarMap;
-
+    private:
         typedef SimpleMessageStoring<MODEL> MsgStorage;
         typedef typename std::iterator_traits<typename MODEL::FactorIdIter>::iterator_category FactorIdIterCategory;
         typedef typename std::iterator_traits<typename MODEL::VariableIdIter>::iterator_category VariableIdIterCategory;
-
+    public:
         struct Options{
-            Options(){
-                damping_  = 0.95;
-                nSteps_  = 1000;
+            Options(           
+            ){
+                nSteps_ = 1000;
+                damping_ = 0.95;
+                eps_ = 1.0e-07 ;
                 nThreads_ = 0; 
+                saveMem_ = false;
             }
             Options(const InferenceOptions & options)
             {
+                Options  defaultOpt;
                 if(options.checkOptions()){
                     auto keys = options.keys();
-                    options.getOption("damping", 0.95, damping_, keys);
-                    options.getOption("nSteps", 1000, nSteps_, keys);
-                    options.getOption("nThreads", 0, nThreads_, keys);
+                    options.getOption("nSteps", defaultOpt.nSteps_, nSteps_, keys);
+                    options.getOption("damping", defaultOpt.damping_, damping_, keys);
+                    options.getOption("eps", defaultOpt.eps_, eps_, keys);
+                    options.getOption("saveMem", defaultOpt.saveMem_, saveMem_, keys);
+                    options.getOption("nThreads", defaultOpt.nThreads_, nThreads_, keys);
                     options. template checkForLeftovers<Self>(keys);
                 }
                 else{
-                    options.getOption("damping", 0.95, damping_);
-                    options.getOption("nSteps", 1000, nSteps_);
-                    options.getOption("nThreads", 0, nThreads_);
+                    options.getOption("nSteps", defaultOpt.nSteps_, nSteps_);
+                    options.getOption("damping", defaultOpt.damping_, damping_);
+                    options.getOption("eps", defaultOpt.eps_, eps_);
+                    options.getOption("saveMem", defaultOpt.saveMem_, saveMem_);
+                    options.getOption("nThreads", defaultOpt.nThreads_, nThreads_);
                 }
             }
             ValueType damping_;
             uint64_t nSteps_;
+            ValueType eps_;
             uint64_t nThreads_;
+            bool saveMem_;
         };
 
         static void defaultOptions(InferenceOptions & options){
-            Options opt;
-            options.set("damping",opt.damping_);
-            options.set("nSteps",opt.nSteps_);
-            options.set("nThreads",opt.nThreads_);
+            Options defaultOpt;
+            options.set("nSteps",defaultOpt.nSteps_);
+            options.set("damping",defaultOpt.damping_);
+            options.set("eps",defaultOpt.eps_);
+            options.set("saveMem",defaultOpt.saveMem_);
+            options.set("nThreads",defaultOpt.nThreads_);
         }
 
  
@@ -215,7 +222,6 @@ namespace inference{
             msg_(model,factorsOfVariables_),
             maxNumLabels_(),
             sMsgBuffer_(),
-            sBelBuffer_(),
             conf_(model),
             stopInference_(false)
         {
@@ -253,93 +259,119 @@ namespace inference{
 
             // outer loop
             for(size_t i=0; i<options_.nSteps_; ++i){
-                convergence_ = 0;
+                // reset epsilon for convergence 
+                // logging and termination
+                eps_ = 0;
 
-                // SEND FAC TO VAR
+                // non - parallel
                 if(options_.nThreads_ == 1){
                     sendFacToVarNonParallel();
+                    sendVarToFacNonParallel();
                 }
+                // parallel  only if WITH_OPENMP is defined)
+                // otherwise serial fall-back
                 else{
-                    #ifdef WITH_OPENMP
                     sendFacToVarParallel(FactorIdIterCategory());
-                    #else 
-                    sendFacToVarNonParallel();
-                    #endif
-                }
-
-                // SEND VAR TO FAC
-                if(options_.nThreads_ == 1){
-                    sendVarToFacNonParallel();
-                }
-                else{
-                    #ifdef WITH_OPENMP
                     sendVarToFacParallel(VariableIdIterCategory());
-                    #else 
-                    sendVarToFacNonParallel();
-                    #endif
                 }
 
+                eps_ /= (msg_.nMsg()/2);
 
-                if(visitor!=NULL)
+                // call visitor 
+                if(visitor!=NULL){
+                    visitor->logging(this,std::string("convergence"), eps_);
                     visitor->visit(this);
+                }
+                // check for termination (by visitors)
+                if(stopInference_)
+                    break;
+
+                // check for termination by convergence
+                if(eps_ < options_.eps_)
+                    break;
             }
 
             if(visitor!=NULL)
                 visitor->end(this);
         }
 
-
+        // send varToFac parallel for
+        // NON random access iterator
         template<class ITER_TAG>
         void sendVarToFacParallel(const ITER_TAG tag){
             ValueType sum = 0.0;
+            #ifdef WITH_OPENMP
             #pragma omp parallel  reduction(+:sum)
+            #endif
             {
                 for(auto varIter = model_.variableIdsBegin(); varIter< model_.variableIdsEnd(); ++varIter){
+                    #ifdef WITH_OPENMP
                     #pragma omp single nowait 
+                    #endif
                     {
                         sum += sendVarToFac(*varIter);
                     }
                 }
             }
-            convergence_ = sum;
+            eps_ = sum;
         }
+
+        // send varToFac parallel for
+        // random access iterator
         void sendVarToFacParallel(const std::random_access_iterator_tag tag){
             ValueType sum = 0.0;
+            #ifdef WITH_OPENMP
             #pragma omp parallel for reduction(+:sum)
-                for(auto varIter = model_.variableIdsBegin(); varIter< model_.variableIdsEnd(); ++varIter){
+            #endif
+            for(auto varIter = model_.variableIdsBegin(); varIter< model_.variableIdsEnd(); ++varIter){
                     sum+=sendVarToFac(*varIter);
             }
-            convergence_ = sum;
+            eps_ = sum;
         }
+        // send varToFac NON-parallel 
+        // but exactly the semantic meaning
+        // as parallel
         void sendVarToFacNonParallel(){
             ValueType sum = 0.0;
             for(auto varIter = model_.variableIdsBegin(); varIter< model_.variableIdsEnd(); ++varIter){
                 sum += sendVarToFac(*varIter);
             }
-            convergence_ = sum;
+            eps_ = sum;
         }
 
 
-
+        // send facToVar parallel for
+        // NON random access iterator
         template<class ITER_TAG>
         void sendFacToVarParallel(const ITER_TAG tag){
+            #ifdef WITH_OPENMP
             #pragma omp parallel
+            #endif
             {
                 for(auto facIter = model_.factorIdsBegin(); facIter!=model_.factorIdsEnd(); ++facIter){
+                    #ifdef WITH_OPENMP
                     #pragma omp single nowait 
+                    #endif
                     {
                         sendFacToVar(*facIter);
                     }
                 }
             }
         }
+        // send facToVar parallel for
+        // NON random access iterator
         void sendFacToVarParallel(const std::random_access_iterator_tag tag){
+            #ifdef WITH_OPENMP
             #pragma omp parallel for
+            #endif
             for(auto facIter = model_.factorIdsBegin(); facIter<model_.factorIdsEnd(); ++facIter){
                 const auto fi = *facIter;
                 sendFacToVar(fi);
             }
         }
+        // send facToVar NON-parallel 
+        // but exactly the semantic meaning
+        // as parallel
         void sendFacToVarNonParallel(){
             for(auto facIter = model_.factorIdsBegin(); facIter<model_.factorIdsEnd(); ++facIter){
                 const auto fi = *facIter;
@@ -404,6 +436,8 @@ namespace inference{
         }
         ValueType sendVarToFac(const Vi vi){
             
+            // get a buffer which can hold a single msg.
+            // (each thread needs its one buffer)
             #ifdef WITH_OPENMP
                 const auto tid = omp_get_thread_num();
                 auto buffer  =  sMsgBuffer_.data() +  (options_.nThreads_!= 1 ? tid*maxNumLabels_ : 0);
@@ -411,7 +445,7 @@ namespace inference{
                 auto buffer  =  sMsgBuffer_.data();
             #endif
 
-            ValueType res = 0.0;
+            ValueType msgSquaredDiff = 0.0;
 
             // how many labels
             const DiscreteLabel nl = model_.nLabels(vi);
@@ -468,11 +502,11 @@ namespace inference{
 
                         // convergence accumulation
                         const ValueType diff = oldValue-newDampedValue;
-                        res += diff*diff;
+                        msgSquaredDiff += diff*diff;
                     }
                 }
             }
-            return res;
+            return msgSquaredDiff;
         }
 
 
@@ -515,9 +549,8 @@ namespace inference{
         MsgStorage msg_;
         DiscreteLabel maxNumLabels_;
         std::vector<ValueType> sMsgBuffer_;
-        std::vector<ValueType> sBelBuffer_;
         Conf conf_;
-        ValueType convergence_;
+        ValueType eps_;
         bool stopInference_;
     };
   

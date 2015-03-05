@@ -45,7 +45,9 @@ namespace inference{
 
             typedef inferno::delegate1<void , BaseInf * > BeginCallBack;
             typedef inferno::delegate1<void , BaseInf * > VisitCallBack;
+            typedef inferno::delegate3<void , BaseInf * , const std::string &, const ValueType> LoggingCallBack;          
             typedef inferno::delegate1<void , BaseInf * > EndCallBack;
+
 
 
             void begin(BaseInf * inf){
@@ -56,6 +58,10 @@ namespace inference{
                 if(bool(visitCallBack))
                     visitCallBack(inf);
             }
+            void logging(BaseInf * inf, const std::string & name, const ValueType value){
+                if(bool(loggingCallBack))
+                    loggingCallBack(inf, name, value);
+            }
             void end(BaseInf * inf){
                 if(bool(endCallBack))
                     endCallBack(inf);
@@ -64,6 +70,7 @@ namespace inference{
 
             BeginCallBack beginCallBack;
             VisitCallBack visitCallBack;
+            LoggingCallBack loggingCallBack;
             EndCallBack endCallBack;
         };
 
@@ -125,7 +132,6 @@ namespace inference{
         virtual void partialEnergyChange(const Fi * changedFacBegin, const Fi * changedFacEnd ) {
             throw NotImplementedException(this->name()+std::string("does not support \"partialEneryChange\" so far"));
         }
-        
     };
 
 
