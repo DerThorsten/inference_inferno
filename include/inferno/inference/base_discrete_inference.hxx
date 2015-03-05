@@ -18,7 +18,8 @@
 #include "inferno/inference/utilities/movemaker.hxx"
 #include "inferno/inference/inference_options.hxx"
 #include "inferno/model/factors_of_variables.hxx"
-
+#include "inferno/utilities/parallel/parallel.hxx"
+    
 namespace inferno{
 
 /** \namespace inferno::inference
@@ -32,7 +33,7 @@ namespace inferno{
 */
 namespace inference{
 
-   
+    typedef inferno::utilities::Concurrency Concurrency;
 
     template<class MODEL>
     class DiscreteInferenceBase{

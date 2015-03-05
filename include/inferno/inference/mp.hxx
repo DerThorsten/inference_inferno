@@ -7,6 +7,8 @@
 #ifndef INFERNO_INFERENCE_MP_HXX
 #define INFERNO_INFERENCE_MP_HXX
 
+#include <functional>
+
 #include "boost/format.hpp"
 
 #ifdef WITH_OPENMP
@@ -15,6 +17,10 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/utilities/delegate.hxx"
+#include "inferno/utilities/parallel/parallel.hxx"
+#include "inferno/utilities/parallel/threadpool/threadpool.h"
+#include "inferno/utilities/parallel/threadpool/impl/threadpool_inst.h"
+#include "inferno/utilities/parallel/threadpool/parallel_for_each.h"
 #include "inferno/inference/base_discrete_inference.hxx"
 #include "inferno/inference/utilities/movemaker.hxx"
 #include "inferno/model/factors_of_variables.hxx"
@@ -164,8 +170,10 @@ namespace inference{
         typedef typename MODEL:: template VariableMap<uint8_t> UIn8VarMap;
     private:
         typedef SimpleMessageStoring<MODEL> MsgStorage;
-        typedef typename std::iterator_traits<typename MODEL::FactorIdIter>::iterator_category FactorIdIterCategory;
-        typedef typename std::iterator_traits<typename MODEL::VariableIdIter>::iterator_category VariableIdIterCategory;
+        typedef typename MODEL::FactorIdIter FactorIdIter;
+        typedef typename MODEL::VariableIdIter VariableIdIter;
+        typedef typename std::iterator_traits<FactorIdIter>::iterator_category FactorIdIterCategory;
+        typedef typename std::iterator_traits<VariableIdIter>::iterator_category VariableIdIterCategory;
     public:
         struct Options{
             Options(           
@@ -173,8 +181,10 @@ namespace inference{
                 nSteps_ = 1000;
                 damping_ = 0.95;
                 eps_ = 1.0e-07 ;
-                nThreads_ = 0; 
                 saveMem_ = false;
+                nThreads_ = 0; 
+                concurrency_ = Concurrency::OpenMp;
+               
             }
             Options(const InferenceOptions & options)
             {
@@ -186,6 +196,7 @@ namespace inference{
                     options.getOption("eps", defaultOpt.eps_, eps_, keys);
                     options.getOption("saveMem", defaultOpt.saveMem_, saveMem_, keys);
                     options.getOption("nThreads", defaultOpt.nThreads_, nThreads_, keys);
+                    concurrency_ = static_cast<Concurrency>(options.getOption<int64_t>("concurrency", defaultOpt.concurrency_, keys));
                     options. template checkForLeftovers<Self>(keys);
                 }
                 else{
@@ -194,6 +205,7 @@ namespace inference{
                     options.getOption("eps", defaultOpt.eps_, eps_);
                     options.getOption("saveMem", defaultOpt.saveMem_, saveMem_);
                     options.getOption("nThreads", defaultOpt.nThreads_, nThreads_);
+                    concurrency_ = static_cast<Concurrency>(options.getOption<int64_t>("concurrency", defaultOpt.concurrency_));
                 }
             }
             ValueType damping_;
@@ -201,6 +213,7 @@ namespace inference{
             ValueType eps_;
             uint64_t nThreads_;
             bool saveMem_;
+            Concurrency concurrency_;
         };
 
         static void defaultOptions(InferenceOptions & options){
@@ -210,6 +223,7 @@ namespace inference{
             options.set("eps",defaultOpt.eps_);
             options.set("saveMem",defaultOpt.saveMem_);
             options.set("nThreads",defaultOpt.nThreads_);
+            options.set("concurrency",static_cast<int64_t>(defaultOpt.nThreads_));
         }
 
  
@@ -358,17 +372,66 @@ namespace inference{
                 }
             }
         }
+
+        void sendFacToVarChunck(FactorIdIter begin, FactorIdIter end){
+            while(begin != end){
+                sendFacToVar(*begin);
+                ++begin;
+            }
+            //std::cout<<"ended "<<*begin<<" "<<*end<<"\n";
+        }
         // send facToVar parallel for
         // NON random access iterator
         void sendFacToVarParallel(const std::random_access_iterator_tag tag){
-            #ifdef WITH_OPENMP
-            #pragma omp parallel for
-            #endif
-            for(auto facIter = model_.factorIdsBegin(); facIter<model_.factorIdsEnd(); ++facIter){
-                const auto fi = *facIter;
-                sendFacToVar(fi);
+
+            if(options_.concurrency_  == Concurrency::OpenMp){
+                #ifdef WITH_OPENMP
+                #pragma omp parallel for
+                #endif
+                for(auto facIter = model_.factorIdsBegin(); facIter<model_.factorIdsEnd(); ++facIter){
+                    const auto fi = *facIter;
+                    sendFacToVar(fi);
+                }
+            }
+            else if(options_.concurrency_ == Concurrency::StdThreads){
+
+                threadpool::parallel::for_each(model_.factorIdsBegin(), model_.factorIdsEnd(),
+                    [this] (Fi fi) { this->sendFacToVar(fi) ;}
+                );
+
+                /*
+                threadpool::ThreadPool pool;
+
+                auto iter = model_.factorIdsBegin(); 
+                auto endIter = model_.factorIdsEnd();
+                size_t chunkSize = 20;
+
+                while(true){
+                    auto d = std::distance(iter, endIter);
+                    if(d>=chunkSize){
+                        //std::cout<<"  i "<<*iter<< "i+chunkSize" <<*(iter+chunkSize)<<"\n";
+                        //auto f = std::bind(&MessagePassing<MODEL>::sendFacToVarChunck, this, iter, iter+chunkSize);
+
+
+                        pool.run([iter,chunkSize,this](){this->sendFacToVarChunck(iter,iter+chunkSize);});
+                        iter+=chunkSize;
+                        if(iter==endIter)
+                            break;
+                    }
+                    else{
+                        //std::cout<<"**i "<<*iter<< "endIter\n";
+                        //auto f = std::bind(&MessagePassing<MODEL>::sendFacToVarChunck, this, iter, endIter);
+                        pool.run([iter,endIter,this](){this->sendFacToVarChunck(iter,endIter);});
+                        break;
+                    }
+                }
+                pool.wait();    
+                */
             }
         }
+
+
+
         // send facToVar NON-parallel 
         // but exactly the semantic meaning
         // as parallel

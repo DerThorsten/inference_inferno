@@ -57,8 +57,22 @@ public:
      *                         immediately after the first function in the same
      *                         thread that ran the first function
      */
-    void executeJob(std::function<void()> job, std::function<void()> notificationJob);
+    void executeJob(std::function<void()> job, std::function<void()> notificationJob = std::function<void()>());
 
+
+    join()
+    {
+        {
+            std::unique_lock<std::mutex> lockList(m_lockJobsList);
+            m_bTerminate = true;
+            m_notifyJob.notify_all();
+        }
+
+        for(std::unique_ptr<std::thread>& worker: m_workers)
+        {
+            worker->join();
+        }
+    }
 
 private:
     /**
@@ -206,7 +220,8 @@ void ThreadPool::loop()
         {
             std::pair<std::function<void()>, std::function<void()> > job = getNextJob();
             job.first();
-            job.second();
+            if(job.second)
+                job.second();
         }
     }
     catch(Terminated& e)

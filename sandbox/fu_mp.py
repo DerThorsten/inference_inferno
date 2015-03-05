@@ -4,7 +4,7 @@ import vigra
 
 numpy.random.seed(7)
 
-nVar = 64*4
+nVar = 100*25
 nLabels = 10
 model = inferno.models.GeneralDiscreteGraphicalModel(nVar, nLabels)
 
@@ -59,8 +59,8 @@ if False:
 # Potts 2-ORDER
 ####################################################
 # add explicit 2-order functions
-if True:
-    nSecondOrder = 4 * nVar 
+if False:
+    nSecondOrder =  nVar 
     # add potts factors
     vis = numpy.random.randint(nVar,size=[nSecondOrder,2])
     vv = numpy.where(vis[:,0]!=vis[:,1])
@@ -68,10 +68,25 @@ if True:
     nSecondOrder = vis.shape[0]
 
 
-    vals = (numpy.random.rand(nSecondOrder)+0.5)*0.01
+    vals = (numpy.random.rand(nSecondOrder)-0.5)*0.01
     vtiRange = model.addPottsValueTables(nLabels, vals)
     fiRange = model.addFactors(vtiRange, numpy.array(vis))
 
+####################################################
+# EXPLICIT 2-ORDER
+####################################################
+if False:
+    nSecondOrder = nVar 
+    # add potts factors
+    vis = numpy.random.randint(nVar,size=[nSecondOrder,3])
+    vv = numpy.where(vis[:,0]!=vis[:,1])
+    vis = vis[vv[0],:]
+    nSecondOrder = vis.shape[0]
+    
+    
+    vals = numpy.random.rand(nSecondOrder,nLabels,nLabels,nLabels)*0.01
+    vtiRange = model.addExplicitValueTables(vals)
+    fiRange = model.addFactors(vtiRange, numpy.array(vis))
 
 
 
@@ -89,7 +104,7 @@ if True:
     nSecondOrder = vis.shape[0]
     
     
-    vals = numpy.random.rand(nSecondOrder,nLabels,nLabels,nLabels)*0.01
+    vals = numpy.random.rand(nSecondOrder,nLabels,nLabels,nLabels)*0.1
     vtiRange = model.addExplicitValueTables(vals)
     fiRange = model.addFactors(vtiRange, numpy.array(vis))
 
@@ -100,12 +115,13 @@ if True:
 
 opts = inferno.inference.messagePassingOptions(model)
 opts['damping'] = 0.2
-opts['nSteps'] = long(2000)
+opts['nSteps'] = long(10)
 opts['nThreads'] = 0
 opts['eps'] =  1.0e-09
+opts['concurrency'] = 1
 print opts
 
-verbVisitor = inferno.inference.verboseVisitor(model,1,False)
+verbVisitor = inferno.inference.verboseVisitor(model,1,True)
 inf = inferno.inference.messagePassing(model, opts, True)
 
 

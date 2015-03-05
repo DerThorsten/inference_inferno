@@ -188,6 +188,38 @@ namespace inference{
             }
         }
 
+        template<class T, class DEFAULT_VAL>
+        T getOption(
+            const std::string & key, 
+            const DEFAULT_VAL & defaultVal, 
+            std::set<std::string> & keys
+        )const{
+            const auto i = storage_.find(key);
+            if(i==storage_.end()){
+                return static_cast<T>(defaultVal);
+                return false;
+            }
+            else{
+                keys.erase(key);
+                return  get<T>(key);
+            }
+        }
+
+        template<class T, class DEFAULT_VAL>
+        T getOption(
+            const std::string & key, 
+            const DEFAULT_VAL & defaultVal
+        )const{
+            const auto i = storage_.find(key);
+            if(i==storage_.end()){
+                return static_cast<T>(defaultVal);
+                return false;
+            }
+            else{
+                return  get<T>(key);
+            }
+        }
+
         std::set<std::string> keys()const{
             std::set<std::string> ret;
             for(const auto & kv : storage_)
