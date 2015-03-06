@@ -18,7 +18,7 @@
 #include "inferno/inferno.hxx"
 #include "inferno/utilities/delegate.hxx"
 #include "inferno/utilities/parallel/parallel.hxx"
-#include "inferno/utilities/parallel/spool.hxx"
+#include "inferno/utilities/parallel/pool.hxx"
 #include "inferno/inference/base_discrete_inference.hxx"
 #include "inferno/inference/utilities/movemaker.hxx"
 #include "inferno/model/factors_of_variables.hxx"
@@ -180,9 +180,7 @@ namespace inference{
                 damping_ = 0.95;
                 eps_ = 1.0e-07 ;
                 saveMem_ = false;
-                nThreads_ = 0; 
-                concurrency_ = Concurrency::OpenMp;
-               
+                nThreads_ = 0;     
             }
             Options(const InferenceOptions & options)
             {
@@ -194,7 +192,6 @@ namespace inference{
                     options.getOption("eps", defaultOpt.eps_, eps_, keys);
                     options.getOption("saveMem", defaultOpt.saveMem_, saveMem_, keys);
                     options.getOption("nThreads", defaultOpt.nThreads_, nThreads_, keys);
-                    concurrency_ = static_cast<Concurrency>(options.getOption<int64_t>("concurrency", defaultOpt.concurrency_, keys));
                     options. template checkForLeftovers<Self>(keys);
                 }
                 else{
@@ -203,7 +200,6 @@ namespace inference{
                     options.getOption("eps", defaultOpt.eps_, eps_);
                     options.getOption("saveMem", defaultOpt.saveMem_, saveMem_);
                     options.getOption("nThreads", defaultOpt.nThreads_, nThreads_);
-                    concurrency_ = static_cast<Concurrency>(options.getOption<int64_t>("concurrency", defaultOpt.concurrency_));
                 }
             }
             ValueType damping_;
@@ -221,7 +217,6 @@ namespace inference{
             options.set("eps",defaultOpt.eps_);
             options.set("saveMem",defaultOpt.saveMem_);
             options.set("nThreads",defaultOpt.nThreads_);
-            options.set("concurrency",static_cast<int64_t>(defaultOpt.nThreads_));
         }
 
  
@@ -235,25 +230,14 @@ namespace inference{
             maxNumLabels_(),
             sMsgBuffer_(),
             conf_(model),
-            stopInference_(false)
+            stopInference_(false),
+            nThreads_(options_.nThreads_ == 0 ? std::thread::hardware_concurrency() : options_.nThreads_)
         {
             DiscreteLabel minNumLabels;
             model_.minMaxNLabels(minNumLabels, maxNumLabels_);
 
-            #ifdef WITH_OPENMP
-                if(options_.nThreads_!=1){
-                    if(options_.nThreads_!=0)
-                        omp_set_num_threads(options_.nThreads_);
-                    size_t usedThreads = omp_get_max_threads(); 
-                    sMsgBuffer_.resize(maxNumLabels_*usedThreads);
-                }
-                else{
-                    sMsgBuffer_.resize(maxNumLabels_);
-                }
-            #else 
-                sMsgBuffer_.resize(maxNumLabels_);
-            #endif
 
+            sMsgBuffer_.resize(maxNumLabels_*nThreads_);
 
             for(const auto vi : model_.variableIds())
                 conf_[vi]  = 0;
@@ -271,22 +255,11 @@ namespace inference{
 
             // outer loop
             for(size_t i=0; i<options_.nSteps_; ++i){
+
                 // reset epsilon for convergence 
-                // logging and termination
                 eps_ = 0;
-
-                // non - parallel
-                if(options_.nThreads_ == 1){
-                    sendFacToVarNonParallel();
-                    sendVarToFacNonParallel();
-                }
-                // parallel  only if WITH_OPENMP is defined)
-                // otherwise serial fall-back
-                else{
-                    sendFacToVarParallel(FactorIdIterCategory());
-                    sendVarToFacParallel(VariableIdIterCategory());
-                }
-
+                sendAllFacToVar();
+                sendAllVarToFac();
                 eps_ /= (msg_.nMsg()/2);
 
                 // call visitor 
@@ -307,149 +280,31 @@ namespace inference{
                 visitor->end(this);
         }
 
-        // send varToFac parallel for
-        // NON random access iterator
-        template<class ITER_TAG>
-        void sendVarToFacParallel(const ITER_TAG tag){
-            ValueType sum = 0.0;
-            #ifdef WITH_OPENMP
-            #pragma omp parallel  reduction(+:sum)
-            #endif
-            {
-                for(auto varIter = model_.variableIdsBegin(); varIter< model_.variableIdsEnd(); ++varIter){
-                    #ifdef WITH_OPENMP
-                    #pragma omp single nowait 
-                    #endif
-                    {
-                        sum += sendVarToFac(*varIter);
-                    }
-                }
-            }
-            eps_ = sum;
-        }
+
 
         // send varToFac parallel for
         // random access iterator
-        void sendVarToFacParallel(const std::random_access_iterator_tag tag){
-            ValueType sum = 0.0;
-            #ifdef WITH_OPENMP
-            #pragma omp parallel for reduction(+:sum)
-            #endif
-            for(auto varIter = model_.variableIdsBegin(); varIter< model_.variableIdsEnd(); ++varIter){
-                    sum+=sendVarToFac(*varIter);
-            }
-            eps_ = sum;
-        }
-        // send varToFac NON-parallel 
-        // but exactly the semantic meaning
-        // as parallel
-        void sendVarToFacNonParallel(){
-            ValueType sum = 0.0;
-            for(auto varIter = model_.variableIdsBegin(); varIter< model_.variableIdsEnd(); ++varIter){
-                sum += sendVarToFac(*varIter);
-            }
-            eps_ = sum;
-        }
+        void sendAllVarToFac(){
+            std::vector<ValueType> sum(nThreads_, 0.0);
+            utilities::parallel_foreach(model_.variableIdsBegin(), model_.variableIdsEnd(),
+                [this, &sum] (int id, inferno::Vi vi) {sum[id] += this->sendVarToFac(vi,id);},
+                model_.nVariables(),nThreads_);
 
-
+            eps_ = 0;
+            for(const auto s : sum){
+                eps_+=s;
+            }
+        }
+     
         // send facToVar parallel for
         // NON random access iterator
-        template<class ITER_TAG>
-        void sendFacToVarParallel(const ITER_TAG tag){
-            #ifdef WITH_OPENMP
-            #pragma omp parallel
-            #endif
-            {
-                for(auto facIter = model_.factorIdsBegin(); facIter!=model_.factorIdsEnd(); ++facIter){
-                    #ifdef WITH_OPENMP
-                    #pragma omp single nowait 
-                    #endif
-                    {
-                        sendFacToVar(*facIter);
-                    }
-                }
-            }
+        void sendAllFacToVar(){
+            utilities::parallel_foreach(model_.factorIdsBegin(),model_.factorIdsEnd(),
+                [this] (int id, inferno::Fi fi) {
+                    this->sendFacToVar(fi);
+                }, model_.nFactors(), nThreads_
+            );  
         }
-
-        void sendFacToVarChunck(FactorIdIter begin, FactorIdIter end){
-            while(begin != end){
-                sendFacToVar(*begin);
-                ++begin;
-            }
-            //std::cout<<"ended "<<*begin<<" "<<*end<<"\n";
-        }
-        // send facToVar parallel for
-        // NON random access iterator
-        void sendFacToVarParallel(const std::random_access_iterator_tag tag){
-
-            if(options_.concurrency_  == Concurrency::OpenMp){
-                #ifdef WITH_OPENMP
-                #pragma omp parallel for
-                #endif
-                for(auto facIter = model_.factorIdsBegin(); facIter<model_.factorIdsEnd(); ++facIter){
-                    const auto fi = *facIter;
-                    sendFacToVar(fi);
-                }
-            }
-            else if(options_.concurrency_ == Concurrency::StdThreads){
-
-                //threadpool::parallel::for_each(model_.factorIdsBegin(), model_.factorIdsEnd(),
-                //    [this] (Fi fi) { this->sendFacToVar(fi) ;}
-                //);
-
-
-
-
-                ThreadPool pool(9);
-
-                auto iter = model_.factorIdsBegin(); 
-                auto endIter = model_.factorIdsEnd();
-
-                size_t workload = model_.nFactors();
-
-                size_t chunkSize = workload/(9*6);
-
-               //pool.finishTasks();
-                while(true){
-
-                    const int lChunkSize = (workload >= chunkSize ? chunkSize  : workload);
-                    pool.enqueue(
-                        [iter,lChunkSize,this]
-                        (int id)
-                        {
-                            auto ii = iter;
-                            for(size_t i=0; i<lChunkSize; ++i){
-                                const auto fi = *ii;
-                                this->sendFacToVar(fi);
-                                ++ii;
-                            }
-                        }
-                    );
-                    workload -= lChunkSize;
-                    INFERNO_CHECK_OP(workload,>=,0,"");
-                    if(workload==0){
-                        break;
-                    }
-                    std::advance(iter, lChunkSize);
-
-                }                
-                
-            }
-        }
-
-
-
-        // send facToVar NON-parallel 
-        // but exactly the semantic meaning
-        // as parallel
-        void sendFacToVarNonParallel(){
-            for(auto facIter = model_.factorIdsBegin(); facIter<model_.factorIdsEnd(); ++facIter){
-                const auto fi = *facIter;
-                sendFacToVar(fi);
-            }
-        }
-
-
 
         void sendFacToVar(const Fi fi){
             const auto factor = model_[fi];
@@ -500,21 +355,11 @@ namespace inference{
 
                 #undef SEND_FAC_TO_VAR_MS
             }
-
-
-            
         }
-        ValueType sendVarToFac(const Vi vi){
-            
-            // get a buffer which can hold a single msg.
-            // (each thread needs its one buffer)
-            #ifdef WITH_OPENMP
-                const auto tid = omp_get_thread_num();
-                auto buffer  =  sMsgBuffer_.data() +  (options_.nThreads_!= 1 ? tid*maxNumLabels_ : 0);
-            #else
-                auto buffer  =  sMsgBuffer_.data();
-            #endif
 
+        ValueType sendVarToFac(const Vi vi, const int tid){
+            
+            auto buffer  =  sMsgBuffer_.data() +  (options_.nThreads_!= 1 ? tid*maxNumLabels_ : 0);
             ValueType msgSquaredDiff = 0.0;
 
             // how many labels
@@ -581,7 +426,6 @@ namespace inference{
 
 
 
-
         // get result
         virtual void conf(Conf & confMap ) {
             confMap = conf_;
@@ -622,6 +466,7 @@ namespace inference{
         Conf conf_;
         ValueType eps_;
         bool stopInference_;
+        size_t nThreads_;
     };
   
     

@@ -118,7 +118,6 @@ opts['damping'] = 0.2
 opts['nSteps'] = long(10)
 opts['nThreads'] = 0
 opts['eps'] =  1.0e-09
-opts['concurrency'] = 1
 print opts
 
 verbVisitor = inferno.inference.verboseVisitor(model,1,True)
@@ -127,6 +126,7 @@ inf = inferno.inference.messagePassing(model, opts, True)
 
 
 with vigra.Timer("inf"):
+    #inf.infer()
     inf.infer(verbVisitor.visitor())
     print "inf is done"
 
