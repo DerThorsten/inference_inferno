@@ -18,9 +18,7 @@
 #include "inferno/inferno.hxx"
 #include "inferno/utilities/delegate.hxx"
 #include "inferno/utilities/parallel/parallel.hxx"
-#include "inferno/utilities/parallel/threadpool/threadpool.h"
-#include "inferno/utilities/parallel/threadpool/impl/threadpool_inst.h"
-#include "inferno/utilities/parallel/threadpool/parallel_for_each.h"
+#include "inferno/utilities/parallel/spool.hxx"
 #include "inferno/inference/base_discrete_inference.hxx"
 #include "inferno/inference/utilities/movemaker.hxx"
 #include "inferno/model/factors_of_variables.hxx"
@@ -395,38 +393,47 @@ namespace inference{
             }
             else if(options_.concurrency_ == Concurrency::StdThreads){
 
-                threadpool::parallel::for_each(model_.factorIdsBegin(), model_.factorIdsEnd(),
-                    [this] (Fi fi) { this->sendFacToVar(fi) ;}
-                );
+                //threadpool::parallel::for_each(model_.factorIdsBegin(), model_.factorIdsEnd(),
+                //    [this] (Fi fi) { this->sendFacToVar(fi) ;}
+                //);
 
-                /*
-                threadpool::ThreadPool pool;
+
+
+
+                ThreadPool pool(9);
 
                 auto iter = model_.factorIdsBegin(); 
                 auto endIter = model_.factorIdsEnd();
-                size_t chunkSize = 20;
 
+                size_t workload = model_.nFactors();
+
+                size_t chunkSize = workload/(9*6);
+
+               //pool.finishTasks();
                 while(true){
-                    auto d = std::distance(iter, endIter);
-                    if(d>=chunkSize){
-                        //std::cout<<"  i "<<*iter<< "i+chunkSize" <<*(iter+chunkSize)<<"\n";
-                        //auto f = std::bind(&MessagePassing<MODEL>::sendFacToVarChunck, this, iter, iter+chunkSize);
 
-
-                        pool.run([iter,chunkSize,this](){this->sendFacToVarChunck(iter,iter+chunkSize);});
-                        iter+=chunkSize;
-                        if(iter==endIter)
-                            break;
-                    }
-                    else{
-                        //std::cout<<"**i "<<*iter<< "endIter\n";
-                        //auto f = std::bind(&MessagePassing<MODEL>::sendFacToVarChunck, this, iter, endIter);
-                        pool.run([iter,endIter,this](){this->sendFacToVarChunck(iter,endIter);});
+                    const int lChunkSize = (workload >= chunkSize ? chunkSize  : workload);
+                    pool.enqueue(
+                        [iter,lChunkSize,this]
+                        (int id)
+                        {
+                            auto ii = iter;
+                            for(size_t i=0; i<lChunkSize; ++i){
+                                const auto fi = *ii;
+                                this->sendFacToVar(fi);
+                                ++ii;
+                            }
+                        }
+                    );
+                    workload -= lChunkSize;
+                    INFERNO_CHECK_OP(workload,>=,0,"");
+                    if(workload==0){
                         break;
                     }
-                }
-                pool.wait();    
-                */
+                    std::advance(iter, lChunkSize);
+
+                }                
+                
             }
         }
 
