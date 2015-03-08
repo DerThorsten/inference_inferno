@@ -17,11 +17,6 @@ namespace inferno{
 
 namespace inference{
 
-
-
-
-
-    
     template<class MODEL>
     class Icm  : public DiscreteInferenceBase<MODEL> {
     public:
@@ -130,8 +125,8 @@ namespace inference{
   
     
 
-}
-}
+} // end namespace inferno::inference
+} // end namespace inferno
 
 
 #endif /* INFERNO_INFERENCE_ICM_HXX */

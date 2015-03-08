@@ -414,12 +414,75 @@ private:
 
 template<class MODEL>
 class FactorsOfVariable{
-    
-public:
-
-private:
-
 };
+
+
+
+
+template<class MODEL, bool HAS_DENSE_IDS>
+class DenseVariableIdsImpl;
+
+template<class MODEL>
+class DenseVariableIdsImpl<MODEL, true>
+{
+public:
+    DenseVariableIdsImpl(const MODEL & model){
+    };
+
+    Vi toSparse(const Vi denseVi)const{
+        return denseVi;
+    }
+
+    Vi toDense(const Vi sparseId)const{
+        return sparseId;
+    }
+};
+
+template<class MODEL>
+class DenseVariableIdsImpl<MODEL, false>
+{
+public:
+    typedef MODEL Model;
+    DenseVariableIdsImpl(const Model & model)
+    :   denseToSparse_(model.nVariables()),
+        sparseToDense_(model)
+    {
+        Vi denseVi = 0;
+        for(Vi sparseVi : model.variableIds()){
+            denseToSparse_[denseVi] = sparseVi;
+            sparseToDense_[sparseVi] = denseVi;
+            ++denseVi;
+        }
+    };
+
+    Vi toSparse(const Vi denseVi)const{
+        INFERNO_ASSERT_OP(denseVi, <, denseToSparse_.size());
+        return denseToSparse_[denseVi];
+    }
+
+    Vi toDense(const Vi sparseId)const{
+        return sparseToDense_[sparseId];
+    }
+private:
+    std::vector<Vi> denseToSparse_;
+    typename  Model:: template VariableMap<Vi> sparseToDense_;
+};
+
+
+
+template<class MODEL>
+class DenseVariableIds : public DenseVariableIdsImpl<MODEL, MODEL::VariableIdsPolicy::HasDenseIds>
+{
+public:
+    typedef MODEL Model;
+    DenseVariableIds(const Model & model)
+    : DenseVariableIdsImpl<Model, Model::VariableIdsPolicy::HasDenseIds>(model){        
+    }
+};
+
+
+
+
 
 
 } // end namespace inferno::models

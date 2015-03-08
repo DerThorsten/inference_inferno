@@ -90,6 +90,11 @@ endif()
 OPTION(WITH_QPBO "Include wrapper for QPBO code" OFF)
 OPTION(WITH_TRWS "Include wrapper for TRWS code" OFF)
 
+IF(WITH_QPBO)
+    add_definitions(-DWITH_QPBO)
+ENDIF(WITH_QPBO)
+
+
 OPTION(WITH_OPENMP "Use OpenMP " OFF)
 
 FIND_PACKAGE(Threads REQUIRED)  # includes pthread

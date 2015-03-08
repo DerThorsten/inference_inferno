@@ -202,8 +202,6 @@ namespace inferno{
 
 
 
-
-
 const static int USUAL_MAX_FACTOR_ORDER = 10;
 
 
@@ -231,7 +229,7 @@ inline bool fEq(const T a,const T b) {
 */
 typedef int64_t LabelType;
 
-
+typedef uint32_t ArityType;
 typedef int64_t Vi;
 typedef int64_t Fi;
 typedef int64_t Vti;
@@ -255,6 +253,14 @@ enum SemiRing{
     MaxProd = 1,
     SumProd = 2
 };
+
+
+
+/// \return infinity for infernos value type
+inline ValueType infVal(){
+    return std::numeric_limits<ValueType>::infinity();
+}
+
 
 
 

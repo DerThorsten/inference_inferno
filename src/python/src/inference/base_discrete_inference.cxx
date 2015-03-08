@@ -33,6 +33,10 @@
 #include "inferno/inference/base_discrete_inference.hxx"
 #include "inferno/inference/icm.hxx"
 #include "inferno/inference/mp.hxx"
+#ifdef WITH_QPBO
+#include "inferno/inference/qpbo.hxx"
+#include "inferno/inference/higher_order_qpbo.hxx"
+#endif
 
 namespace inferno{
 namespace inference{
@@ -160,7 +164,7 @@ namespace inference{
             );
         }
         {
-            // export icm
+            // export mp
             typedef MessagePassing<MODEL> Inference;
             const std::string infClsName = std::string("MessagePassing") + modelName;
             bp::class_< Inference,bp::bases<BaseInf>,boost::noncopyable >(infClsName.c_str(),bp::no_init)
@@ -175,6 +179,44 @@ namespace inference{
                 ),
                 CustWardPost< 0,1 ,RetValPolNewObj>()  
             );
+        }
+        {   
+            #ifdef WITH_QPBO
+            // export qpbo
+            typedef Qpbo<MODEL> Inference;
+            const std::string infClsName = std::string("Qpbo") + modelName;
+            bp::class_< Inference,bp::bases<BaseInf>,boost::noncopyable >(infClsName.c_str(),bp::no_init)
+            ; 
+            // export factory
+            bp::def("qpboOptions", &getDefaultOptions<Inference, MODEL>);
+            bp::def("qpbo", & inferenceFactory< Inference>,
+                (
+                    bp::arg("model"),
+                    bp::arg("options") = InferenceOptions(),
+                    bp::arg("checkOptions") = true
+                ),
+                CustWardPost< 0,1 ,RetValPolNewObj>()  
+            );
+            #endif
+        }
+        {   
+            #ifdef WITH_QPBO
+            // export qpbo
+            typedef HigherOrderQpbo<MODEL> Inference;
+            const std::string infClsName = std::string("HigherOrderQpbo") + modelName;
+            bp::class_< Inference,bp::bases<BaseInf>,boost::noncopyable >(infClsName.c_str(),bp::no_init)
+            ; 
+            // export factory
+            bp::def("higherOrderQpboOptions", &getDefaultOptions<Inference, MODEL>);
+            bp::def("higherOrderQpbo", & inferenceFactory< Inference>,
+                (
+                    bp::arg("model"),
+                    bp::arg("options") = InferenceOptions(),
+                    bp::arg("checkOptions") = true
+                ),
+                CustWardPost< 0,1 ,RetValPolNewObj>()  
+            );
+            #endif
         }
     }
 

@@ -11,186 +11,197 @@
 #include <unordered_map>
 
 #include "inferno/inference/base_discrete_inference.hxx"
-#include "inferno/inference/utilities/fix-fusion/higher-order-energy.hpp"
-#include "inferno/inference/utilities/fix-fusion/clique.hpp"
 
+#ifdef WITH_QPBO
 #include <inferno_externals/qpbo/QPBO.h>
-
+#else 
+#error "To include inferno/infernece/qpbo.hxx, WITH_QPBO needs to be" 
+#endif 
 
 namespace inferno{
 namespace inference{
 
-
-    ///Option object for Qpbo
-    struct QpboOptions : public InferenceOptions
-    {
-        /** \brief Different Qpbo algorithm 
-            which can be used within Qpbo
-
-            \warning If an other value than QpboAlgorithm::Automatic is chosen,
-            it is the users responsibility that the choice is matching 
-            the model.
-            For example calling simple qpbo for a model with 
-            a factor order greater then two will lead to 
-            undefined behavior.
-        */
-        enum QpboAlgorithm{
-            /// Automatically select the most suitable Qpbo algorithm
-            Automatic  = 0,  
-            /// Simple Qpbo only for second order models with binary labels    
-            SimpleQpbo = 1,      
-            /// Higher order Qpbo for models with order up to 9 and binary labels
-            HigherOrderQpbo = 2,
-            /// Multilabel Qpbo  for second order models with binary labels
-            MultiLabelQpbo = 3  
-        };
-
-        /**  \brief Which qpbo algorithm should be used
-        */
-        QpboAlgorithm qpboAlgorithm_;
-        /// using probeing technique
-        bool useProbeing;
-        /// \brief forcing strong persistency
-        /// so far it is NOT recommended to
-        /// enable this option
-        bool strongPersistency;
-        /// using improving technique
-        bool useImproveing;
-
-        /// \brief constructor
-        QpboOptions() {
-            qpboAlgorithm_ = Automatic; 
-            strongPersistency = true;
-            useImproveing = false;
-            useProbeing = false;
-        }
-    };
-
-    /** \brief Qpbo algorithm
-        Qpbo for second order graphical models with binary
-        variables.
-
-        \ingroup discrete_inference partial_optimal_discrete_inference approximate_discrete_inference
-    */
+    
     template<class MODEL>
-    class Qpbo : public DiscreteInferenceBase<Qpbo<MODEL>, MODEL > {
-    private:
-        struct ModelInfo{
-            size_t maxArity;
-            DiscreteLabel minNumLabels;
-            DiscreteLabel maxNumLabels;
-
-        };
+    class Qpbo  : public DiscreteInferenceBase<MODEL> {
     public:
-        typedef kolmogorov::qpbo::QPBO<ValueType> QpboSolver;
         typedef MODEL Model;
-        typedef QpboOptions Options;
+        typedef Qpbo<MODEL> Self;
+        typedef DiscreteInferenceBase<MODEL> BaseInf;
+        typedef typename BaseInf::Visitor Visitor;
+        typedef typename MODEL:: template VariableMap<DiscreteLabel> Conf;
+        typedef models::DenseVariableIds<Model> DenseVarIds;
+        typedef kolmogorov::qpbo::QPBO<ValueType> QpboSolver;
 
-        Qpbo(const Model & model, const Options & options)
-        :   model_(&model),
-            options_(options),
-            qpbo_(NULL),
-            constTerm_(0.0),
-            bound_(-1.0*std::numeric_limits<ValueType>::infinity()),
-            value_( 1.0*std::numeric_limits<ValueType>::infinity()),
-            hoe_()
-        {
-
-            const auto maxArity = model_->maxArity();
-            if(maxArity<=2){
-                if(model_->denseVariableIds()){
-                    const auto minVarId = model_->minVarId();
-                    const auto nVar = model_->nVariables();             
-                    qpbo_ = new QpboSolver(nVar, model_->nPairwiseFactors());
-                    qpbo_->AddNode(nVar);
-
-                    for(const auto factor : model_->factors()){
-                        const auto arity = factor->arity();
-                        if(arity == 0){
-                            constTerm_ += factor->eval(0l);
-                        }
-                        else if(arity == 1){
-                            const int qpboVi0 = factor->vi(0)-minVarId;
-                            qpbo_->AddUnaryTerm(qpboVi0, factor->eval1(0l), factor->eval1(1l));
-                        }
-                        else if(arity == 2){
-                            const int qpboVi0 = factor->vi(0)-minVarId;
-                            const int qpboVi1 = factor->vi(1)-minVarId;
-
-                            qpbo_->AddPairwiseTerm(qpboVi0, qpboVi1,
-                                                   factor->eval2(0,0), factor->eval2(0,1),
-                                                   factor->eval2(1,0), factor->eval2(1,1));
-                        }
-                        else
-                            throw RuntimeError("INTERNAL ERROR: model_.maxArity() must have a bug");
-                    }
-                    qpbo_->MergeParallelEdges();
+        struct Options{
+            Options(           
+            ){
+                useProbing_ = true;
+                useImproving_ = false ;         
+                strongPersistency_ = false;
+                saveMem_ = false;
+                nThreads_ = 0;     
+            }
+            Options(const InferenceOptions & options)
+            {
+                Options  defaultOpt;
+                if(options.checkOptions()){
+                    auto keys = options.keys();
+                    options.getOption("useProbing", defaultOpt.useProbing_, useProbing_, keys);
+                    options.getOption("useImproving", defaultOpt.useImproving_, useImproving_, keys);                   
+                    options.getOption("strongPersistency", defaultOpt.strongPersistency_, strongPersistency_, keys);
+                    options.getOption("saveMem", defaultOpt.saveMem_, saveMem_, keys);
+                    options.getOption("nThreads", defaultOpt.nThreads_, nThreads_, keys);
+                    options. template checkForLeftovers<Self>(keys);
                 }
                 else{
-                    throw NotImplementedException("models with non-dense variable ids are not yet supported");
+                    options.getOption("useProbing", defaultOpt.useProbing_, useProbing_);
+                    options.getOption("useImproving", defaultOpt.useImproving_, useImproving_);  
+                    options.getOption("strongPersistency", defaultOpt.strongPersistency_, strongPersistency_);
+                    options.getOption("saveMem", defaultOpt.saveMem_, saveMem_);
+                    options.getOption("nThreads", defaultOpt.nThreads_, nThreads_);
                 }
             }
-            else{
-                if(model_->denseVariableIds()){
-                    
-                }
-                else{
-                    throw NotImplementedException("models with non-dense variable ids are not yet supported");
-                }
-            }
-            
+            ValueType strongPersistency_;
+            bool useProbing_;
+            ValueType useImproving_;
+            uint64_t nThreads_;
+            bool saveMem_;
+        };
+
+        static void defaultOptions(InferenceOptions & options){
+            Options defaultOpt;
+            options.set("useProbing",defaultOpt.useProbing_);
+            options.set("useImproving",defaultOpt.useImproving_);
+            options.set("strongPersistency",defaultOpt.strongPersistency_);
+            options.set("saveMem",defaultOpt.saveMem_);
+            options.set("nThreads",defaultOpt.nThreads_);
         }
 
 
-        
+        Qpbo(const Model & model, const InferenceOptions & infParam = InferenceOptions())
+        :   BaseInf(),
+            model_(model),
+            denseVarIds_(model),
+            stopInference_(false),
+            qpbo_(),
+            constTerm_(0.0),
+            bound_(-1.0*infVal()),
+            value_(infVal()){
+
+            INFERNO_CHECK_OP(model_.maxArity(),<=,2,
+                "qpbo is only allowed for models with maxArity<=2");
+            
+            const Vi nVar = model_.nVariables();
+
+            // construct qpbo
+            qpbo_ = new QpboSolver(nVar, model_.nPairwiseFactors());
+            qpbo_->AddNode(nVar);
+
+
+             for(const auto factor : model_.factors()){
+                const auto arity = factor->arity();
+                if(arity == 0){
+                    INFERNO_CHECK(false, "constant factors are not allowed anymore!");
+                    constTerm_ += factor->eval(0l);
+                }
+                else if(arity == 1){
+                    const int qpboVi0 = denseVarIds_.toDense(factor->vi(0));
+                    qpbo_->AddUnaryTerm(qpboVi0, factor->eval1(0l), factor->eval1(1l));
+                }
+                else if(arity == 2){
+                    const int qpboVi0 = denseVarIds_.toDense(factor->vi(0));
+                    const int qpboVi1 = denseVarIds_.toDense(factor->vi(1));
+                    qpbo_->AddPairwiseTerm(qpboVi0, qpboVi1,factor->eval2(0,0), factor->eval2(0,1),
+                        factor->eval2(1,0), factor->eval2(1,1));
+                }
+                else
+                    throw RuntimeError("INTERNAL ERROR: model_.maxArity() must have a bug");
+            }
+            qpbo_->MergeParallelEdges();
+        }
 
         ~Qpbo(){
             delete qpbo_;
         }
 
+        // MUST HAVE INTERACE
+        virtual std::string name() const {
+            return "Qpbo";
+        }
+        // inference
+        virtual void infer( Visitor  * visitor  = NULL) {
 
 
-        void infer(){
-            
+            if(visitor!=NULL)
+                visitor->begin(this);
+
             qpbo_->Solve();
-            if(!options_.strongPersistency)
+            if(!options_.strongPersistency_)
                 qpbo_->ComputeWeakPersistencies();
-
+            
+            value_ = constTerm_ + 0.5 * qpbo_->ComputeTwiceEnergy();
             bound_ = constTerm_ + 0.5 * qpbo_->ComputeTwiceLowerBound();
 
-            if(options_.useProbeing){
-                throw NotImplementedException("useProbeing will be implemented soon");
-            }
-            if(options_.useImproveing){
-                throw NotImplementedException("useImproveing will be implemented soon");
-            }
+            if(options_.useProbing_)
+                throw NotImplementedException("useProbing will be implemented soon");
+            if(options_.useImproving_)
+                throw NotImplementedException("useImproving will be implemented soon");
 
+            if(visitor!=NULL)
+                visitor->end(this);
         }
-
-        template<class CONF_MAP>
-        void conf(CONF_MAP & configuration){
-            if(model_->denseVariableIds()){
-                const auto minVarId = model_->minVarId();
-                for(auto vi : model_->variableIds()){
-                    configuration[vi-minVarId] = qpbo_->GetLabel(vi-minVarId);
-                }
+        // get result
+        virtual void conf(Conf & confMap ) {
+            for(const Vi vi : model_.variableIds()){
+                const auto qpboLabel = qpbo_->GetLabel(denseVarIds_.toDense(vi));
+                if(qpboLabel==0)
+                    confMap[vi] = 0;
+                if(qpboLabel==1)
+                    confMap[vi] = 1;
+                else 
+                    confMap[vi] = 0;
             }
+        }
+        virtual DiscreteLabel label(const Vi vi ) {
+            const auto qpboLabel = qpbo_->GetLabel(denseVarIds_.toDense(vi));
+            if(qpboLabel==0)
+                return 0;
+            if(qpboLabel==1)
+                return 1;
+            else 
+                return 0;
+        }
+        // get model
+        virtual const Model & model() const{
+            return model_;
+        }
+        // stop inference (via visitor)
+        virtual void stopInference(){
+            stopInference_ = true;
+        }
+        // get results optional interface
+        virtual ValueType lowerBound(){
+            return bound_;
+        }
+        virtual ValueType upperBound(){
+            return value_;
+        }
+        virtual ValueType energy(){
+            return value_;
         }
 
     private:
-        
-
-
-    private:
-        const Model * model_;
-        QpboOptions   options_;
+        const Model & model_;
+        DenseVarIds   denseVarIds_;
+        Options       options_;
+        bool          stopInference_;
         QpboSolver *  qpbo_;
         ValueType     constTerm_;
         ValueType     bound_;
         ValueType     value_;
-        HigherOrderEnergy<ValueType, 10> hoe_;
-
     };
+
 
 } // end namespace inference
 } // end namespace inferno

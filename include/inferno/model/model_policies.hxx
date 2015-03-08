@@ -9,6 +9,7 @@ namespace inferno{
 namespace models{
 namespace policies{
 
+
     template<class MODEL>
     struct VariableIdsPolicy{
         static const bool HasDenseIds = true;

@@ -36,7 +36,7 @@ namespace inference{
     };
 
     template<class MODEL>
-    class SimpleMessageStoring{
+    class MessageStoring{
     public:
         typedef MODEL Model;
         typedef typename MODEL:: template FactorMap<uint64_t> FacToVarMsgOffset;
@@ -45,7 +45,7 @@ namespace inference{
 
         typedef typename MODEL:: template VariableMap< VectorSet<Fi>  >   VarsHoFacs;        
 
-        SimpleMessageStoring(const Model & model, const models::HigherOrderAndUnaryFactorsOfVariables<Model> & factorsOfVariables)
+        MessageStoring(const Model & model, const models::HigherOrderAndUnaryFactorsOfVariables<Model> & factorsOfVariables)
         :   model_(model),
             factorsOfVariables_(factorsOfVariables),
             msgPtrs_(),
@@ -167,7 +167,7 @@ namespace inference{
         typedef typename MODEL:: template VariableMap<DiscreteLabel> Conf;
         typedef typename MODEL:: template VariableMap<uint8_t> UIn8VarMap;
     private:
-        typedef SimpleMessageStoring<MODEL> MsgStorage;
+        typedef MessageStoring<MODEL> MsgStorage;
         typedef typename MODEL::FactorIdIter FactorIdIter;
         typedef typename MODEL::VariableIdIter VariableIdIter;
         typedef typename std::iterator_traits<FactorIdIter>::iterator_category FactorIdIterCategory;
@@ -207,7 +207,6 @@ namespace inference{
             ValueType eps_;
             uint64_t nThreads_;
             bool saveMem_;
-            Concurrency concurrency_;
         };
 
         static void defaultOptions(InferenceOptions & options){
