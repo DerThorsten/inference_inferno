@@ -188,8 +188,8 @@ public:
 
 
     // POLICIES
-    static const bool DenseVariableIds = models::VariablePolicy<MODEL>::DenseVariableIds;
-
+    typedef policies::VariableIdsPolicy<MODEL> VariableIdsPolicy;
+    typedef policies::FactorIdsPolicy<MODEL> FactorIdsPolicy;
 
 
     typedef FactorIdToFactorProxy<MODEL> U; 
@@ -200,7 +200,7 @@ public:
     template<class CONFIG>
     double eval(const CONFIG  &conf)const{
 
-        std::cout<<"is DENSE "<<DenseVariableIds<<"\n";
+        std::cout<<"is DENSE "<<VariableIdsPolicy::HasDenseIds<<"\n";
 
         double sum = 0.0;
         const size_t maxArity = model().maxArity();

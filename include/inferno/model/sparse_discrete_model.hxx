@@ -314,10 +314,21 @@ private:
 
 
 // policies
+namespace policies{
+
 template< >
-struct VariablePolicy< SparseDiscreteGraphicalModel >{
-    static const bool DenseVariableIds = false;
+struct VariableIdsPolicy< SparseDiscreteGraphicalModel >{
+    static const bool HasDenseIds = false;
+    static const bool HasSortedIds = false;
 };
+
+template< >
+struct FactorIdsPolicy< SparseDiscreteGraphicalModel >{
+    static const bool HasDenseIds = false;
+    static const bool HasSortedIds = false;
+};
+
+} // end namespace inferno::models::policies
 
 } // end namespace inferno::models
 } // end namespace infero
