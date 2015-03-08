@@ -38,7 +38,7 @@ PottsBenchmarkInferno(benchmark::State& state) {
     auto generator = std::bind(distribution, engine);
 
 
-    inferno::GeneralDiscreteGraphicalModel model(nVar, nLabels);
+    inferno::models::GeneralDiscreteGraphicalModel model(nVar, nLabels);
 
     // unary factors
     for(auto y=0; y< gridShape[1]; ++y)
@@ -89,7 +89,7 @@ PottsBenchmarkInferno(benchmark::State& state) {
 
 
 
-    //inferno::GeneralDiscreteGraphicalModel::VariableMap<inferno::DiscreteLabel>  labels(model, 0);
+    //inferno::models::GeneralDiscreteGraphicalModel::VariableMap<inferno::DiscreteLabel>  labels(model, 0);
     inferno::ValueType res = 0;
     
     std::vector<inferno::DiscreteLabel> labels(model.nVariables(),0);
@@ -120,7 +120,7 @@ static void PottsBenchmarkInfernoMem(benchmark::State& state) {
     auto generator = std::bind(distribution, engine);
 
 
-    inferno::GeneralDiscreteGraphicalModel model(nVar, nLabels, false);
+    inferno::models::GeneralDiscreteGraphicalModel model(nVar, nLabels, false);
 
     const auto nUnaries = nVar; 
     const auto n2Order  = ((gridShape[0]-1) * gridShape[1]) + ((gridShape[1]-1) * gridShape[0]);
@@ -184,7 +184,7 @@ static void PottsBenchmarkInfernoMem(benchmark::State& state) {
 
 
 
-    //inferno::GeneralDiscreteGraphicalModel::VariableMap<inferno::DiscreteLabel>  labels(model, 0);
+    //inferno::models::GeneralDiscreteGraphicalModel::VariableMap<inferno::DiscreteLabel>  labels(model, 0);
     inferno::ValueType res = 0;
     
     std::vector<inferno::DiscreteLabel> labels(model.nVariables(),0);
@@ -214,7 +214,7 @@ static void PottsBenchmarkInfernoTl(benchmark::State& state) {
     auto generator = std::bind(distribution, engine);
 
 
-    inferno::TlModel<inferno::value_tables::PottsValueTable, inferno::value_tables::UnaryValueTable> model(nVar, nLabels);
+    inferno::models::TlModel<inferno::value_tables::PottsValueTable, inferno::value_tables::UnaryValueTable> model(nVar, nLabels);
 
     // unary factors
     for(auto y=0; y< gridShape[1]; ++y)
@@ -265,7 +265,7 @@ static void PottsBenchmarkInfernoTl(benchmark::State& state) {
 
 
 
-    //inferno::GeneralDiscreteGraphicalModel::VariableMap<inferno::DiscreteLabel>  labels(model, 0);
+    //inferno::models::GeneralDiscreteGraphicalModel::VariableMap<inferno::DiscreteLabel>  labels(model, 0);
     inferno::ValueType res = 0;
     std::vector<inferno::DiscreteLabel> labels(model.nVariables(),0);
     state.ResumeTiming();

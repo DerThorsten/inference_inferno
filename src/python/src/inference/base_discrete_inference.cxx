@@ -33,8 +33,9 @@
 #include "inferno/inference/base_discrete_inference.hxx"
 #include "inferno/inference/icm.hxx"
 #include "inferno/inference/mp.hxx"
-namespace inferno{
 
+namespace inferno{
+namespace inference{
 
     namespace bp = boost::python;
 
@@ -56,15 +57,15 @@ namespace inferno{
     }
 
     template<class INF,class MODEL>
-    inference::InferenceOptions getDefaultOptions(const MODEL & model){
-        inference::InferenceOptions  options;
+    InferenceOptions getDefaultOptions(const MODEL & model){
+        InferenceOptions  options;
         INF::defaultOptions(options);
         return options;
     }
 
 
 
-    void setOpt(inference::InferenceOptions & options, const std::string & key, bp::object obj){
+    void setOpt(InferenceOptions & options, const std::string & key, bp::object obj){
         {
             bp::extract<int64_t> e(obj);
             if(e.check()){
@@ -102,7 +103,7 @@ namespace inferno{
             }
         }
         {
-            bp::extract<inference::InferenceOptions> e(obj);
+            bp::extract<InferenceOptions> e(obj);
             if(e.check()){
                 options.set(key, e());
                 return ;
@@ -117,7 +118,7 @@ namespace inferno{
 
         {
 
-            typedef inference::InferenceOptions InfOpts;
+            typedef InferenceOptions InfOpts;
 
 
 
@@ -127,7 +128,7 @@ namespace inferno{
             ;
         }
         const std::string baseClsName = std::string("DiscreteInferenceBase") + modelName;
-        typedef inference::DiscreteInferenceBase<MODEL> BaseInf;
+        typedef DiscreteInferenceBase<MODEL> BaseInf;
         bp::class_<export_helper::BaseInfWrap<MODEL>, boost::noncopyable>(baseClsName.c_str())
             // pure virtual functions
             .def("name", bp::pure_virtual( &BaseInf::name))
@@ -143,16 +144,16 @@ namespace inferno{
 
         {
             // export icm
-            typedef inference::Icm<MODEL> Inference;
+            typedef Icm<MODEL> Inference;
             const std::string infClsName = std::string("Icm") + modelName;
-            bp::class_< Inference,bp::bases<BaseInf> >(infClsName.c_str(),bp::no_init)
+            bp::class_< Inference,bp::bases<BaseInf>,boost::noncopyable >(infClsName.c_str(),bp::no_init)
             ; 
             // export factory
             bp::def("icmOptions", &getDefaultOptions<Inference, MODEL>);
-            bp::def("icm", & inference::inferenceFactory<Inference>,
+            bp::def("icm", & inferenceFactory<Inference>,
                 (
                     bp::arg("model"),
-                    bp::arg("options") = inference::InferenceOptions(),
+                    bp::arg("options") = InferenceOptions(),
                     bp::arg("checkOptions") = true
                 ),
                 CustWardPost< 0,1 ,RetValPolNewObj>()  
@@ -160,16 +161,16 @@ namespace inferno{
         }
         {
             // export icm
-            typedef inference::MessagePassing<MODEL> Inference;
+            typedef MessagePassing<MODEL> Inference;
             const std::string infClsName = std::string("MessagePassing") + modelName;
-            bp::class_< Inference,bp::bases<BaseInf> >(infClsName.c_str(),bp::no_init)
+            bp::class_< Inference,bp::bases<BaseInf>,boost::noncopyable >(infClsName.c_str(),bp::no_init)
             ; 
             // export factory
             bp::def("messagePassingOptions", &getDefaultOptions<Inference, MODEL>);
-            bp::def("messagePassing", & inference::inferenceFactory< Inference>,
+            bp::def("messagePassing", & inferenceFactory< Inference>,
                 (
                     bp::arg("model"),
-                    bp::arg("options") = inference::InferenceOptions(),
+                    bp::arg("options") = InferenceOptions(),
                     bp::arg("checkOptions") = true
                 ),
                 CustWardPost< 0,1 ,RetValPolNewObj>()  
@@ -179,10 +180,11 @@ namespace inferno{
 
 
     void exportDiscreteInferenceBase(){
-        exportDiscreteInferenceBaseT<GeneralDiscreteGraphicalModel>("GeneralDiscreteGraphicalModel");
+        exportDiscreteInferenceBaseT<models::GeneralDiscreteGraphicalModel>("GeneralDiscreteGraphicalModel");
     }
 
-}
+} // end namespace inferno::inference
+} // end namespace inferno
 
 
 

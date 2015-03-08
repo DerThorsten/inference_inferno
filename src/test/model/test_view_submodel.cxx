@@ -23,10 +23,10 @@ BOOST_AUTO_TEST_CASE(TestViewSubmodel)
     const auto submodular = false;
 
     // create the base model
-    typedef GeneralDiscreteGraphicalModel Model;
-    typedef FactorsOfVariables<Model> FacOfVars;
+    typedef models::GeneralDiscreteGraphicalModel Model;
+    typedef models::FactorsOfVariables<Model> FacOfVars;
     BOOST_TEST_CHECKPOINT("model constructor");
-    const Model model = test_models::grid2d(shape, nl, beta, submodular);
+    const Model model = models::grid2d(shape, nl, beta, submodular);
     const FacOfVars facOfVars(model);
     BOOST_CHECK_EQUAL(model.maxVarId(),8);
     BOOST_CHECK_EQUAL(model.nVariables(),9);

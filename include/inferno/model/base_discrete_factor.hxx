@@ -7,7 +7,7 @@
 
 
 namespace inferno{
-
+namespace models{
 
 
 class Lifetime{
@@ -241,6 +241,7 @@ std::ostream& operator <<(std::ostream& stream, const io::FactorValueTableCout<F
     return stream;
 }
 
-} // end namespace inferno
+} // end namespace inferno::models
+} // inferno
 
 #endif /* INFERNO_MODEL_BASE_FACTOR_HXX */

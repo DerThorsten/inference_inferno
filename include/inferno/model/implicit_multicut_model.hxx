@@ -9,8 +9,9 @@
 #include "inferno/model/base_discrete_model.hxx"
 #include <boost/iterator/counting_iterator.hpp>
 
-namespace inferno{
 
+namespace inferno{
+namespace models{
 
 
 
@@ -157,9 +158,7 @@ private:
 
 };
 
-
-
-
-}
+} // end namespace inferno::models
+} // inferno
 
 #endif 

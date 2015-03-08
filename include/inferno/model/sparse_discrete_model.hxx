@@ -1,5 +1,5 @@
 /** \file sparse_discrete_model.hxx 
-    \brief  functionality for inferno::SparseDiscreteGraphicalModel is implemented in this header.
+    \brief  functionality for inferno::models::SparseDiscreteGraphicalModel is implemented in this header.
     \todo add namespae
 */
 #ifndef INFERNO_MODEL_SPARSE_DISCRETE_MODEL_HXX
@@ -16,6 +16,8 @@
 #include <boost/iterator/counting_iterator.hpp>
 
 namespace inferno{
+namespace models{
+
 
 /** \brief Factor class for the SparseDiscreteGraphicalModel
 */
@@ -311,9 +313,13 @@ private:
 };
 
 
+// policies
+template< >
+struct VariablePolicy< SparseDiscreteGraphicalModel >{
+    static const bool DenseVariableIds = false;
+};
 
-
-
-}
+} // end namespace inferno::models
+} // end namespace infero
 
 #endif 

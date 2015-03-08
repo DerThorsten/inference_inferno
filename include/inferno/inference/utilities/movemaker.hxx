@@ -76,7 +76,7 @@ public:
             confMap[vi] = state_[vi];
     }
 
-    const FactorsOfVariables<Model> & factorsOfVariabes()const{
+    const models::FactorsOfVariables<Model> & factorsOfVariabes()const{
         return factorsOfVariables_;
     }
 
@@ -88,7 +88,7 @@ private:
     ValueType evaluateFactors(FactorIndexIterator, FactorIndexIterator, const std::vector<DiscreteLabel>&) ;
 
     const Model & model_;
-    FactorsOfVariables<Model> factorsOfVariables_;
+    models::FactorsOfVariables<Model> factorsOfVariables_;
     Conf state_;
     Conf stateBuffer_; // always equal to state_ (invariant)
     Conf bestStateBuffer_; // used in moveOptimaly
@@ -96,7 +96,7 @@ private:
 
     std::vector<DiscreteLabel> currentFState_,destFState_; // buffers for the factors  configs
 
-    inferno::FactorsOfMultipleVariables<Model> facToRecomp_;
+    inferno::models::FactorsOfMultipleVariables<Model> facToRecomp_;
 };
 
 

@@ -27,7 +27,7 @@
 
 
 namespace inferno{
-
+namespace models{
     namespace bp = boost::python;
 
 
@@ -42,10 +42,8 @@ namespace inferno{
         exportGeneralDiscreteTlGraphicalModel();
     }
 
-
-    
-}
-
+} // end namespace inferno::models  
+} // end namespace inferno
 
 
 
@@ -62,6 +60,6 @@ BOOST_PYTHON_MODULE_INIT(models) {
     // No not change 4 line above
 
 
-    inferno::exportModels();
+    inferno::models::exportModels();
 
 }

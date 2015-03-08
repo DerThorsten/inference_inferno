@@ -11,12 +11,13 @@
 #include "inferno/inferno.hxx"
 #include "inferno/value_tables/base_discrete_value_table.hxx"
 #include "inferno/utilities/small_vector.hxx"
+#include "inferno/model/model_policies.hxx"
 #include "inferno/model/base_discrete_factor.hxx"
 
 
 
 namespace inferno{
-
+namespace models{
 
     
 /// \cond
@@ -116,6 +117,7 @@ private:
 };
 
 
+
 /// \cond
 template<class MODEL>
 struct FactorIdToFactorProxy{
@@ -176,26 +178,30 @@ private:
         If these additional functions are not implemented, inferno::DiscreteGraphicalModelBase 
         will provide default implementations.
 */
+
+
+
+
 template<class MODEL>
 class DiscreteGraphicalModelBase{
 public:
+
+
+    // POLICIES
+    static const bool DenseVariableIds = models::VariablePolicy<MODEL>::DenseVariableIds;
 
 
 
     typedef FactorIdToFactorProxy<MODEL> U; 
 
 
-    /// \deprecated
-    template<class T>
-    double eval(std::initializer_list<T> conf)const{
-        return model().eval(conf.begin());
-    }
-
-
 
     /// \brief evaluate the energy of the model for a certain configuration
     template<class CONFIG>
     double eval(const CONFIG  &conf)const{
+
+        std::cout<<"is DENSE "<<DenseVariableIds<<"\n";
+
         double sum = 0.0;
         const size_t maxArity = model().maxArity();
         std::vector<LabelType> confBuffer(maxArity);
@@ -416,6 +422,7 @@ private:
 };
 
 
-}
+} // end namespace inferno::models
+} // end namespace inferno
 
 #endif 

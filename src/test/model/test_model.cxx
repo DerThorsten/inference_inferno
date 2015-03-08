@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(TestImplicitMulticutModel)
     //  _ | _
     //  2 | 3
     BOOST_TEST_CHECKPOINT("construct model");
-    ImplicitMulticutModel model(nVar);
+    models::ImplicitMulticutModel model(nVar);
 
 
     BOOST_TEST_CHECKPOINT("minVarId");
@@ -115,12 +115,12 @@ BOOST_AUTO_TEST_CASE(TestImplicitMulticutModel)
 BOOST_AUTO_TEST_CASE(TestDifferentTypesGrid)
 {
     using namespace inferno;
-    typedef TlModel<
+    typedef models::TlModel<
         value_tables::UnaryValueTable,
         value_tables::PottsValueTable
     > TlModel;
-    typedef GeneralDiscreteGraphicalModel VModel;
-    typedef SparseDiscreteGraphicalModel  SModel;
+    typedef models::GeneralDiscreteGraphicalModel VModel;
+    typedef models::SparseDiscreteGraphicalModel  SModel;
 
     const LabelType nLabes = 3;
     const DiscreteLabel gridShape[2] = {3l,3l};
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(TestModel)
     const LabelType nLabes = 2;
     const Vi nVar = 10;
 
-    GeneralDiscreteGraphicalModel model(nVar, nLabes);
+    models::GeneralDiscreteGraphicalModel model(nVar, nLabes);
     
 
     std::random_device rd;

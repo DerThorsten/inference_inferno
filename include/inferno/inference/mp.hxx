@@ -45,7 +45,7 @@ namespace inference{
 
         typedef typename MODEL:: template VariableMap< VectorSet<Fi>  >   VarsHoFacs;        
 
-        SimpleMessageStoring(const Model & model, const HigherOrderAndUnaryFactorsOfVariables<Model> & factorsOfVariables)
+        SimpleMessageStoring(const Model & model, const models::HigherOrderAndUnaryFactorsOfVariables<Model> & factorsOfVariables)
         :   model_(model),
             factorsOfVariables_(factorsOfVariables),
             msgPtrs_(),
@@ -144,7 +144,7 @@ namespace inference{
 
     private:
         const Model model_;
-        const HigherOrderAndUnaryFactorsOfVariables<Model> factorsOfVariables_;
+        const models::HigherOrderAndUnaryFactorsOfVariables<Model> factorsOfVariables_;
         std::vector<Msg> msgPtrs_;
 
         FacToVarMsgOffset facToVarOffset_;
@@ -231,6 +231,7 @@ namespace inference{
             sMsgBuffer_(),
             conf_(model),
             stopInference_(false),
+            pool_(options_.nThreads_ == 0 ? std::thread::hardware_concurrency() : options_.nThreads_),
             nThreads_(options_.nThreads_ == 0 ? std::thread::hardware_concurrency() : options_.nThreads_)
         {
             DiscreteLabel minNumLabels;
@@ -250,6 +251,7 @@ namespace inference{
         }
         // inference
         virtual void infer( Visitor  * visitor  = NULL) {
+
             if(visitor!=NULL)
                 visitor->begin(this);
 
@@ -286,9 +288,12 @@ namespace inference{
         // random access iterator
         void sendAllVarToFac(){
             std::vector<ValueType> sum(nThreads_, 0.0);
-            utilities::parallel_foreach(model_.variableIdsBegin(), model_.variableIdsEnd(),
-                [this, &sum] (int id, inferno::Vi vi) {sum[id] += this->sendVarToFac(vi,id);},
-                model_.nVariables(),nThreads_);
+            utilities::parallel_foreach(pool_, model_.nVariables(), 
+                model_.variableIdsBegin(), model_.variableIdsEnd(),
+                [this, &sum] (int id, inferno::Vi vi) {
+                    sum[id] += this->sendVarToFac(vi,id);
+                }
+            );
 
             eps_ = 0;
             for(const auto s : sum){
@@ -299,10 +304,11 @@ namespace inference{
         // send facToVar parallel for
         // NON random access iterator
         void sendAllFacToVar(){
-            utilities::parallel_foreach(model_.factorIdsBegin(),model_.factorIdsEnd(),
+            utilities::parallel_foreach(pool_, model_.nFactors(),
+                model_.factorIdsBegin(),model_.factorIdsEnd(),
                 [this] (int id, inferno::Fi fi) {
                     this->sendFacToVar(fi);
-                }, model_.nFactors(), nThreads_
+                }
             );  
         }
 
@@ -459,13 +465,14 @@ namespace inference{
     private:
         const Model & model_;
         Options options_;
-        HigherOrderAndUnaryFactorsOfVariables<Model> factorsOfVariables_;
+        models::HigherOrderAndUnaryFactorsOfVariables<Model> factorsOfVariables_;
         MsgStorage msg_;
         DiscreteLabel maxNumLabels_;
         std::vector<ValueType> sMsgBuffer_;
         Conf conf_;
         ValueType eps_;
         bool stopInference_;
+        utilities::ThreadPool pool_;
         size_t nThreads_;
     };
   

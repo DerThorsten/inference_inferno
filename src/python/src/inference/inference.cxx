@@ -27,6 +27,7 @@
 
 
 namespace inferno{
+namespace inference{
 
     namespace bp = boost::python;
 
@@ -39,9 +40,8 @@ namespace inferno{
     }
 
 
-    
-}
-
+} // end namespace inferno::inference
+} // end namespace inferno
 
 
 
@@ -58,6 +58,6 @@ BOOST_PYTHON_MODULE_INIT(inference) {
     // No not change 4 line above
 
 
-    inferno::exportInference();
+    inferno::inference::exportInference();
 
 }

@@ -11,7 +11,7 @@ int main(){
     const inferno::Vi gridShape[2] = {64,48};
     const inferno::Vi nVar = gridShape[0]*gridShape[1];
 
-    inferno::GeneralDiscreteGraphicalModel model(nVar, nLabels);
+    inferno::models::GeneralDiscreteGraphicalModel model(nVar, nLabels);
     
     // random gen (just for this example)
     std::uniform_real_distribution<float> distribution(-1,1); //Values between -1 and 1

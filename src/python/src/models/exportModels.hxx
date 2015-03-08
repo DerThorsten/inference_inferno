@@ -6,6 +6,7 @@
 #include "inferno/inferno.hxx"
 
 namespace inferno{
+namespace models{
 namespace export_helper{
 
     namespace bp = boost::python;
@@ -41,7 +42,8 @@ namespace export_helper{
         //static void foo(MODEL& self);
         //static void bar(MODEL& self);
     };
-}
-}
+} // end namespace inferno::models::export_helper
+} // end namespace inferno::models  
+} // end namespace inferno
 
 #endif /* INFERNO_SRC_PYTHON_MODELS_EXPORT_MODELS_HXX */

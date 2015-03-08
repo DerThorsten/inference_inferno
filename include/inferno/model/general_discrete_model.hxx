@@ -1,5 +1,5 @@
 /** \file general_discrete_model.hxx 
-    \brief  functionality for inferno::GeneralDiscreteGraphicalModel is implemented in this header.
+    \brief  functionality for inferno::models::GeneralDiscreteGraphicalModel is implemented in this header.
 */
 #ifndef INFERNO_MODEL_GENERAL_DISCRETE_MODEL_HXX
 #define INFERNO_MODEL_GENERAL_DISCRETE_MODEL_HXX
@@ -10,7 +10,9 @@
 #include <boost/iterator/counting_iterator.hpp>
 
 namespace inferno{
+namespace models{
 
+    
 class GeneralDiscreteGraphicalModel;
 
 
@@ -296,6 +298,8 @@ private:
 
 
 
-}
+} // end namespace inferno::models
+} // inferno
+
 
 #endif 

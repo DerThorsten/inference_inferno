@@ -34,7 +34,7 @@
 #include "inferno/value_tables/explicit.hxx"
 
 namespace inferno{
-
+namespace models{
 
     namespace bp = boost::python;
 
@@ -174,7 +174,7 @@ namespace inferno{
             .def("addFactors",vigra::registerConverters(&addFactors<uint32_t>))
         ;
     }
-}
-
+} // end namespace inferno::models  
+} // end namespace inferno
 
 

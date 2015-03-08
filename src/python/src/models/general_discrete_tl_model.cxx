@@ -28,7 +28,7 @@
 #include "inferno/value_tables/explicit.hxx"
 
 namespace inferno{
-
+namespace models{
 
     namespace bp = boost::python;
 
@@ -41,6 +41,6 @@ namespace inferno{
         ;
     }
 }
-
+}
 
 

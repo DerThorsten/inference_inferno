@@ -115,12 +115,12 @@ if True:
 
 opts = inferno.inference.messagePassingOptions(model)
 opts['damping'] = 0.2
-opts['nSteps'] = long(10)
-opts['nThreads'] = 0
+opts['nSteps'] = long(40)
+opts['nThreads'] = 1
 opts['eps'] =  1.0e-09
 print opts
 
-verbVisitor = inferno.inference.verboseVisitor(model,1,True)
+verbVisitor = inferno.inference.verboseVisitor(model,1,False)
 inf = inferno.inference.messagePassing(model, opts, True)
 
 

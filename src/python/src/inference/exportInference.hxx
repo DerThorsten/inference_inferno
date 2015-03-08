@@ -7,18 +7,19 @@
 #include "inferno/inference/base_discrete_inference.hxx"
 
 namespace inferno{
+namespace inference{
 namespace export_helper{
 
     namespace bp = boost::python;
 
     template<class MODEL>
     struct BaseInfWrap : 
-        public inference::DiscreteInferenceBase<MODEL>, 
-        bp::wrapper<inference::DiscreteInferenceBase<MODEL> >
+        public DiscreteInferenceBase<MODEL>, 
+        bp::wrapper<DiscreteInferenceBase<MODEL> >
     {
         typedef MODEL Model;
         typedef typename MODEL :: template VariableMap<DiscreteLabel> Conf;
-        typedef inference::DiscreteInferenceBase<MODEL> BaseInf;
+        typedef DiscreteInferenceBase<MODEL> BaseInf;
         typedef typename BaseInf::Visitor  VisitorType;
 
 
@@ -48,7 +49,8 @@ namespace export_helper{
         }
     };
 
-}
-}
+} // end namespace inferno::inference::export_helper
+} // end namespace inferno::inference  
+} // end namespace inferno
 
 #endif /* INFERNO_SRC_PYTHON_INFERENCE_EXPORT_INFERENCE_HXX */

@@ -10,7 +10,7 @@ int main(){
     const inferno::LabelType nLabes = 2;
     const inferno::Vi nVar = 10;
 
-    inferno::GeneralDiscreteGraphicalModel model(nVar, nLabes);
+    inferno::models::GeneralDiscreteGraphicalModel model(nVar, nLabes);
     
     // random gen (just for this example)
     std::uniform_real_distribution<float> distribution(-1,1); //Values between -1 and 1

@@ -15,7 +15,7 @@
 
 
 namespace inferno{
-
+namespace models{
 
 
 /** \brief Container one can access
@@ -262,6 +262,7 @@ private:
 };
 
 
+}
 }
 
 #endif 

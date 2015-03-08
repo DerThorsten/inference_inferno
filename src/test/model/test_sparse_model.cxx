@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(TestSparseModel1)
     const LabelType nLabes = 2;
     const Vi nVar = 10;
 
-    SparseDiscreteGraphicalModel model;
+    models::SparseDiscreteGraphicalModel model;
     
     BOOST_CHECK_EQUAL(model.nVariables(),0);
     BOOST_CHECK_EQUAL(model.nFactors(),0);
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(TestSparseModelGrid2x2_AddAndErase)
     const LabelType nLabes = 3;
     const Vi nVar = 10;
 
-    SparseDiscreteGraphicalModel model;
+    models::SparseDiscreteGraphicalModel model;
     
     BOOST_CHECK_EQUAL(model.nVariables(),0);
     BOOST_CHECK_EQUAL(model.nFactors(),0);

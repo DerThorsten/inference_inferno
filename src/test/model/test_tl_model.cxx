@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_CASE(TestAddFunctionVti)
 {
     using namespace inferno;
 
-    typedef TlModel<
+    typedef models::TlModel<
         value_tables::UnaryValueTable,
         value_tables::PottsValueTable
     > Model;
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(TestAddFactorSimple)
 {
     using namespace inferno;
 
-    typedef TlModel<
+    typedef models::TlModel<
         value_tables::UnaryValueTable,
         value_tables::PottsValueTable
     > Model;

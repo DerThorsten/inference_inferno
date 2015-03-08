@@ -132,7 +132,7 @@
             Currently the following discrete models are implemented : 
 
                 \subsubsection sec_mp_general_model_api General discrete model:
-                    inferno::GeneralDiscreteGraphicalModel :
+                    inferno::models::GeneralDiscreteGraphicalModel :
                     A very flexible discrete graphical model 
                     with no limitation w.r.t. the order of factors.
                     Any factor graph can be encoded with this graphical 
@@ -141,14 +141,14 @@
                     between the factors.
 
                 \subsubsection sec_mp_sparse_model_api Sparse discrete model:
-                    inferno::SparseDiscreteGraphicalModel
+                    inferno::models::SparseDiscreteGraphicalModel
                     A very flexible discrete graphical model 
                     with no limitation w.r.t. the order of factors.
                     Any factor graph can be encoded with this graphical 
                     model.
                     All value tables can be used and shared
                     between the factors.
-                    In contrast to inferno::GeneralDiscreteGraphicalModel
+                    In contrast to inferno::models::GeneralDiscreteGraphicalModel
                     neither variables nor factor or functions must have
                     continuous indices. Therefore
                     factors and variables can be erased and re-added efficiently.

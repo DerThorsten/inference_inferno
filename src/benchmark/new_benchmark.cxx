@@ -18,16 +18,16 @@ int main(int argc, const char* argv[]) {
     using namespace inferno;
 
 
-    typedef GeneralDiscreteGraphicalModel Model;
+    typedef models::GeneralDiscreteGraphicalModel Model;
     typedef Benchmark<Model> BenchType;
-    typedef PottsGrid2d<Model> ModelBuilder;
+    typedef models::PottsGrid2d<Model> ModelBuilder;
     typedef ModelBuilder::ModelParam ModelParam;
     typedef ModelBuilder::BuilderParam BuilderParam;
     
     BenchType benchFunctor;
 
     for(size_t x=1;x<10;++x){
-        PottsGridParam mp{DiscreteLabel(2),x*10,x*10,1.0,true};
+        models::PottsGridParam mp{DiscreteLabel(2),x*10,x*10,1.0,true};
         ModelBuilder::buildModelCallFunctor(mp, BuilderParam(),0, benchFunctor);
     }
         

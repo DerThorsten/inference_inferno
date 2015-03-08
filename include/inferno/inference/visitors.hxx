@@ -65,7 +65,7 @@ namespace inference{
                     std::cout<<"  ";
                 }
                 for(const auto & kv : logging_){
-                    std::cout<<kv.first<<"   "<<std::setw(7)<<std::showpos<<std::scientific<<std::setprecision(6)<<kv.second<<"  \n";
+                    std::cout<<kv.first<<"   "<<std::setw(7)<<std::showpos<<std::scientific<<std::setprecision(6)<<kv.second<<"  ";
                 }
                 std::cout<<nlFlag_;
             }

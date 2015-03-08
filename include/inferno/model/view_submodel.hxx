@@ -18,8 +18,6 @@
 
 
 namespace inferno{
-
-
 namespace models{
 
 
@@ -41,7 +39,7 @@ namespace detail_view_submodel{
         and partially included factors in inferno::models::detail_view_submodel::PartiallyIncludedFactor
     */ 
     template<class VIEW_SUBMODEL>
-    class FactorBase : public inferno::DiscreteFactorBase< FactorBase<VIEW_SUBMODEL> >{
+    class FactorBase : public inferno::models::DiscreteFactorBase< FactorBase<VIEW_SUBMODEL> >{
     public:
         virtual ~FactorBase(){}
         virtual Vi vi(const size_t d) const = 0;

@@ -128,8 +128,9 @@
     } \
 } \
 
+
 namespace inferno{
-namespace test_models{
+namespace models{
 
     template<class T>
     GeneralDiscreteGraphicalModel grid2d(
@@ -177,7 +178,7 @@ namespace test_models{
         return model;
     }
 
-} // end namespace test_models
+} // end namespace models
 } // end namespace inferno
 
 

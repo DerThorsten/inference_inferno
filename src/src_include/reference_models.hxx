@@ -10,7 +10,7 @@
 #include "rep_rand.hxx"
 
 namespace inferno{
-
+namespace models{
 
 
     template<class MODEL>
@@ -125,5 +125,5 @@ namespace inferno{
 
     };
 
-
+}
 }

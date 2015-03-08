@@ -123,7 +123,7 @@ namespace inference{
     private:
         const Model & model_;
         MovemakerType movemaker_;
-        VariablesNeighbours<Model> variablesNeighbours_;
+        inferno::models::VariablesNeighbours<Model> variablesNeighbours_;
         UIn8VarMap isLocalOpt_;
         bool stopInference_;
     };

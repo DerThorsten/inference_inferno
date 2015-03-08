@@ -19,24 +19,24 @@
 #include "inferno/inference/visitors.hxx"
 
 namespace inferno{
-
+namespace inference{
 
     namespace bp = boost::python;
 
     template<class MODEL>
-    typename inference::DiscreteInferenceBase<MODEL>::Visitor * visitorFactory(
+    typename DiscreteInferenceBase<MODEL>::Visitor * visitorFactory(
          const MODEL & model
     ){
-        return  new typename inference::DiscreteInferenceBase<MODEL>::Visitor ();
+        return  new typename DiscreteInferenceBase<MODEL>::Visitor ();
     }
 
     template<class MODEL>
-    inference::VerboseVisitor<MODEL> * verboseVisitorFactory(
+    VerboseVisitor<MODEL> * verboseVisitorFactory(
          const MODEL & model,
          const uint64_t printNth,
          const bool singleLine
     ){
-        return  new inference::VerboseVisitor<MODEL>(printNth, singleLine);
+        return  new VerboseVisitor<MODEL>(printNth, singleLine);
     }
 
     template<class MODEL>
@@ -44,7 +44,7 @@ namespace inferno{
 
         {
             const std::string visitorClsName = std::string("VerboseVisitor") + modelName;
-            typedef inference::VerboseVisitor<MODEL> VisitorType;
+            typedef VerboseVisitor<MODEL> VisitorType;
             bp::class_<VisitorType>(visitorClsName.c_str(),bp::no_init)
                 .def("visitor",&VisitorType::visitor,bp::return_internal_reference<>())
             ;
@@ -60,7 +60,7 @@ namespace inferno{
         }
 
         {
-            typedef inference::DiscreteInferenceBase<MODEL> BaseInf;
+            typedef DiscreteInferenceBase<MODEL> BaseInf;
             const std::string visitorClsName = std::string("Visitor") + modelName;
             typedef typename BaseInf::Visitor VisitorType;
             bp::class_<VisitorType>(visitorClsName.c_str(),bp::no_init)
@@ -77,10 +77,10 @@ namespace inferno{
 
 
     void exportVisitors(){
-        exportVisitorsT<GeneralDiscreteGraphicalModel>("GeneralDiscreteGraphicalModel");
+        exportVisitorsT<inferno::models::GeneralDiscreteGraphicalModel>("GeneralDiscreteGraphicalModel");
     }
 
 }
-
+}
 
 

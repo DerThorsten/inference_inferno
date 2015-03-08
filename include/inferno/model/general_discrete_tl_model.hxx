@@ -1,5 +1,5 @@
 /** \file general_discrete_tl_model.hxx 
-    \brief  functionality for inferno::GeneralDiscreteGraphicalModel is implemented in this header.
+    \brief  functionality for inferno::models::GeneralDiscreteGraphicalModel is implemented in this header.
 */
 #ifndef INFERNO_MODEL_GENERAL_DISCRETE_TL_MODEL_HXX
 #define INFERNO_MODEL_GENERAL_DISCRETE_TL_MODEL_HXX
@@ -13,7 +13,10 @@
 
 
 
+
 namespace inferno{
+namespace models{
+
 
 
 template <class T, class Tuple>
@@ -490,7 +493,7 @@ private:
     std::vector< FactorType >   factors_;
 };
 
-
-}
+} // end namespace inferno::models
+} // inferno
 
 #endif 
