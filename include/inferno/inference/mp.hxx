@@ -1,6 +1,5 @@
-/** \file base_discrete_inference.hxx 
-    \brief  Functionality which is shared between all inference algorithms
-    is implemented in this header.
+/** \file mp.hxx 
+    \brief  loop-bp is implemented here
 
     \warning Not yet finished
 */
