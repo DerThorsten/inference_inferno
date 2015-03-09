@@ -31,12 +31,17 @@ namespace inference{
 
     namespace bp = boost::python;
 
-    void exportDiscreteInferenceBase();
+    void exportInferenceOptions();
     void exportVisitors();
+    void exportGeneralDiscreteModelInference();
+    void exportModifiedMultiwaycutModelInference();
+
     void exportInference(){
         
+        exportInferenceOptions();
         exportVisitors();
-        exportDiscreteInferenceBase();
+        exportGeneralDiscreteModelInference();
+        exportModifiedMultiwaycutModelInference();
     }
 
 

@@ -302,13 +302,13 @@ public:
         \warning 
         - if the graphical model has no variables,
             calling this function will have undefined behavior.
-        - if MODEL::SortedVariableIds is false, 
+        - if VariableIdsPolicy::HasSortedIds is false, 
           this default implementation is O(N)
 
     */
     Vi minVarId() const{
         typedef typename std::iterator_traits<typename MODEL::VariableIdIter>::iterator_category  IterTag;
-        return * MinElement<IterTag, MODEL::SortedVariableIds>::minElement(
+        return * MinElement<IterTag, VariableIdsPolicy::HasSortedIds>::minElement(
             model().variableIdsBegin(), model().variableIdsEnd()
         );
     }
@@ -317,12 +317,12 @@ public:
         \warning 
         - if the graphical model has no variables,
             calling this function will have undefined behavior.
-        - if MODEL::SortedVariableIds is false, 
+        - if VariableIdsPolicy::HasSortedIds is false, 
           this default implementation is O(N)
     */
     Vi maxVarId() const{
         typedef typename std::iterator_traits<typename MODEL::VariableIdIter>::iterator_category  IterTag;
-        return * MaxElement<IterTag, MODEL::SortedVariableIds>::maxElement(
+        return * MaxElement<IterTag, VariableIdsPolicy::HasSortedIds>::maxElement(
             model().variableIdsBegin(), model().variableIdsEnd()
         );
     }
@@ -335,7 +335,7 @@ public:
     */
     Fi minFactorId() const{
         typedef typename std::iterator_traits<typename MODEL::FactorIdIter>::iterator_category  IterTag;
-        return * MinElement<IterTag, MODEL::SortedFactorIds>::minElement(
+        return * MinElement<IterTag, FactorIdsPolicy::HasSortedIds >::minElement(
             model().factorIdsBegin(), model().factorIdsEnd()
         );
     }
@@ -346,7 +346,7 @@ public:
     */
     Fi maxFactorId() const{
         typedef typename std::iterator_traits<typename MODEL::FactorIdIter>::iterator_category  IterTag;
-        return * MaxElement<IterTag, MODEL::SortedFactorIds>::maxElement(
+        return * MaxElement<IterTag, FactorIdsPolicy::HasSortedIds >::maxElement(
             model().factorIdsBegin(), model().factorIdsEnd()
         );
     }
@@ -370,14 +370,34 @@ public:
         }
     }
 
+    /// \brief the number of unary factors in
+    /// the graphical model
+    ///
+    /// this function should be overloaded by 
+    /// all models where this can be computed
+    /// efficiently
+    Fi nUnaryFactors()const{
+        Fi nUnarys = 0;
+        auto fiter = model().factorIdsBegin();
+        auto fiterEnd = model().factorIdsEnd();
+        for(;fiter!=fiterEnd; ++fiter){
+            auto factorId = *fiter;
+            auto factor = model()[factorId];
+            if(factor->arity()==1){
+                ++nUnarys;
+            }
+        }
+        return nUnarys;
+    }
+
     /// \brief the number of second order factors in
     /// the graphical model
     ///
     /// this function should be overloaded by 
     /// all models where this can be computed
     /// efficiently
-    size_t nPairwiseFactors()const{
-        size_t nPairwise = 0;
+    Fi nPairwiseFactors()const{
+        Fi nPairwise = 0;
         auto fiter = model().factorIdsBegin();
         auto fiterEnd = model().factorIdsEnd();
         for(;fiter!=fiterEnd; ++fiter){

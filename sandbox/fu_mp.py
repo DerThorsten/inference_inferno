@@ -6,7 +6,7 @@ numpy.random.seed(7)
 
 nVar = 50*50
 nLabels = 10
-model = inferno.models.GeneralDiscreteGraphicalModel(nVar, nLabels)
+model = inferno.models.GeneralDiscreteModel(nVar, nLabels)
 
 
 ####################################################

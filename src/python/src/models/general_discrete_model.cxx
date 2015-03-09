@@ -40,7 +40,7 @@ namespace models{
 
     template<class T>
     vigra::TinyVector<int, 2> 
-    addPottsValueTables(GeneralDiscreteGraphicalModel & model,  
+    addPottsValueTables(GeneralDiscreteModel & model,  
                         const DiscreteLabel nl,
                         const vigra::NumpyArray<1, T>  & betas
     ){
@@ -53,7 +53,7 @@ namespace models{
 
     template<class T>
     vigra::TinyVector<int, 2> 
-    addL1ValueTables(GeneralDiscreteGraphicalModel & model,  
+    addL1ValueTables(GeneralDiscreteModel & model,  
                         const DiscreteLabel nl,
                         const vigra::NumpyArray<1, T>  & betas
     ){
@@ -66,7 +66,7 @@ namespace models{
 
     template<class T>
     vigra::TinyVector<int, 2> 
-    addTruncatedL1ValueTables(GeneralDiscreteGraphicalModel & model,  
+    addTruncatedL1ValueTables(GeneralDiscreteModel & model,  
                         const DiscreteLabel nl,
                         const vigra::NumpyArray<1, T>  & betas,
                         const vigra::NumpyArray<1, T>  & truncateAts
@@ -81,7 +81,7 @@ namespace models{
 
     template<class T, unsigned int A>
     vigra::TinyVector<int, 2> 
-    addExplicitValueTables(GeneralDiscreteGraphicalModel & model,  
+    addExplicitValueTables(GeneralDiscreteModel & model,  
                           const vigra::NumpyArray<A, T>  & values  
     ){
         Vti start = model.nValueTables();
@@ -101,7 +101,7 @@ namespace models{
 
     template<class T>
     bp::tuple
-    addFactors(GeneralDiscreteGraphicalModel & model, 
+    addFactors(GeneralDiscreteModel & model, 
                const vigra::TinyVector<int, 2> & vtiRange,
                const vigra::NumpyArray<2, T> & vis
     ){
@@ -117,7 +117,7 @@ namespace models{
 
     template<class T>
     bp::tuple
-    addUnaryFactors(GeneralDiscreteGraphicalModel & model, 
+    addUnaryFactors(GeneralDiscreteModel & model, 
                const vigra::TinyVector<int, 2> & vtiRange,
                const vigra::NumpyArray<1, T> & vis
     ){
@@ -135,9 +135,9 @@ namespace models{
 
 
     void exportGeneralDiscreteGraphicalModel(){
-        typedef GeneralDiscreteGraphicalModel Model;
-        bp::class_<Model>("GeneralDiscreteGraphicalModel",bp::init<Vi,DiscreteLabel>())
-            .def(export_helper::ExportModelAPI<Model>("GeneralDiscreteGraphicalModel"))
+        typedef GeneralDiscreteModel Model;
+        bp::class_<Model>("GeneralDiscreteModel",bp::init<Vi,DiscreteLabel>())
+            .def(export_helper::ExportModelAPI<Model>("GeneralDiscreteModel"))
 
             // batch add potts value tableS
             .def("addPottsValueTables",vigra::registerConverters(&addPottsValueTables<float>))

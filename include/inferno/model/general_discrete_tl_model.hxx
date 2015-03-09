@@ -1,5 +1,5 @@
 /** \file general_discrete_tl_model.hxx 
-    \brief  functionality for inferno::models::GeneralDiscreteGraphicalModel is implemented in this header.
+    \brief  functionality for inferno::models::GeneralDiscreteModel is implemented in this header.
 */
 #ifndef INFERNO_MODEL_GENERAL_DISCRETE_TL_MODEL_HXX
 #define INFERNO_MODEL_GENERAL_DISCRETE_TL_MODEL_HXX
@@ -269,9 +269,6 @@ public:
     typedef boost::counting_iterator<uint64_t> FactorIdIter;
     typedef boost::counting_iterator<Vi> VariableIdIter;
 
-    const static bool SortedVariableIds = true;
-    const static bool SortedFactorIds = true;
-
     typedef std::pair<uint8_t, uint64_t> ValueTableId;
 
     typedef std::tuple< VALUE_TABLE ... >           TupleOfValueTables;
@@ -416,35 +413,48 @@ private:
         const  uint64_t vtIndex, 
         FUNCTOR & functor
     )const{
-        return vtTypePos == 0 ? functor(this-> template getValueTable<0>(vtIndex) ) :
-                                functor(this-> template getValueTable<1>(vtIndex) );
-
-        //switch(vtTypePos){
-        //    case 0 :{
-        //        const auto & vt = std::get<getSaveIndex(0,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
-        //        return functor(vt);
-        //    }
-        //    case 1 :{
-        //        const auto & vt = std::get<getSaveIndex(1,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
-        //        return functor(vt);
-        //    }
-        //    //case 2 :{
-        //    //    const auto & vt = std::get<getSaveIndex(2,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
-        //    //    return functor(vt);
-        //    //}
-        //    //case 3 :{
-        //    //    const auto & vt = std::get<getSaveIndex(3,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
-        //    //    return functor(vt);
-        //    //}
-        //    //case 4 :{
-        //    //    const auto & vt = std::get<getSaveIndex(4,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
-        //    //    return functor(vt);
-        //    //}
-        //    //case 5 :{
-        //    //    const auto & vt = std::get<getSaveIndex(5,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
-        //    //    return functor(vt);
-        //    //}
-        //}
+        switch(vtTypePos){
+            case 0 :{
+                const auto & vt = std::get<getSaveIndex(0,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 1 :{
+                const auto & vt = std::get<getSaveIndex(1,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 2 :{
+                const auto & vt = std::get<getSaveIndex(2,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 3 :{
+                const auto & vt = std::get<getSaveIndex(3,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 4 :{
+                const auto & vt = std::get<getSaveIndex(4,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 5 :{
+                const auto & vt = std::get<getSaveIndex(5,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 6 :{
+                const auto & vt = std::get<getSaveIndex(6,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 7 :{
+                const auto & vt = std::get<getSaveIndex(7,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 8 :{
+                const auto & vt = std::get<getSaveIndex(8,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 9 :{
+                const auto & vt = std::get<getSaveIndex(9,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+        }
     }
 
     template<class FUNCTOR>
@@ -454,34 +464,48 @@ private:
         const  uint64_t vtIndex, 
         const FUNCTOR & functor
     )const{
-        return vtTypePos == 0 ? functor(std::get<getSaveIndex(0,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex]) :
-                                functor(std::get<getSaveIndex(1,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex]);
-        //switch(vtTypePos){
-        //    case 0 :{
-        //        const auto & vt = std::get<getSaveIndex(0,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
-        //        return functor(vt);
-        //    }
-        //    case 1 :{
-        //        const auto & vt = std::get<getSaveIndex(1,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
-        //        return functor(vt);
-        //    }
-        //    //case 2 :{
-        //    //    const auto & vt = std::get<getSaveIndex(2,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
-        //    //    return functor(vt);
-        //    //}
-        //    //case 3 :{
-        //    //    const auto & vt = std::get<getSaveIndex(3,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
-        //    //    return functor(vt);
-        //    //}
-        //    //case 4 :{
-        //    //    const auto & vt = std::get<getSaveIndex(4,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
-        //    //    return functor(vt);
-        //    //}
-        //    //case 5 :{
-        //    //    const auto & vt = std::get<getSaveIndex(5,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
-        //    //    return functor(vt);
-        //    //}
-        //}
+        switch(vtTypePos){
+            case 0 :{
+                const auto & vt = std::get<getSaveIndex(0,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 1 :{
+                const auto & vt = std::get<getSaveIndex(1,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 2 :{
+                const auto & vt = std::get<getSaveIndex(2,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 3 :{
+                const auto & vt = std::get<getSaveIndex(3,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 4 :{
+                const auto & vt = std::get<getSaveIndex(4,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 5 :{
+                const auto & vt = std::get<getSaveIndex(5,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 6 :{
+                const auto & vt = std::get<getSaveIndex(6,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 7 :{
+                const auto & vt = std::get<getSaveIndex(7,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 8 :{
+                const auto & vt = std::get<getSaveIndex(8,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+            case 9 :{
+                const auto & vt = std::get<getSaveIndex(9,NFunctionTypes)>(tupleOfVtVecs_)[vtIndex];
+                return functor(vt);
+            }
+        }
     }
 
 

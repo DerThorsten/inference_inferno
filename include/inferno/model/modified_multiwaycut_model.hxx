@@ -1,5 +1,5 @@
 /** \file modified_multiwaycut_model.hxx 
-    \brief  functionality for inferno::ModifiedMultiwayCut is implemented in this header.
+    \brief  functionality for inferno::ModifiedMultiwaycutModel is implemented in this header.
      NOT YET FINISHED!
 
     \warning Not yet finished
@@ -17,31 +17,95 @@ namespace inferno{
 namespace models{
 
 
-/**
-*/
+class ModifiedMultiwaycutModel;
+
+
+namespace detail_mmwc_model{
+
+    class  HybridValueTable : public inferno::value_tables::DiscreteValueTableBase{
+    public:
+        HybridValueTable(const Vi nVar, const Vi nSemanticClasses,
+                         const uint8_t arity, const ValueType * data
+        )
+        :   inferno::value_tables::DiscreteValueTableBase(),
+            nVar_(nVar),
+            nSemanticClasses_(nSemanticClasses),
+            arity_(arity),
+            data_(data)
+        {
+        } 
+        ValueType eval(const LabelType *conf)const{
+            if(arity_==1)
+                return data_[conf[0]/nVar_];
+            else{
+                return conf[0] == conf[1] ? 0.0 : *data_;
+            }
+        }
+        ValueType eval1(const LabelType l0)const{
+            return data_[l0/nVar_];
+        }
+        ValueType eval2(const LabelType l0, const LabelType l1)const{
+            return l0==l1 ? 0 : *data_;
+        }
+        LabelType shape(const uint32_t d) const{
+            return nVar_*nSemanticClasses_;
+        }
+        uint32_t  arity()const{
+            return arity_;
+        }
+        bool isGeneralizedPotts() const{
+            return arity_ == 2 ? true : false;   
+        }
+        bool isPotts(ValueType & beta) const{
+            if(arity_ == 2)
+                beta = data_[0];
+            return arity_ == 2 ? true : false;
+        }
+        void facToVarMsg(const ValueType ** inMsgs, ValueType ** outMsgs)const{
+            if(arity_ == 2)
+                inferno::value_tables::pottsFacToVarMsg(shape(0), data_[0], inMsgs, outMsgs);
+            else
+                throw RuntimeError("facToVarMsg should not be called with an arity of 1");
+        }
+
+    private:
+        Vi                  nVar_;
+        Vi                  nSemanticClasses_;
+        uint8_t             arity_;
+        const ValueType *   data_;
+    };   
+}
+
+
+
 class ModifiedMultiwayCutFactor : public DiscreteFactorBase<ModifiedMultiwayCutFactor>{
 public:
-    ModifiedMultiwayCutFactor(const Vi nLabels = Vi(), const Vi u = Vi(), const Vi v=Vi(), const ValueType beta=ValueType())
-    :   u_(u),
-        v_(v),
-        pottsFunction_(nLabels, beta){
+    ModifiedMultiwayCutFactor(const Vi nVar, const Vi nSemanticClasses,
+                              const uint8_t arity, const ValueType * data,
+                              const Vi u, const Vi v = Vi()
+    )
+    :   DiscreteFactorBase<ModifiedMultiwayCutFactor>(),
+        vt_(nVar, nSemanticClasses, arity, data),
+        u_(u),
+        v_(v)
+    {
     }
 
     const value_tables::DiscreteValueTableBase * valueTable()const{
-        return &pottsFunction_;
+       return &vt_;
     }   
     size_t arity()const{
-        return 2;
+        return vt_.arity();
     }
     LabelType shape(const size_t d)const{
-        return pottsFunction_.shape(d);
+        return vt_.shape(d);
     }
     Vi vi(const size_t d)const{
-        return d==0? u_ : v_;
+        return d==0 ? u_ : v_; 
     }
 private:
+    detail_mmwc_model::HybridValueTable vt_;
     Vi u_,v_;
-    value_tables::PottsValueTable pottsFunction_;
 };
 
 /** \brief Modified multiway-cut graphical model
@@ -49,9 +113,10 @@ private:
     \ingroup models
     \ingroup discrete_models
 */
-class ModifiedMultiwayCut : 
-public DiscreteGraphicalModelBase<ModifiedMultiwayCut>{
-
+class ModifiedMultiwaycutModel : 
+public DiscreteGraphicalModelBase<ModifiedMultiwaycutModel>{
+    
+    friend class detail_mmwc_model::HybridValueTable;
 public:
 
     typedef boost::counting_iterator<uint64_t> FactorIdIter;
@@ -67,10 +132,10 @@ public:
     template<class T>
     class VariableMap : public std::vector<T>{
     public:
-        VariableMap(const ModifiedMultiwayCut & m, const T & val)
+        VariableMap(const ModifiedMultiwaycutModel & m, const T & val)
         : std::vector<T>(m.nVariables(),val){
         }//
-        VariableMap(const ModifiedMultiwayCut & m)
+        VariableMap(const ModifiedMultiwaycutModel & m)
         : std::vector<T>(m.nVariables()){
         }
     };
@@ -78,25 +143,51 @@ public:
     template<class T>
     class FactorMap : public std::vector<T>{
     public:
-        FactorMap(const ModifiedMultiwayCut & m, const T & val)
+        FactorMap(const ModifiedMultiwaycutModel & m, const T & val)
         : std::vector<T>(m.nFactors(),val){
         }
-        FactorMap(const ModifiedMultiwayCut & m)
+        FactorMap(const ModifiedMultiwaycutModel & m)
         : std::vector<T>(m.nFactors()){
         }
     };
 
 
-    ModifiedMultiwayCut(const uint64_t nVar)
+    ModifiedMultiwaycutModel(const Vi nVar, const Vi nSemanticClasses)
     :   nVar_(nVar),
         edges_(),
-        beta_(){
+        beta_(),
+        nSemanticClasses_(nSemanticClasses){
 
     }   
-    uint64_t addFactor(const Vi u, const Vi v, const ValueType beta){
+    void addPottsFactor(const Vi u, const Vi v, const ValueType beta){
         edges_.push_back(u);
         edges_.push_back(v);
         beta_.push_back(beta);
+    }
+
+    template<class SEMANTIC_COST_ITER>
+    void addUnaryFactor(const Vi u, SEMANTIC_COST_ITER costBegin, SEMANTIC_COST_ITER costEnd){
+        unariesVis_.push_back(u);
+        for( ;costBegin != costEnd; ++costBegin){
+            unaries_.push_back(*costBegin);
+        }
+    }
+
+    template<class SEMANTIC_COST_TYPE>
+    void addUnaryFactor(const Vi u, std::initializer_list<SEMANTIC_COST_TYPE> list){
+        this->addUnaryFactor(u, list.begin(), list.end());
+    }
+
+    Vi nSemanticClasses()const{
+        return nSemanticClasses_;
+    }
+
+    Fi nUnaryFactors()const{
+        return unariesVis_.size();
+    }
+
+    Fi nPairwiseFactors()const{
+        return beta_.size();
     }
 
     uint64_t maxArity()const{
@@ -106,32 +197,48 @@ public:
     FactorIdIter factorIdsBegin()const{
         return FactorIdIter(0);
     }
+
     FactorIdIter factorIdsEnd()const{
-        return FactorIdIter(beta_.size());
+        return FactorIdIter(nUnaryFactors()+nPairwiseFactors());
     }
+
     VariableIdIter variableIdsBegin()const{
         return VariableIdIter(0);
     }
+
     VariableIdIter variableIdsEnd()const{
         return VariableIdIter(nVar_);
     }
 
-    FactorProxy operator[](const uint64_t factorId)const{
-        const uint64_t uu = factorId*2;
-        const uint64_t vv = uu+1;
-        return FactorProxy(nVar_,edges_[uu],edges_[vv],beta_[uu/2]);
+    FactorProxy operator[](const Fi factorId)const{
+        if(factorId<nUnaryFactors()){
+            const ValueType * data =  unaries_.data() + factorId*nSemanticClasses_;
+            const Vi u = unariesVis_[factorId];
+            return FactorProxy(nVar_, nSemanticClasses_, 1, data, u);
+        }
+        else{
+            const Fi edgeIndex = factorId - nUnaryFactors();
+            const ValueType * data = beta_.data() + edgeIndex;
+            const Vi uu = edgeIndex*2;
+            const Vi vv = uu+1;
+            return FactorProxy(nVar_, nSemanticClasses_, 2, data, edges_[uu], edges_[vv]);
+        }
     }
 
-    LabelType nLabels(const uint64_t variabeId)const{
-        return LabelType(nVar_); 
+    LabelType nLabels(const Vi variabeId)const{
+        return LabelType(nVar_*nSemanticClasses_); 
     }
 
 
 private:
     uint64_t nVar_;
+    uint64_t nSemanticClasses_;
+
     std::vector<Vi> edges_;
     std::vector<ValueType> beta_;
-    std::vector<ValueType> unaries_;
+
+    std::vector<Vi>         unariesVis_;
+    std::vector<ValueType>  unaries_;
 
 };
 

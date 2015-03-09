@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(TestDifferentTypesGrid)
         value_tables::UnaryValueTable,
         value_tables::PottsValueTable
     > TlModel;
-    typedef models::GeneralDiscreteGraphicalModel VModel;
+    typedef models::GeneralDiscreteModel VModel;
     typedef models::SparseDiscreteGraphicalModel  SModel;
 
     const LabelType nLabes = 3;
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(TestModel)
     const LabelType nLabes = 2;
     const Vi nVar = 10;
 
-    models::GeneralDiscreteGraphicalModel model(nVar, nLabes);
+    models::GeneralDiscreteModel model(nVar, nLabes);
     
 
     std::random_device rd;

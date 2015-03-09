@@ -1,7 +1,9 @@
 SET(MOD_SRC 
+    inference_options.cxx
     inference.cxx 
     visitors.cxx
-    base_discrete_inference.cxx
+    general_discrete_model_inference.cxx
+    modified_multiwaycut_model_inference.cxx
 )
 SET(MOD_EXTRA_LIBS inferno )
 

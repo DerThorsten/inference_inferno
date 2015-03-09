@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(TestQpboInference)
     const LabelType nLabes = 2;
     const Vi nVar = 10;
 
-    GeneralDiscreteGraphicalModel model(nVar, nLabes);
+    GeneralDiscreteModel model(nVar, nLabes);
     
 
     std::random_device rd;
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(TestQpboInference)
 
 
 
-    typedef GeneralDiscreteGraphicalModel   Model;
+    typedef GeneralDiscreteModel   Model;
     typedef inference::Qpbo<Model>          Solver;
     typedef Solver::Options                 SolverOptions; 
 

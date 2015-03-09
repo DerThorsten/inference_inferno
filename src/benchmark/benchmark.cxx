@@ -16,7 +16,7 @@ static void GeneralDiscreteGraphicalModelBenchmark(benchmark::State& state) {
         const inferno::LabelType nLabes = state.range_y();
         const inferno::Vi nVar = state.range_x();
         state.ResumeTiming();
-        inferno::models::GeneralDiscreteGraphicalModel model(nVar, nLabes);
+        inferno::models::GeneralDiscreteModel model(nVar, nLabes);
         // second order
         for(inferno::Vi vi=0; vi<nVar-1; ++vi){
             auto vti = model.addValueTable(new inferno::value_tables::PottsValueTable(nLabes, 1.0));

@@ -133,7 +133,7 @@ namespace inferno{
 namespace models{
 
     template<class T>
-    GeneralDiscreteGraphicalModel grid2d(
+    GeneralDiscreteModel grid2d(
         std::initializer_list<T> shape, 
         const DiscreteLabel  nLabels,
         const ValueType beta = 1.0,
@@ -141,7 +141,7 @@ namespace models{
     ){
         std::vector<DiscreteLabel> vShape(shape.begin(),shape.end());
         const Vi nVar = vShape[0]*vShape[1];
-        GeneralDiscreteGraphicalModel model(nVar, nLabels);
+        GeneralDiscreteModel model(nVar, nLabels);
 
         std::mt19937 engine; 
 

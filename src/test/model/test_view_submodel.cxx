@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(TestViewSubmodel)
     const auto submodular = false;
 
     // create the base model
-    typedef models::GeneralDiscreteGraphicalModel Model;
+    typedef models::GeneralDiscreteModel Model;
     typedef models::FactorsOfVariables<Model> FacOfVars;
     BOOST_TEST_CHECKPOINT("model constructor");
     const Model model = models::grid2d(shape, nl, beta, submodular);

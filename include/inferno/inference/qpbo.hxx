@@ -10,6 +10,7 @@
 
 #include <unordered_map>
 
+#include "inferno/model/base_discrete_model.hxx"
 #include "inferno/inference/base_discrete_inference.hxx"
 
 #ifdef WITH_QPBO
@@ -30,7 +31,7 @@ namespace inference{
         typedef DiscreteInferenceBase<MODEL> BaseInf;
         typedef typename BaseInf::Visitor Visitor;
         typedef typename MODEL:: template VariableMap<DiscreteLabel> Conf;
-        typedef models::DenseVariableIds<Model> DenseVarIds;
+        typedef inferno::models::DenseVariableIds<Model> DenseVarIds;
         typedef kolmogorov::qpbo::QPBO<ValueType> QpboSolver;
 
         struct Options{

@@ -71,7 +71,7 @@ static void PottsBenchmarkInfernoTl(benchmark::State& state) {
 
 
 
-    //inferno::models::GeneralDiscreteGraphicalModel::VariableMap<inferno::DiscreteLabel>  labels(model, 0);
+    //inferno::models::GeneralDiscreteModel::VariableMap<inferno::DiscreteLabel>  labels(model, 0);
     inferno::ValueType res = 0;
     std::vector<inferno::DiscreteLabel> labels(model.nVariables(),0);
     state.ResumeTiming();

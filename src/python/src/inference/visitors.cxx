@@ -77,7 +77,7 @@ namespace inference{
 
 
     void exportVisitors(){
-        exportVisitorsT<inferno::models::GeneralDiscreteGraphicalModel>("GeneralDiscreteGraphicalModel");
+        exportVisitorsT<inferno::models::GeneralDiscreteModel>("GeneralDiscreteModel");
     }
 
 }

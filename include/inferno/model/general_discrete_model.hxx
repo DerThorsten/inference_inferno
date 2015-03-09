@@ -1,5 +1,5 @@
 /** \file general_discrete_model.hxx 
-    \brief  functionality for inferno::models::GeneralDiscreteGraphicalModel is implemented in this header.
+    \brief  functionality for inferno::models::GeneralDiscreteModel is implemented in this header.
 */
 #ifndef INFERNO_MODEL_GENERAL_DISCRETE_MODEL_HXX
 #define INFERNO_MODEL_GENERAL_DISCRETE_MODEL_HXX
@@ -13,10 +13,10 @@ namespace inferno{
 namespace models{
 
     
-class GeneralDiscreteGraphicalModel;
+class GeneralDiscreteModel;
 
 
-/** \brief Factor class for the GeneralDiscreteGraphicalModel
+/** \brief Factor class for the GeneralDiscreteModel
 */
 template<class MODEL>
 class GeneralDiscreteGraphicalModelFactor : public DiscreteFactorBase<GeneralDiscreteGraphicalModelFactor<MODEL> > {
@@ -78,29 +78,25 @@ private:
 
     \todo move this to the namespace inferno::models
 */
-class GeneralDiscreteGraphicalModel : 
-public DiscreteGraphicalModelBase<GeneralDiscreteGraphicalModel>{
+class GeneralDiscreteModel : 
+public DiscreteGraphicalModelBase<GeneralDiscreteModel>{
 
-    friend class GeneralDiscreteGraphicalModelFactor<GeneralDiscreteGraphicalModel>;
+    friend class GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel>;
 private:
-    typedef  GeneralDiscreteGraphicalModelFactor<GeneralDiscreteGraphicalModel> Ftype;
+    typedef  GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel> Ftype;
 public:
     typedef boost::counting_iterator<uint64_t> FactorIdIter;
     typedef boost::counting_iterator<Vi> VariableIdIter;
-    typedef const GeneralDiscreteGraphicalModelFactor<GeneralDiscreteGraphicalModel> * FactorProxy;
+    typedef const GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel> * FactorProxy;
     typedef FactorProxy FactorProxyRef;
 
-
-
-    const static bool SortedVariableIds = true;
-    const static bool SortedFactorIds = true;
 
     /** \brief destructor for model
 
         \warning this will delete all value
         table have been added.
     */
-    ~GeneralDiscreteGraphicalModel(){
+    ~GeneralDiscreteModel(){
         if(functionOwner_){
             for(auto vt : valueTables_)
                 delete vt;
@@ -117,10 +113,10 @@ public:
     template<class T>
     class VariableMap : public std::vector<T>{
     public:
-        VariableMap(const GeneralDiscreteGraphicalModel & m, const T & val)
+        VariableMap(const GeneralDiscreteModel & m, const T & val)
         : std::vector<T>(m.nVariables(),val){
         }//
-        VariableMap(const GeneralDiscreteGraphicalModel & m)
+        VariableMap(const GeneralDiscreteModel & m)
         : std::vector<T>(m.nVariables()){
         }
     };
@@ -133,10 +129,10 @@ public:
     template<class T>
     class FactorMap : public std::vector<T>{
     public:
-        FactorMap(const GeneralDiscreteGraphicalModel & m, const T & val)
+        FactorMap(const GeneralDiscreteModel & m, const T & val)
         : std::vector<T>(m.nFactors(),val){
         }
-        FactorMap(const GeneralDiscreteGraphicalModel & m)
+        FactorMap(const GeneralDiscreteModel & m)
         : std::vector<T>(m.nFactors()){
         }
     };
@@ -239,7 +235,7 @@ public:
         return valueTables_.size();
     }
 
-    GeneralDiscreteGraphicalModel(const uint64_t nVar, const LabelType nLabes, const bool functionOwner = true)
+    GeneralDiscreteModel(const uint64_t nVar, const LabelType nLabes, const bool functionOwner = true)
     :   nVar_(nVar),
         numberOfLabels_(1, nLabes),
         valueTables_(),
@@ -264,7 +260,7 @@ public:
         }
         INFERNO_CHECK_OP(arity,==,valueTables_[vti]->arity(),
             "dist(viBegin,viEnd) does not match vt's arity");
-        factors_.push_back(GeneralDiscreteGraphicalModelFactor<GeneralDiscreteGraphicalModel>(this,valueTables_[vti], visOffset, arity));
+        factors_.push_back(GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel>(this,valueTables_[vti], visOffset, arity));
         maxArity_  = std::max(arity, maxArity_);
         return factors_.size()-1;
     }
@@ -287,7 +283,7 @@ private:
     const uint64_t nVar_;
     std::vector<LabelType>              numberOfLabels_;
     std::vector<value_tables::DiscreteValueTableBase * >  valueTables_;
-    std::vector<GeneralDiscreteGraphicalModelFactor<GeneralDiscreteGraphicalModel> >         factors_;
+    std::vector<GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel> >         factors_;
     std::vector<Vi> facVis_;
     size_t maxArity_;
     bool functionOwner_;

@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(TestMovemaker_ConstructorCompiles)
 
     const LabelType nLabels = 2;
     const Vi nVar = 10;
-    typedef GeneralDiscreteGraphicalModel Model;
+    typedef GeneralDiscreteModel Model;
     Model model(nVar, nLabels);
     
 
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(TestMove)
     size_t numLabels[] = {3, 3, 3, 3, 3};
     const LabelType nLabels = 3;
     const Vi nVar = 5;
-    typedef GeneralDiscreteGraphicalModel Model;
+    typedef GeneralDiscreteModel Model;
     Model model(nVar, nLabels);
 
     // 1 order

@@ -18,7 +18,7 @@ int main(int argc, const char* argv[]) {
     using namespace inferno;
 
 
-    typedef models::GeneralDiscreteGraphicalModel Model;
+    typedef models::GeneralDiscreteModel Model;
     typedef Benchmark<Model> BenchType;
     typedef models::PottsGrid2d<Model> ModelBuilder;
     typedef ModelBuilder::ModelParam ModelParam;

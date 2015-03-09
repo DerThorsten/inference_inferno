@@ -7,7 +7,7 @@
 #ifndef INFERNO_INFERNO_PYTHON_HXX
 #define INFERNO_INFERNO_PYTHON_HXX
 
-
+#include "inferno/inferno.hxx"
 
 // boost python related
 //#include <boost/python.hpp>

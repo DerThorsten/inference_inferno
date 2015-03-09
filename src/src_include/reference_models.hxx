@@ -35,8 +35,8 @@ namespace models{
 
 
     template< >
-    struct PottsGrid2d<GeneralDiscreteGraphicalModel>{
-        typedef GeneralDiscreteGraphicalModel Model;
+    struct PottsGrid2d<GeneralDiscreteModel>{
+        typedef GeneralDiscreteModel Model;
         typedef PottsGridParam ModelParam;
         struct BuilderParam{
             BuilderParam(){
