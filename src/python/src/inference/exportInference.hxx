@@ -8,20 +8,61 @@
 #include "inferno/inferno.hxx"
 #include "inferno/inferno_python.hxx"
 #include "inferno/inference/base_discrete_inference.hxx"
+#include "inferno/inference/base_discrete_inference_factory.hxx"
 
 
 #define INFERNO_EXPORT_INFERENCE(MODEL, modelName, INF, infName) \
     boost::python::class_< INF,boost::python::bases< DiscreteInferenceBase<MODEL>   >,boost::noncopyable > \
     (( std::string(infName) + modelName ).c_str(),boost::python::no_init) \
-        .def(export_helper::ExportInferenecAPI<INF>(modelName, infName)) 
+        .def(ExportInferenecAPI<INF>(modelName, infName)) 
 
 
 
 namespace inferno{
 namespace inference{
-namespace export_helper{
+
 
     namespace bp = boost::python;
+
+
+    template<class INF>
+    struct ExportInferenceFactory{
+        static void op(const std::string  & modelName, const std::string & infName){
+
+            typedef INF Inference;
+            typedef typename Inference::Model Model;
+            typedef DiscreteInferenceBase<Model> BaseInf;
+            typedef BaseDiscreteInferenceFactory<Model> BaseInfFactory;
+            typedef DiscreteInferenceFactory<INF> InfFactory;
+
+            namespace bp = boost::python;
+
+            const std::string clsName =  infName + std::string("Factory") + modelName;
+
+            bp::class_<InfFactory, bp::bases<BaseInfFactory>,  boost::noncopyable> 
+            (
+                clsName.c_str(),bp::init<>()
+            );
+
+        }
+    };
+
+
+    template<class MODEL>
+    struct BaseInfFactoryWrap : 
+        public BaseDiscreteInferenceFactory<MODEL>, 
+        bp::wrapper<BaseDiscreteInferenceFactory<MODEL> >
+    {
+        typedef MODEL Model;
+        typedef DiscreteInferenceBase<MODEL> BaseInf;
+        typedef BaseDiscreteInferenceFactory<MODEL> BaseInfFactory;
+
+        std::shared_ptr<BaseInf> create(const Model & model){
+            return this->get_override("create")(model);
+        }
+
+    };
+
 
     template<class MODEL>
     struct BaseInfWrap : 
@@ -83,14 +124,26 @@ namespace export_helper{
     }
 
 
-
+    // this export function must
+    // be called only once for each type of model
     template<class MODEL>
     void exportDiscreteInferenceBase(const std::string modelName){
 
+        // register the shared ptr
+        bp::register_ptr_to_python< std::shared_ptr<  DiscreteInferenceBase<MODEL> > >();
 
+        // the  base inference factory class
+        const std::string baseClsFactoryName = std::string("BaseDiscreteInferenceFactory") + modelName;
+        typedef BaseDiscreteInferenceFactory<MODEL> BaseInfFactory;
+        bp::class_<BaseInfFactoryWrap<MODEL>, boost::noncopyable>(baseClsFactoryName.c_str())
+            // pure virtual functions
+            .def("create", bp::pure_virtual( &BaseInfFactory::create),CustWardPostEnd< 0,1 >()  )
+        ;
+
+        // the actual base inference class
         const std::string baseClsName = std::string("DiscreteInferenceBase") + modelName;
         typedef DiscreteInferenceBase<MODEL> BaseInf;
-        bp::class_<export_helper::BaseInfWrap<MODEL>, boost::noncopyable>(baseClsName.c_str())
+        bp::class_<BaseInfWrap<MODEL>, boost::noncopyable>(baseClsName.c_str())
             // pure virtual functions
             .def("name", bp::pure_virtual( &BaseInf::name))
             .def("infer", bp::pure_virtual(&BaseInf::infer),(bp::arg("visitor")=NULL))
@@ -102,107 +155,16 @@ namespace export_helper{
             .def("model", bp::pure_virtual(&BaseInf::model),bp::return_internal_reference<>())
             .def("stopInference", bp::pure_virtual(&BaseInf::stopInference))
         ;
-        #if 0
-        {
-            // export icm
-            typedef Icm<MODEL> Inference;
-            const std::string infClsName = std::string("Icm") + modelName;
-            bp::class_< Inference,bp::bases<BaseInf>,boost::noncopyable >(infClsName.c_str(),bp::no_init)
-                .def(export_helper::ExportInferenecAPI<Inference>(modelName,"Icm"))
-            ; 
-            //// export factory
-            //bp::def("icmOptions", &getDefaultOptions<Inference, MODEL>);
-            //bp::def("icm", & inferenceFactory<Inference>,
-            //    (
-            //        bp::arg("model"),
-            //        bp::arg("options") = InferenceOptions(),
-            //        bp::arg("checkOptions") = true
-            //    ),
-            //    CustWardPost< 0,1 ,RetValPolNewObj>()  
-            //);
-        }
-        {
-            // export mp
-            typedef MessagePassing<MODEL> Inference;
-            const std::string infClsName = std::string("MessagePassing") + modelName;
-            bp::class_< Inference,bp::bases<BaseInf>,boost::noncopyable >(infClsName.c_str(),bp::no_init)
-            ; 
-            // export factory
-            bp::def("messagePassingOptions", &getDefaultOptions<Inference, MODEL>);
-            bp::def("messagePassing", & inferenceFactory< Inference>,
-                (
-                    bp::arg("model"),
-                    bp::arg("options") = InferenceOptions(),
-                    bp::arg("checkOptions") = true
-                ),
-                CustWardPost< 0,1 ,RetValPolNewObj>()  
-            );
-        }
-        {   
-            #ifdef WITH_QPBO
-            // export qpbo
-            typedef Qpbo<MODEL> Inference;
-            const std::string infClsName = std::string("Qpbo") + modelName;
-            bp::class_< Inference,bp::bases<BaseInf>,boost::noncopyable >(infClsName.c_str(),bp::no_init)
-            ; 
-            // export factory
-            bp::def("qpboOptions", &getDefaultOptions<Inference, MODEL>);
-            bp::def("qpbo", & inferenceFactory< Inference>,
-                (
-                    bp::arg("model"),
-                    bp::arg("options") = InferenceOptions(),
-                    bp::arg("checkOptions") = true
-                ),
-                CustWardPost< 0,1 ,RetValPolNewObj>()  
-            );
-            #endif
-        }
-        {   
-            #ifdef WITH_QPBO
-            // export qpbo
-            typedef HigherOrderQpbo<MODEL> Inference;
-            const std::string infClsName = std::string("HigherOrderQpbo") + modelName;
-            bp::class_< Inference,bp::bases<BaseInf>,boost::noncopyable >(infClsName.c_str(),bp::no_init)
-            ; 
-            // export factory
-            bp::def("higherOrderQpboOptions", &getDefaultOptions<Inference, MODEL>);
-            bp::def("higherOrderQpbo", & inferenceFactory< Inference>,
-                (
-                    bp::arg("model"),
-                    bp::arg("options") = InferenceOptions(),
-                    bp::arg("checkOptions") = true
-                ),
-                CustWardPost< 0,1 ,RetValPolNewObj>()  
-            );
-            #endif
-        }
-
-        {
-            // export hmmwc
-            typedef Hmmwc<MODEL> Inference;
-            const std::string infClsName = std::string("Hmmwc") + modelName;
-            bp::class_< Inference,bp::bases<BaseInf>,boost::noncopyable >(infClsName.c_str(),bp::no_init)
-            ; 
-            // export factory
-            bp::def("hmmwcOptions", &getDefaultOptions<Inference, MODEL>);
-            bp::def("hmmwc", & inferenceFactory< Inference>,
-                (
-                    bp::arg("model"),
-                    bp::arg("options") = InferenceOptions(),
-                    bp::arg("checkOptions") = true
-                ),
-                CustWardPost< 0,1 ,RetValPolNewObj>()  
-            );
-        }
-        #endif
     }
 
-
+    // this export "visitor" is called for
+    // each template instantiation of a particular solver
     template<class INF>
     class ExportInferenecAPI  : public boost::python::def_visitor<ExportInferenecAPI<INF> >
     {
     public:
         typedef INF Inference;
+        typedef typename INF::Options Options;
         typedef typename Inference::Model Model;
         typedef typename Model:: template VariableMap<inferno::DiscreteLabel> Conf;
 
@@ -227,24 +189,12 @@ namespace export_helper{
             //const std::string infClsName = inferenceName_ + modelName_;
             const std::string optFuncName = facFuncName + std::string("Options");
 
-            // export factory
-            bp::def(optFuncName.c_str(), &getDefaultOptions);
-            bp::def(facFuncName.c_str(), &inferenceFactory<Inference>,
-                (
-                    bp::arg("model"),
-                    bp::arg("options") = InferenceOptions(),
-                    bp::arg("checkOptions") = true
-                ),
-                CustWardPost< 0,1 ,RetValPolNewObj>()  
-            );
+            //// export factory
+            ExportInferenceFactory<INF>::op(modelName_, inferenceName_);
 
         }
 
-        static InferenceOptions getDefaultOptions(const Model & model){
-            InferenceOptions  options;
-            Inference::defaultOptions(options);
-            return options;
-        }
+      
 
     private:
         std::string modelName_;
@@ -279,7 +229,6 @@ namespace export_helper{
     }
     */
 
-} // end namespace inferno::inference::export_helper
 } // end namespace inferno::inference  
 } // end namespace inferno
 

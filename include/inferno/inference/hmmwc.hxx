@@ -26,12 +26,14 @@ namespace inference{
         typedef typename MODEL:: template VariableMap<DiscreteLabel> Conf;
         typedef typename MODEL:: template VariableMap<uint8_t> UIn8VarMap;
 
-        static void defaultOptions(InferenceOptions & options){
+        
+        struct Options{
 
-        }
+        };
 
 
-        Hmmwc(const Model & model, const InferenceOptions & infParam = InferenceOptions())
+
+        Hmmwc(const Model & model, const Options & options = Options())
         :   BaseInf(),
             model_(model),
             stopInference_(false){

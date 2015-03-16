@@ -43,26 +43,6 @@ namespace inference{
                 saveMem_ = false;
                 nThreads_ = 0;     
             }
-            Options(const InferenceOptions & options)
-            {
-                Options  defaultOpt;
-                if(options.checkOptions()){
-                    auto keys = options.keys();
-                    options.getOption("useProbing", defaultOpt.useProbing_, useProbing_, keys);
-                    options.getOption("useImproving", defaultOpt.useImproving_, useImproving_, keys);                   
-                    options.getOption("strongPersistency", defaultOpt.strongPersistency_, strongPersistency_, keys);
-                    options.getOption("saveMem", defaultOpt.saveMem_, saveMem_, keys);
-                    options.getOption("nThreads", defaultOpt.nThreads_, nThreads_, keys);
-                    options. template checkForLeftovers<Self>(keys);
-                }
-                else{
-                    options.getOption("useProbing", defaultOpt.useProbing_, useProbing_);
-                    options.getOption("useImproving", defaultOpt.useImproving_, useImproving_);  
-                    options.getOption("strongPersistency", defaultOpt.strongPersistency_, strongPersistency_);
-                    options.getOption("saveMem", defaultOpt.saveMem_, saveMem_);
-                    options.getOption("nThreads", defaultOpt.nThreads_, nThreads_);
-                }
-            }
             ValueType strongPersistency_;
             bool useProbing_;
             ValueType useImproving_;
@@ -70,20 +50,13 @@ namespace inference{
             bool saveMem_;
         };
 
-        static void defaultOptions(InferenceOptions & options){
-            Options defaultOpt;
-            options.set("useProbing",defaultOpt.useProbing_);
-            options.set("useImproving",defaultOpt.useImproving_);
-            options.set("strongPersistency",defaultOpt.strongPersistency_);
-            options.set("saveMem",defaultOpt.saveMem_);
-            options.set("nThreads",defaultOpt.nThreads_);
-        }
 
 
-        Qpbo(const Model & model, const InferenceOptions & infParam = InferenceOptions())
+        Qpbo(const Model & model, const Options & options = Options())
         :   BaseInf(),
             model_(model),
             denseVarIds_(model),
+            options_(options),
             stopInference_(false),
             qpbo_(),
             constTerm_(0.0),
@@ -113,6 +86,7 @@ namespace inference{
                 else if(arity == 2){
                     const int qpboVi0 = denseVarIds_.toDense(factor->vi(0));
                     const int qpboVi1 = denseVarIds_.toDense(factor->vi(1));
+                    INFERNO_CHECK_OP(qpboVi0,!=,qpboVi1,"");
                     qpbo_->AddPairwiseTerm(qpboVi0, qpboVi1,factor->eval2(0,0), factor->eval2(0,1),
                         factor->eval2(1,0), factor->eval2(1,1));
                 }

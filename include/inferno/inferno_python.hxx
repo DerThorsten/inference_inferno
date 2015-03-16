@@ -31,6 +31,10 @@ namespace inferno{
     template<unsigned int A, unsigned int B,class T> using CustWardPost =
         bp::with_custodian_and_ward_postcall<A,B, T>; 
 
+
+    template<unsigned int A, unsigned int B> using CustWardPostEnd =
+    bp::with_custodian_and_ward_postcall<A,B>; 
+
     class ScopedGILRelease
     {
     // C & D -------------------------------------------------------------------------------------------

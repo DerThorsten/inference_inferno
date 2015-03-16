@@ -49,16 +49,18 @@ namespace inference{
     class DiscreteInferenceFactory :
     public BaseDiscreteInferenceFactory<typename INFERENCE::Model>{
     public:
+        typedef typename INFERENCE::Model Model;
         typedef DiscreteInferenceBase<Model> BaseInference;
         typedef INFERENCE Inference;
-        typedef Inference::Options Options;
+        typedef typename Inference::Options Options;
 
         DiscreteInferenceFactory(const Options & options = Options())
-        : options_(options){
+        :   BaseDiscreteInferenceFactory<Model>(),
+            options_(options){
 
         }
         virtual std::shared_ptr<BaseInference> create(const Model & model){
-            return std::make_shared<BaseInference>(new Inference(model, options));
+            return std::make_shared<Inference>(model, options_);
         }
     private:
         const Options & options_;

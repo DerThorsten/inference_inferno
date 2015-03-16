@@ -181,26 +181,6 @@ namespace inference{
                 saveMem_ = false;
                 nThreads_ = 0;     
             }
-            Options(const InferenceOptions & options)
-            {
-                Options  defaultOpt;
-                if(options.checkOptions()){
-                    auto keys = options.keys();
-                    options.getOption("nSteps", defaultOpt.nSteps_, nSteps_, keys);
-                    options.getOption("damping", defaultOpt.damping_, damping_, keys);
-                    options.getOption("eps", defaultOpt.eps_, eps_, keys);
-                    options.getOption("saveMem", defaultOpt.saveMem_, saveMem_, keys);
-                    options.getOption("nThreads", defaultOpt.nThreads_, nThreads_, keys);
-                    options. template checkForLeftovers<Self>(keys);
-                }
-                else{
-                    options.getOption("nSteps", defaultOpt.nSteps_, nSteps_);
-                    options.getOption("damping", defaultOpt.damping_, damping_);
-                    options.getOption("eps", defaultOpt.eps_, eps_);
-                    options.getOption("saveMem", defaultOpt.saveMem_, saveMem_);
-                    options.getOption("nThreads", defaultOpt.nThreads_, nThreads_);
-                }
-            }
             ValueType damping_;
             uint64_t nSteps_;
             ValueType eps_;
@@ -208,21 +188,13 @@ namespace inference{
             bool saveMem_;
         };
 
-        static void defaultOptions(InferenceOptions & options){
-            Options defaultOpt;
-            options.set("nSteps",defaultOpt.nSteps_);
-            options.set("damping",defaultOpt.damping_);
-            options.set("eps",defaultOpt.eps_);
-            options.set("saveMem",defaultOpt.saveMem_);
-            options.set("nThreads",defaultOpt.nThreads_);
-        }
 
  
 
-        MessagePassing(const Model & model, const InferenceOptions & infParam = InferenceOptions())
+        MessagePassing(const Model & model, const Options & options = Options())
         :   BaseInf(),
             model_(model),
-            options_(infParam),
+            options_(options),
             factorsOfVariables_(model),
             msg_(model,factorsOfVariables_),
             maxNumLabels_(),

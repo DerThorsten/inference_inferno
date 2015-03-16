@@ -32,8 +32,11 @@ namespace inference{
 
         }
 
+        struct Options{
 
-        Icm(const Model & model, const InferenceOptions & infParam = InferenceOptions())
+        };
+
+        Icm(const Model & model, const Options & options = Options())
         :   BaseInf(),
             model_(model),
             movemaker_(model),

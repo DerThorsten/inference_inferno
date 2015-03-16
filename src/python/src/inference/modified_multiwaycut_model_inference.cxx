@@ -36,7 +36,7 @@ namespace inference{
 
 
         // export the base class for discrete inference
-        export_helper::exportDiscreteInferenceBase<Model>(modelName);
+        exportDiscreteInferenceBase<Model>(modelName);
 
         // export concrete solvers (via macro)
         INFERNO_EXPORT_INFERENCE(Model, modelName, Hmmwc<Model>, "Hmmwc");

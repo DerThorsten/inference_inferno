@@ -35,60 +35,12 @@ namespace inference{
     namespace bp = boost::python;
 
 
-    void setOpt(InferenceOptions & options, const std::string & key, bp::object obj){
-        {
-            bp::extract<int64_t> e(obj);
-            if(e.check()){
-                options.set(key, e());
-                return ;
-            }
-        }
-        {
-            bp::extract<bool> e(obj);
-            if(e.check()){
-                options.set(key, e());
-                return ;
-            }
-        }
-        {
-            bp::extract<double> e(obj);
-            if(e.check()){
-                options.set(key, e());
-                return ;
-            }
-        }
-        {
-            bp::extract<float> e(obj);
-            if(e.check()){
-                options.set(key, e());
-                return ;
-            }
-        }
-        
-        {
-            bp::extract<std::string> e(obj);
-            if(e.check()){
-                options.set(key, e());
-                return ;
-            }
-        }
-        {
-            bp::extract<InferenceOptions> e(obj);
-            if(e.check()){
-                options.set(key, e());
-                return ;
-            }
-        }
-        throw RuntimeError("no converter found for object with key "+key);
-    }
 
 
     void exportInferenceOptions(){
-            typedef InferenceOptions InfOpts;
-            bp::class_<InfOpts>("InferenceOptions",bp::init<>())
-                .def("__setitem__",&setOpt)
-                .def("__str__",&InfOpts::asString)
-            ;
+        typedef InferenceOptions InfOpts;
+        bp::class_<InfOpts>("InferenceOptions",bp::init<>())
+        ;
     }
 
 
