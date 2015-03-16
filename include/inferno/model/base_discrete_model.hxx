@@ -390,6 +390,14 @@ public:
         return nUnarys;
     }
 
+    /// \brief check if the model has any unary at all
+    bool hasUnaries() const {
+        for(const auto factor : model().factors())
+            if(factor->arity() == true)
+                return true;
+        return false;
+    }
+
     /// \brief the number of second order factors in
     /// the graphical model
     ///
@@ -418,6 +426,59 @@ public:
     }
     ModelsFactors<MODEL> factors() const{
         return ModelsFactors<MODEL>(model());
+    }
+
+
+    /// at least for one semantic class allow cuts within must 
+    /// be true.
+    /// At least one unary must be present
+    bool isSecondOrderModifiedMultiwaycutModel(std::vector<bool> & allowCutsInSemanticClass) const{
+        // model must have an arity of 2
+        if( model().maxArity() == 2){
+            const DiscreteLabel nLabels;
+            // first simple check
+            // - do all variables have the same number of labels
+            if(model().hasSimpleLabelSpace(nLabels)){
+                const Vi nVar = model().nVariables();
+
+                // only if nLabels >= nVar we can have a 
+                // valid mmwc model
+                if(nLabels>nVar){
+                    // check if we have unaries at all
+                    if(model().hasUnaries()){
+
+                        allowCutsInSemanticClass.clear();
+
+                        // get the number of semantic classes
+                        // where cuts within is allowed
+                        const auto nSemanticClassesWithCuts= nLabels / nVar;
+                        const auto nSemanticClassesWithoutCuts = nLabels - nSemanticClassesWithCuts;
+
+                        allowCutsInSemanticClass.resize(0);
+                        allowCutsInSemanticClass.reserve(nSemanticClassesWithCuts+nSemanticClassesWithoutCuts);
+
+                        for(auto i=0; i<nSemanticClassesWithoutCuts; ++i)
+                            allowCutsInSemanticClass.push_back(false);
+                        for(auto i=0; i<nSemanticClassesWithCuts; ++i)
+                            allowCutsInSemanticClass.push_back(true);
+
+                        // check the actual factors
+                        for(const auto factor : model().factors()){
+                            const auto arity = factor.arity();
+                            if(arity==1){
+
+                            }
+                            else{ // (arity =2 )
+                                if(!factor->isPotts(ValueType())){
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;  
     }
 
 private:
