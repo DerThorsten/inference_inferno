@@ -19,7 +19,7 @@
 #include "inferno/inference/icm.hxx"
 #include "inferno/inference/mp.hxx"
 #ifdef WITH_QPBO
-#include "inferno/inference/qpbo.hxx"
+#include "factories/qpbo.hxx"
 #include "inferno/inference/higher_order_qpbo.hxx"
 #endif
 #include "inferno/inference/hmmwc.hxx"

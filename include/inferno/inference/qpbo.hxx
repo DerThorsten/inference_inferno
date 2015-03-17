@@ -35,24 +35,31 @@ namespace inference{
         typedef kolmogorov::qpbo::QPBO<ValueType> QpboSolver;
 
         struct Options{
-            Options(           
-            ){
-                useProbing_ = true;
-                useImproving_ = false ;         
-                strongPersistency_ = false;
-                saveMem_ = false;
-                nThreads_ = 0;     
+            Options(      
+                const bool useProbing = false,
+                const bool useImproving = false ,
+                const bool strongPersistency = false,
+                const bool saveMem = false,
+                const uint64_t nThreads = 0
+            )
+            :   useProbing_(useProbing),
+                useImproving_(useImproving),
+                strongPersistency_(strongPersistency),
+                saveMem_(saveMem),
+                nThreads_(nThreads)
+            {
             }
-            ValueType strongPersistency_;
+            bool strongPersistency_;
             bool useProbing_;
-            ValueType useImproving_;
-            uint64_t nThreads_;
+            bool useImproving_;
             bool saveMem_;
+            uint64_t nThreads_;
+            
         };
 
 
 
-        Qpbo(const Model & model, const Options & options = Options())
+        Qpbo(const Model & model, const Options & options = Options() )
         :   BaseInf(),
             model_(model),
             denseVarIds_(model),
@@ -73,7 +80,7 @@ namespace inference{
             qpbo_->AddNode(nVar);
 
 
-             for(const auto factor : model_.factors()){
+            for(const auto factor : model_.factors()){
                 const auto arity = factor->arity();
                 if(arity == 0){
                     INFERNO_CHECK(false, "constant factors are not allowed anymore!");
@@ -90,8 +97,9 @@ namespace inference{
                     qpbo_->AddPairwiseTerm(qpboVi0, qpboVi1,factor->eval2(0,0), factor->eval2(0,1),
                         factor->eval2(1,0), factor->eval2(1,1));
                 }
-                else
+                else{
                     throw RuntimeError("INTERNAL ERROR: model_.maxArity() must have a bug");
+                }
             }
             qpbo_->MergeParallelEdges();
         }
@@ -118,10 +126,12 @@ namespace inference{
             value_ = constTerm_ + 0.5 * qpbo_->ComputeTwiceEnergy();
             bound_ = constTerm_ + 0.5 * qpbo_->ComputeTwiceLowerBound();
 
-            if(options_.useProbing_)
+            if(options_.useProbing_){
                 throw NotImplementedException("useProbing will be implemented soon");
-            if(options_.useImproving_)
+            }
+            if(options_.useImproving_){
                 throw NotImplementedException("useImproving will be implemented soon");
+            }
 
             if(visitor!=NULL)
                 visitor->end(this);
@@ -147,6 +157,12 @@ namespace inference{
             else 
                 return 0;
         }
+
+        virtual bool isPartialOptimal(const Vi vi){
+            const auto qpboLabel = qpbo_->GetLabel(denseVarIds_.toDense(vi));
+            return qpboLabel == 0 || qpboLabel == 1;
+        }
+
         // get model
         virtual const Model & model() const{
             return model_;

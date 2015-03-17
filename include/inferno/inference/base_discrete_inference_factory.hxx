@@ -63,7 +63,7 @@ namespace inference{
             return std::make_shared<Inference>(model, options_);
         }
     private:
-        const Options & options_;
+        Options options_;
     };
     
 

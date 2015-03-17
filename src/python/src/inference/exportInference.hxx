@@ -21,30 +21,45 @@
 namespace inferno{
 namespace inference{
 
+    inline std::string lowerFirst(const std::string & in){
+        std::string out = in;
+        out[0] = std::tolower(out[0]);
+        return out;
+    }
 
     namespace bp = boost::python;
 
 
     template<class INF>
     struct ExportInferenceFactory{
+        typedef INF Inference;
+        typedef typename Inference::Model Model;
+        typedef DiscreteInferenceBase<Model> BaseInf;
+        typedef BaseDiscreteInferenceFactory<Model> BaseInfFactory;
+        typedef DiscreteInferenceFactory<INF> InfFactory;
+
         static void op(const std::string  & modelName, const std::string & infName){
 
-            typedef INF Inference;
-            typedef typename Inference::Model Model;
-            typedef DiscreteInferenceBase<Model> BaseInf;
-            typedef BaseDiscreteInferenceFactory<Model> BaseInfFactory;
-            typedef DiscreteInferenceFactory<INF> InfFactory;
 
             namespace bp = boost::python;
 
             const std::string clsName =  infName + std::string("Factory") + modelName;
+            std::string fName = clsName;
+            fName[0] = std::tolower(fName[0]);
 
             bp::class_<InfFactory, bp::bases<BaseInfFactory>,  boost::noncopyable> 
             (
-                clsName.c_str(),bp::init<>()
+                clsName.c_str(),bp::no_init
             );
 
+            bp::def(fName.c_str(), &pyFactoryFactory );
+
         }
+
+        static std::shared_ptr<BaseInfFactory>  pyFactoryFactory(
+        ){
+            return  std::make_shared<InfFactory>();
+        } 
     };
 
 
@@ -99,6 +114,27 @@ namespace inference{
         void stopInference(){
             this->get_override("stopInference")();
         }
+
+        
+        // VIRTUAL FUNCTIONS WITH DEFAULT IMPL
+
+        #if 0 
+        // get results
+        ValueType lowerBound(){
+            return this->get_override("lowerBound")();
+        }
+        ValueType upperBound(){
+            return this->get_override("upperBound")();
+        }
+        ValueType energy(){
+            return this->get_override("energy")();
+        }
+
+        // partial optimality
+        bool isPartialOptimal(const Vi vi){
+            return this->get_override("isPartialOptimal")(vi);
+        }
+        # endif
     };
 
 
@@ -131,7 +167,7 @@ namespace inference{
 
         // register the shared ptr
         bp::register_ptr_to_python< std::shared_ptr<  DiscreteInferenceBase<MODEL> > >();
-
+        bp::register_ptr_to_python< std::shared_ptr<  BaseDiscreteInferenceFactory<MODEL> > >();
         // the  base inference factory class
         const std::string baseClsFactoryName = std::string("BaseDiscreteInferenceFactory") + modelName;
         typedef BaseDiscreteInferenceFactory<MODEL> BaseInfFactory;

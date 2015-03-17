@@ -436,12 +436,12 @@ VectorSet<Key,Compare,Alloc>::swap
 
 /// clear the set
 ///
-/// erases all elements
+/// erases all elements (does not deallocate)
 template<class Key, class Compare, class Alloc>
 inline void
 VectorSet<Key,Compare,Alloc>::clear()
 {
-   vector_.clear();
+   vector_.resize(0);
 }
 
 /// key comparator

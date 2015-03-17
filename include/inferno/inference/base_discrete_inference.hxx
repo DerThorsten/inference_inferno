@@ -10,6 +10,7 @@
 #include <iostream>
 #include <iomanip>
 #include <map>
+#include <vector>
 
 #include <boost/any.hpp> 
 
@@ -68,7 +69,6 @@ namespace inference{
                     endCallBack(inf);
             }
 
-
             BeginCallBack beginCallBack;
             VisitCallBack visitCallBack;
             LoggingCallBack loggingCallBack;
@@ -120,8 +120,26 @@ namespace inference{
             return -1.0*std::numeric_limits<ValueType>::infinity();
         }
 
-        // partial optimality
-        // ???
+        /// check if a certain variable is partial optimal partial optimality
+        virtual bool isPartialOptimal(const Vi vi){
+            return false;
+        }
+
+        /// some solvers can guarantee that some labels
+        /// can be excluded in the (unknown) global optimal solutions
+        virtual void excludedLabels(const Vi vi, VectorSet<DiscreteLabel> & excludedLabes){
+            excludedLabes.clear();
+            if(this->isPartialOptimal(vi)){
+                const auto optLabel = this->label(vi);
+                const auto & model = this->model();
+                const auto nLabels = model.nLabels(vi);
+                excludedLabes.reserve(nLabels-1);
+                for(DiscreteLabel l=0; l<nLabels; ++l){
+                    if(l!=optLabel)
+                        excludedLabes.insert(l);
+                }
+            }
+        }
 
         // model has changed
         virtual void graphChange() {
