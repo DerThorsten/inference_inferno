@@ -435,7 +435,7 @@ public:
     bool isSecondOrderModifiedMultiwaycutModel(std::vector<bool> & allowCutsInSemanticClass) const{
         // model must have an arity of 2
         if( model().maxArity() == 2){
-            const DiscreteLabel nLabels;
+            DiscreteLabel nLabels;
             // first simple check
             // - do all variables have the same number of labels
             if(model().hasSimpleLabelSpace(nLabels)){
