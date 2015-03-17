@@ -199,9 +199,7 @@ public:
     /// \brief evaluate the energy of the model for a certain configuration
     template<class CONFIG>
     double eval(const CONFIG  &conf)const{
-
-        std::cout<<"is DENSE "<<VariableIdsPolicy::HasDenseIds<<"\n";
-
+        
         double sum = 0.0;
         const size_t maxArity = model().maxArity();
         std::vector<LabelType> confBuffer(maxArity);
@@ -479,6 +477,29 @@ public:
             }
         }
         return false;  
+    }
+
+
+    void guessAllowCutsWithin(std::vector<bool> & allowCutsInSemanticClass) const{
+        DiscreteLabel nLabels;
+        if(model().hasSimpleLabelSpace(nLabels)){
+            allowCutsInSemanticClass.clear();
+            // get the number of semantic classes
+            // where cuts within is allowed
+            const auto nSemanticClassesWithCuts= nLabels / model().nVariables();
+            const auto nSemanticClassesWithoutCuts = nLabels - nSemanticClassesWithCuts*model().nVariables();
+
+            allowCutsInSemanticClass.resize(0);
+            allowCutsInSemanticClass.reserve(nSemanticClassesWithCuts + nSemanticClassesWithoutCuts);
+
+            for(auto i=0; i<nSemanticClassesWithoutCuts; ++i)
+                allowCutsInSemanticClass.push_back(false);
+            for(auto i=0; i<nSemanticClassesWithCuts; ++i)
+                allowCutsInSemanticClass.push_back(true);
+        }
+        else{
+            allowCutsInSemanticClass.resize(0);
+        }
     }
 
 private:

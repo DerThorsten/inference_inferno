@@ -41,10 +41,10 @@ namespace models{
 
 
 
-    template<class T, class VI>
+    template<class VI, class T>
     void addPottsFactors(ModifiedMultiwaycutModel & model, 
                const vigra::NumpyArray<1, T> & betas,
-               const vigra::NumpyArray<2, T> & vis
+               const vigra::NumpyArray<2, VI> & vis
     ){
         INFERNO_CHECK_OP(betas.shape(0), == ,vis.shape(0),"vis.shape does not match betas.shape");
         INFERNO_CHECK_OP(vis.shape(1), == ,2," wrong vi shape");
@@ -59,10 +59,10 @@ namespace models{
     }
 
 
-    template<class T, class VI>
+    template<class VI, class T>
     void addUnaryFactors(ModifiedMultiwaycutModel & model, 
                const vigra::NumpyArray<2, T> & semanticCosts,
-               const vigra::NumpyArray<1, T> & vis
+               const vigra::NumpyArray<1, VI> & vis
     ){
         INFERNO_CHECK_OP(semanticCosts.shape(0), == ,vis.shape(0),"vis.shape does not match semanticCosts.shape");
         INFERNO_CHECK_OP(semanticCosts.shape(1), == ,model.nSemanticClasses(),
@@ -84,7 +84,7 @@ namespace models{
             .def(export_helper::ExportModelAPI<Model>("ModifiedMultiwaycutModel"))
 
 
-            .def("addPottsFactors",vigra::registerConverters(&addPottsFactors<int64_t, float>))
+            .def("",vigra::registerConverters(&addPottsFactors<int64_t, float>))
             .def("addPottsFactors",vigra::registerConverters(&addPottsFactors<int32_t, float>))
             .def("addPottsFactors",vigra::registerConverters(&addPottsFactors<uint64_t, float>))
             .def("addPottsFactors",vigra::registerConverters(&addPottsFactors<uint32_t, float>))

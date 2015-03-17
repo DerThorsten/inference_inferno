@@ -26,5 +26,8 @@ def infFactoryAndCreate(model,solverName, *args, **kwargs):
 qpboFactory = partial(infFactory,solverName='qpbo')
 qpbo = partial(infFactoryAndCreate,solverName='qpbo')
 
+hmmwcFactory = partial(infFactory,solverName='hmmwc')
+hmmwc = partial(infFactoryAndCreate,solverName='hmmwc')
+
 del infFactory
 del infFactoryAndCreate
