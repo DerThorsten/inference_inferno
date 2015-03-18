@@ -7,9 +7,10 @@
 #ifndef INFERNO_INFERENCE_HMMWC_HXX
 #define INFERNO_INFERENCE_HMMWC_HXX
 
+
 #include "inferno/inferno.hxx"
 #include "inferno/inference/base_discrete_inference.hxx"
-#include "inferno/model/factors_of_variables.hxx"
+#include "inferno/utilities/ufd.hxx"
 
 namespace inferno{
 
@@ -73,8 +74,10 @@ namespace inference{
                             argMin = label;
                         }
                     }
-                    conf_[fac->vi(0)] = argMin;
-                    lowerBound_ += minVal;
+                    const auto vi = fac->vi(0);
+                    conf_[vi] = argMin;
+                    semanticConf_[vi] = argMin;
+                    partitionConf_[vi] = argMin;
                 }
                 else{
                     ValueType beta;
