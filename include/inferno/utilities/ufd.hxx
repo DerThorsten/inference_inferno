@@ -5,7 +5,7 @@
 #include <map>
 
 namespace inferno {
-namespace utitlities{
+namespace utilities{
 
 /// Disjoint set data structure with path compression.
 /// \ingroup datastructures
@@ -24,7 +24,8 @@ public:
     value_type numberOfSets() const;
     template<class Iterator> void elementLabeling(Iterator) const;
     template<class Iterator> void representatives(Iterator) const;
-    void representativeLabeling(std::map<value_type, value_type>&) const;
+    template<class MAP_TYPE>
+    void representativeLabeling( MAP_TYPE &) const;
 
     // manipulation
     void reset(const value_type&);
@@ -212,10 +213,11 @@ Ufd<T>::representatives
 /// \param out (Output) A map that assigns each representative element to its label.
 ///
 template<class T>
+template<class MAP_TYPE>
 inline void
 Ufd<T>::representativeLabeling
 (
-std::map<value_type, value_type>& out
+MAP_TYPE & out
 ) const
 {
     out.clear();

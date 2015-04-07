@@ -33,11 +33,6 @@
 
 
 
-// thread pool to run user's functors with signature
-//      ret func(int id, other_params)
-// where id is the index of the thread that runs the functor
-// ret is some return type
-
 #include <vector>
 #include <queue>
 #include <memory>

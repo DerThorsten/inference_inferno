@@ -9,11 +9,6 @@
 #include <functional>
 
 #include "boost/format.hpp"
-
-#ifdef WITH_OPENMP
-#include <omp.h>
-#endif
-
 #include "inferno/inferno.hxx"
 #include "inferno/utilities/delegate.hxx"
 #include "inferno/utilities/parallel/parallel.hxx"
@@ -328,9 +323,8 @@ namespace inference{
                     factor->facToVarMsg(varToFac.data(), facToVar.data()); 
                     break;
                 }
-
-                #undef SEND_FAC_TO_VAR_MS
             }
+            #undef SEND_FAC_TO_VAR_MS
         }
 
         ValueType sendVarToFac(const Vi vi, const int tid){

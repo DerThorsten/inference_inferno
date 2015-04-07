@@ -11,6 +11,10 @@
 #include "inferno/inferno.hxx"
 #include "inferno/inference/base_discrete_inference.hxx"
 #include "inferno/utilities/ufd.hxx"
+#include "inferno/model/algorithms/connected_components.hxx"
+    
+#include "inferno/utilities/parallel/parallel.hxx"
+#include "inferno/utilities/parallel/pool.hxx"
 
 namespace inferno{
 
@@ -19,14 +23,17 @@ namespace inference{
 
     template<class MODEL>
     class Hmmwc  : public DiscreteInferenceBase<MODEL> {
+
     public:
         typedef MODEL Model;
         typedef Hmmwc<MODEL> Self;
         typedef DiscreteInferenceBase<MODEL> BaseInf;
         typedef typename BaseInf::Visitor Visitor;
         typedef typename MODEL:: template VariableMap<DiscreteLabel> Conf;
-        typedef typename MODEL:: template VariableMap<uint8_t> UIn8VarMap;
-
+    private:
+        typedef models::ConnectedComponents<Model> ConnectedComp;
+        typedef typename ConnectedComp::Options CCOpt;
+    public:
         
         struct Options{
 
@@ -37,6 +44,7 @@ namespace inference{
         Hmmwc(const Model & model, const Options & options = Options())
         :   BaseInf(),
             model_(model),
+            connectedComp_(model,CCOpt{true}),
             conf_(model, 0),
             semanticConf_(model,0),
             partitionConf_(model,0),
@@ -74,6 +82,7 @@ namespace inference{
                             argMin = label;
                         }
                     }
+                    std::cout<<argMin<<" ["<<minVal<<"]\n";
                     const auto vi = fac->vi(0);
                     conf_[vi] = argMin;
                     semanticConf_[vi] = argMin;
@@ -90,6 +99,18 @@ namespace inference{
             }
         }
 
+        void topDownSplitting(){
+            std::cout<<"to-down-splitting\n";
+            const Vi nCC = connectedComp_.run(partitionConf_) + 1;
+
+            std::cout<<"vars "<<model_.nVariables()<<" nCC "<<nCC<<"\n\n";
+
+            for(const auto anchor : connectedComp_.anchors()){
+                std::cout<<" anchors "<<anchor<<"\n";
+            }
+
+        }
+
 
         // MUST HAVE INTERACE
         virtual std::string name() const {
@@ -103,6 +124,8 @@ namespace inference{
 
             
             this->computeTrivialLowerBoundUpperBound();
+            this->topDownSplitting();
+
 
             if(visitor!=NULL)
                 visitor->visit(this);    
@@ -147,7 +170,10 @@ namespace inference{
         }
 
     private:
+
+
         const Model & model_;
+        ConnectedComp connectedComp_;
         Conf conf_;
         Conf semanticConf_;
         Conf partitionConf_;
