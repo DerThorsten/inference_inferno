@@ -6,6 +6,9 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/value_tables/discrete_value_table_base.hxx"
+#include "inferno/value_tables/discrete_unary_value_table_base.hxx"
+#include "inferno/model/discrete_factor_base.hxx"
+#include "inferno/model/discrete_unary_base.hxx"
 #include "inferno/model/discrete_model_base.hxx"
 #include <boost/iterator/counting_iterator.hpp>
 
@@ -53,8 +56,6 @@ public:
         return model_->facShape(visOffset_, d);
     }
 
-
-
     VariableDescriptor variable(const size_t d)const{
         return model_->facVis(visOffset_, d);
     }
@@ -71,7 +72,7 @@ private:
 /** \brief Factor class for the GeneralDiscreteModel
 */
 template<class MODEL>
-class GeneralDiscreteGraphicalModelUnary : public DiscreteFactorBase<GeneralDiscreteGraphicalModelUnary<MODEL> > {
+class GeneralDiscreteGraphicalModelUnary : public DiscreteUnaryBase<GeneralDiscreteGraphicalModelUnary<MODEL> > {
 public:
 
     typedef typename MODEL::VariableDescriptor VariableDescriptor;
@@ -85,30 +86,30 @@ public:
 
 
     GeneralDiscreteGraphicalModelUnary(const MODEL * model ,
-                                             const value_tables::DiscreteValueTableBase * vt,
-                                             const VariableDescriptor var)
+                                       const value_tables::DiscreteUnaryValueTableBase * vt,
+                                       const VariableDescriptor var)
     :   model_(model),
         vt_(vt),
         var_(var){
 
     }
-    const value_tables::DiscreteValueTableBase * valueTable()const{
+    const value_tables::DiscreteUnaryValueTableBase * unaryValueTable()const{
         return vt_;
     }   
     uint32_t arity()const{
         return 1;
     }
-    LabelType shape(const size_t d)const{
+    LabelType shape( )const{
         return model_->nLabels(var_);
     }
 
-    VariableDescriptor variable(const size_t d)const{
+    VariableDescriptor variable()const{
         return var_;
     }
 
 private:
     const MODEL * model_;
-    const value_tables::DiscreteValueTableBase * vt_;
+    const value_tables::DiscreteUnaryValueTableBase * vt_;
     VariableDescriptor var_;
 
 };
@@ -129,6 +130,7 @@ public DiscreteGraphicalModelBase<GeneralDiscreteModel>{
     friend class GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel>;
 private:
     typedef  GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel> Ftype;
+    typedef  GeneralDiscreteGraphicalModelUnary<GeneralDiscreteModel> Utype;
 public:
     typedef boost::counting_iterator<uint64_t> FactorIdIter;
     typedef boost::counting_iterator<Vi> VariableIdIter;
@@ -235,6 +237,9 @@ public:
     template<class CONFIG>
     double eval(const CONFIG  & conf)const{
         double sum = 0.0;
+        for(const auto unary : this->unaries()){
+            sum += unary->eval(conf[unary->variable()]);
+        }
         switch(maxArity_){
             case 1 :{
                 for(size_t i=0; i<factors_.size(); ++i){
@@ -299,7 +304,7 @@ public:
         return UnaryDescriptorIter(0);
     }
     UnaryDescriptorIter unaryDescriptorsEnd()const{
-        return UnaryDescriptorIter(factors_.size());
+        return UnaryDescriptorIter(unaries_.size());
     }
     VariableDescriptorIter variableDescriptorsBegin()const{
         return VariableDescriptorIter(0);
@@ -341,22 +346,12 @@ public:
         return vi;
     }
 
-    size_t nUnaries()const{
-        return unaries_.size();
-    }
-
-
-
     FactorProxy factor(const FactorDescriptor factorDescriptor)const{
         return &factors_[factorDescriptor];
     }
     UnaryProxy unary(const UnaryDescriptor unaryDescriptor)const{
         return &unaries_[unaryDescriptor];
     }
-
-
-
-
 
 
     LabelType nLabels(const VariableDescriptor variableDescriptor)const{
@@ -401,6 +396,25 @@ public:
     uint64_t addFactor(const uint64_t vti , std::initializer_list<VI_T>  list){
         return this->addFactor(vti, list.begin(), list.end());
     }
+
+
+    uint64_t addUnaryValueTable( value_tables::DiscreteUnaryValueTableBase * uvt){
+        unaryValueTables_.push_back(uvt);
+        return unaryValueTables_.size()-1;
+    }
+
+    uint64_t addUnary(const uint64_t vti , VariableDescriptor var){
+        size_t arity=0;
+        
+        INFERNO_CHECK_OP(nLabels(var),==,unaryValueTables_[vti]->size(),
+            "numberOfLabels(var) does not match size of unary value table");
+        const auto unary = Utype(this,unaryValueTables_[vti], var);        
+        unaries_.push_back(unary);
+        maxArity_  = std::max(size_t(1), maxArity_);
+        return unaries_.size()-1;
+    }
+
+
     size_t maxArity()const{
         return maxArity_;
     }
@@ -415,9 +429,13 @@ private:
 
     const uint64_t nVar_;
     std::vector<LabelType>              numberOfLabels_;
+
     std::vector<value_tables::DiscreteValueTableBase * >  valueTables_;
+    std::vector<value_tables::DiscreteUnaryValueTableBase * >  unaryValueTables_;
+
     std::vector<GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel> > factors_;
     std::vector<GeneralDiscreteGraphicalModelUnary<GeneralDiscreteModel> > unaries_;
+
     typedef std::vector<VariableDescriptor> FacVarStorage;
     FacVarStorage facVarDesc_;
     size_t maxArity_;

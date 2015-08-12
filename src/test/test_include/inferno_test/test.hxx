@@ -7,14 +7,16 @@
 #include <random>
 #include <cmath>
 
+#include <boost/test/unit_test.hpp>
+#include <boost/test/floating_point_comparison.hpp>
+
 #include <boost/iterator/counting_iterator.hpp>
 
 #include "inferno/inferno.hxx"
 #include "inferno/model/general_discrete_model.hxx"
-#include "inferno/value_tables/potts.hxx"
-#include "inferno/value_tables/unary.hxx"
 
-#define TEST_EPS 0.00001
+
+#define TEST_EPS 0.00000001
 
 // Have to make it a macro so that it reports exact line numbers when checks fail.
 #define INFERNO_CHECK_EQ_COLLECTION(aa, bb) { \
@@ -107,6 +109,16 @@
 } 
 
 
+#define CHECK_FACTOR_NUM_LABELS_SANITY(model) \
+for(const auto f : model.factors()){ \
+    const auto arity = f->arity(); \
+    for(size_t i=0; i<arity; ++i){ \
+        const auto var = f->variable(i); \
+        BOOST_CHECK_EQUAL(f->shape(i),model.nLabels(var)); \
+    } \
+}
+
+
 #define INFERNO_CHECK_EMPTY_MODEL(model)\
     BOOST_CHECK_EQUAL(model.nVariables(),0); \
     BOOST_CHECK_EQUAL(model.nFactors(),0); \
@@ -143,51 +155,51 @@
 namespace inferno{
 namespace models{
 
-    template<class T>
-    GeneralDiscreteModel grid2d(
-        std::initializer_list<T> shape, 
-        const DiscreteLabel  nLabels,
-        const ValueType beta = 1.0,
-        const bool submodular = false
-    ){
-        std::vector<DiscreteLabel> vShape(shape.begin(),shape.end());
-        const Vi nVar = vShape[0]*vShape[1];
-        GeneralDiscreteModel model(nVar, nLabels);
+    // template<class T>
+    // GeneralDiscreteModel grid2d(
+    //     std::initializer_list<T> shape, 
+    //     const DiscreteLabel  nLabels,
+    //     const ValueType beta = 1.0,
+    //     const bool submodular = false
+    // ){
+    //     std::vector<DiscreteLabel> vShape(shape.begin(),shape.end());
+    //     const Vi nVar = vShape[0]*vShape[1];
+    //     GeneralDiscreteModel model(nVar, nLabels);
 
-        std::mt19937 engine; 
+    //     std::mt19937 engine; 
 
-        std::uniform_real_distribution<ValueType> dUnary(0,1); //Values between -1 and 1
-        auto uGen = std::bind(dUnary, engine);
+    //     std::uniform_real_distribution<ValueType> dUnary(0,1); //Values between -1 and 1
+    //     auto uGen = std::bind(dUnary, engine);
 
-        std::uniform_real_distribution<ValueType> dBinary(submodular ? 0 : -beta,beta); //Values between -1 and 1
-        auto bGen = std::bind(dBinary, engine);
+    //     std::uniform_real_distribution<ValueType> dBinary(submodular ? 0 : -beta,beta); //Values between -1 and 1
+    //     auto bGen = std::bind(dBinary, engine);
 
-        std::vector<ValueType> values(nLabels);
+    //     std::vector<ValueType> values(nLabels);
 
-        for(Vi vi=0; vi<nVar; ++vi){
-            for(auto & v : values)
-                v = uGen();
-            auto vti = model.addValueTable(new value_tables::UnaryValueTable(values.begin(), values.end()) );
-            auto fi = model.addFactor(vti ,{vi});
+    //     for(Vi vi=0; vi<nVar; ++vi){
+    //         for(auto & v : values)
+    //             v = uGen();
+    //         auto vti = model.addValueTable(new value_tables::UnaryValueTable(values.begin(), values.end()) );
+    //         auto fi = model.addFactor(vti ,{vi});
 
-        }
+    //     }
 
-        for(int y=0; y<vShape[1]; ++y)
-        for(int x=0; x<vShape[0]; ++x){
-            const auto vi0  = x + y*vShape[0];
-            if(x + 1 < vShape[0]){
-                const auto vi1  = x + 1 + y*vShape[0];
-                auto vti = model.addValueTable(new value_tables::PottsValueTable(nLabels, bGen( )));
-                auto fi = model.addFactor(vti ,{vi0, vi1});
-            }
-            if(x + 1 < vShape[0]){
-                const auto vi1  = x + 1 + y*vShape[0];
-                auto vti = model.addValueTable(new value_tables::PottsValueTable(nLabels, bGen()));
-                auto fi = model.addFactor(vti ,{vi0, vi1});
-            }
-        }
-        return model;
-    }
+    //     for(int y=0; y<vShape[1]; ++y)
+    //     for(int x=0; x<vShape[0]; ++x){
+    //         const auto vi0  = x + y*vShape[0];
+    //         if(x + 1 < vShape[0]){
+    //             const auto vi1  = x + 1 + y*vShape[0];
+    //             auto vti = model.addValueTable(new value_tables::PottsValueTable(nLabels, bGen( )));
+    //             auto fi = model.addFactor(vti ,{vi0, vi1});
+    //         }
+    //         if(x + 1 < vShape[0]){
+    //             const auto vi1  = x + 1 + y*vShape[0];
+    //             auto vti = model.addValueTable(new value_tables::PottsValueTable(nLabels, bGen()));
+    //             auto fi = model.addFactor(vti ,{vi0, vi1});
+    //         }
+    //     }
+    //     return model;
+    // }
 
 } // end namespace models
 } // end namespace inferno

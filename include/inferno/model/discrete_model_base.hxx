@@ -76,7 +76,7 @@ struct MaxElement<std::bidirectional_iterator_tag, true>{
 
 
 /** \brief Proxy class to use range based loop
-    for models variables ids
+    for models variables descriptors
 */
 template<class MODEL>
 class ModelVariableDescriptors{
@@ -97,7 +97,7 @@ private:
 };
 
 /** \brief Proxy class to use range based loop
-    for models factor ids
+    for models factor descriptors
 */
 template<class MODEL>
 class ModelsFactorDescriptors{
@@ -117,6 +117,26 @@ private:
     const MODEL & model_;
 };
 
+/** \brief Proxy class to use range based loop
+    for models unary descriptors
+*/
+template<class MODEL>
+class ModelsUnaryDescriptors{
+public:
+    ModelsUnaryDescriptors(const MODEL & model) 
+    :   model_(model){
+
+    }//
+    typedef typename MODEL::UnaryDescriptorIter const_iterator;
+    const_iterator begin()const{
+        return model_.unaryDescriptorsBegin();
+    }
+    const_iterator end()const{
+        return model_.unaryDescriptorsEnd();
+    }
+private:
+    const MODEL & model_;
+};
 
 /// \cond
 template<class MODEL>
@@ -178,6 +198,20 @@ struct FactorDescriptorToFactorProxy{
     }
     const MODEL * model_;
 };
+
+template<class MODEL>
+struct UnaryDescriptorToUnaryProxy{
+    typedef typename MODEL::UnaryProxy result_type;
+    typedef typename MODEL::UnaryDescriptor UnaryDescriptor;
+    UnaryDescriptorToUnaryProxy(const MODEL & model)
+    : model_(&model){
+
+    }//
+    result_type operator()(const UnaryDescriptor udesc)const{
+        return model_->unary(udesc);
+    }
+    const MODEL * model_;
+};
 /// \endcond
 
 /** \brief Proxy class to use range based loop
@@ -204,7 +238,29 @@ private:
     const MODEL & model_;
 };
 
+/** \brief Proxy class to use range based loop
+    for models unaries
+*/
+template<class MODEL>
+class ModelsUnaries{
+public:
+    ModelsUnaries(const MODEL & model) 
+    :   model_(model){
 
+    }//
+    typedef typename MODEL::UnaryDescriptorIter UnaryDescriptorIter;
+    typedef UnaryDescriptorToUnaryProxy<MODEL> UnaryFunction;
+    typedef boost::transform_iterator<UnaryFunction, UnaryDescriptorIter> const_iterator;
+
+    const_iterator begin()const{
+        return boost::make_transform_iterator(model_.unaryDescriptorsBegin(), UnaryFunction(model_));
+    }
+    const_iterator end()const{
+        return boost::make_transform_iterator(model_.unaryDescriptorsEnd(), UnaryFunction(model_));
+    }
+private:
+    const MODEL & model_;
+};
 
 
 /** \brief Base class for any discrete model class
@@ -253,16 +309,13 @@ public:
         double sum = 0.0;
         const size_t maxArity = model().maxArity();
         std::vector<LabelType> confBuffer(maxArity);
-        auto fiter = model().factorIdsBegin();
-        auto fiterEnd = model().factorIdsEnd();
-        for(;fiter!=fiterEnd; ++fiter){
-            const auto factorId = *fiter;
-            const auto factor = model().factor(factorId);
-            
+        for(const auto factor : model().factors()){
             // get the configuration of the factor
             factor->getFactorConf(conf, confBuffer.begin());
-
             sum += factor->eval(confBuffer.data());
+        }
+        for(const auto unary: model().unaries()){
+            sum += unary->eval(conf[unary->variable()]);
         }
         return sum;
     }
@@ -344,6 +397,13 @@ public:
     uint64_t nFactors() const {
         return std::distance(model().factorDescriptorsBegin(), model().factorDescriptorsEnd());
     }
+
+    /// \brief number of factors in the graphical model
+    uint64_t nUnaries() const {
+        return std::distance(model().unaryDescriptorsBegin(), model().unaryDescriptorsEnd());
+    }
+
+
 
     /** \brief get the minimal variable id in the model
 
@@ -436,32 +496,13 @@ public:
         }
     }
 
-    /// \brief the number of unary factors in
-    /// the graphical model
-    ///
-    /// this function should be overloaded by 
-    /// all models where this can be computed
-    /// efficiently
-    Fi nUnaryFactors()const{
-        Fi nUnarys = 0;
-        auto fiter = model().factorIdsBegin();
-        auto fiterEnd = model().factorIdsEnd();
-        for(;fiter!=fiterEnd; ++fiter){
-            auto factorId = *fiter;
-            auto factor = model().factor(factorId);
-            if(factor->arity()==1){
-                ++nUnarys;
-            }
-        }
-        return nUnarys;
-    }
+
 
     /// \brief check if the model has any unary at all
     bool hasUnaries() const {
-        for(const auto factor : model().factors())
-            if(factor->arity() == true)
-                return true;
-        return false;
+        const auto b = model().unaryDescriptorsBegin();
+        const auto e = model().unaryDescriptorsEnd();
+        return b != e;
     }
 
     /// \brief the number of second order factors in
@@ -487,10 +528,15 @@ public:
     ModelsFactorDescriptors<MODEL> factorDescriptors() const{
         return ModelsFactorDescriptors<MODEL>(model());
     }
+    ModelsUnaryDescriptors<MODEL> unaryDescriptors() const{
+        return ModelsUnaryDescriptors<MODEL>(model());
+    }
     ModelsFactors<MODEL> factors() const{
         return ModelsFactors<MODEL>(model());
     }
-
+    ModelsUnaries<MODEL> unaries() const{
+        return ModelsUnaries<MODEL>(model());
+    }
 
     /// at least for one semantic class allow cuts within must 
     /// be true.

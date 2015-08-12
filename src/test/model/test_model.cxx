@@ -1,27 +1,24 @@
 #define BOOST_TEST_MODULE ModelTest
 #include <boost/test/unit_test.hpp>
+#include "inferno_test/test.hxx"
 
 #include <random>
 #include <iostream>
+
+
 
 #include "inferno/model/general_discrete_model.hxx"
 #include "inferno/model/general_discrete_tl_model.hxx"
 #include "inferno/model/sparse_discrete_model.hxx"
 #include "inferno/model/implicit_multicut_model.hxx"
-
-
 #include "inferno/value_tables/potts.hxx"
-#include "inferno/value_tables/unary.hxx"
-#define TEST_EPS 0.00001
+#include "inferno/value_tables/new_unary.hxx"
 
 
 
 
 
-
-
-
-
+/*
 BOOST_AUTO_TEST_CASE(TestImplicitMulticutModel)
 {
     using namespace inferno;
@@ -130,9 +127,9 @@ BOOST_AUTO_TEST_CASE(TestDifferentTypesGrid)
     VModel  vModel(nVar, nLabes);
 }
 
+*/
 
-
-BOOST_AUTO_TEST_CASE(TestModel)
+BOOST_AUTO_TEST_CASE(TestGeneralDiscreteModel_1)
 {
     using namespace inferno;
 
@@ -146,22 +143,18 @@ BOOST_AUTO_TEST_CASE(TestModel)
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(-1, 1);
 
-
-
-    
+  
     std::uniform_real_distribution<float> distribution(-1,1); //Values between -1 and 1
     std::mt19937 engine; // Mersenne twister MT19937
     auto generator = std::bind(distribution, engine);
     std::vector<ValueType> values(nLabes); 
     // unary factors
 
-
-    
     for(Vi vi=0; vi<nVar; ++vi){
         for(auto & v : values)
             v = generator();
-        auto vti = model.addValueTable(new value_tables::UnaryValueTable(values.begin(), values.end()) );
-        auto fi = model.addFactor(vti ,{vi});
+        auto vti = model.addUnaryValueTable(new value_tables::UnaryValueTable(values.begin(), values.end()) );
+        auto fi = model.addUnary(vti ,vi);
     }
 
     // second order
@@ -173,4 +166,61 @@ BOOST_AUTO_TEST_CASE(TestModel)
         const auto factor = model.factor(fi);
 
     }
+}
+
+
+
+BOOST_AUTO_TEST_CASE(TestGeneralDiscreteModel_2)
+{
+    using namespace inferno;
+
+    const LabelType nLabes = 2;
+    const Vi nVar = 2;
+
+    models::GeneralDiscreteModel model(nVar, nLabes);
+    
+    auto v0 = new value_tables::UnaryValueTable({1.0,2.0});
+    auto v1 = new value_tables::UnaryValueTable({3.0,7.0});
+    auto v01 = new value_tables::PottsValueTable(2, 3.0);
+
+    auto i0  = model.addUnaryValueTable(v0);
+    auto i1  = model.addUnaryValueTable(v1);
+    auto i01 = model.addValueTable(v01);
+
+    auto u0 = model.addUnary(i0, 0);
+    auto u1 = model.addUnary(i1, 1);
+    auto f10 = model.addFactor(i01, {0,1});
+
+
+    CHECK_FACTOR_NUM_LABELS_SANITY(model);
+
+    BOOST_CHECK_EQUAL(model.nFactors(),1);
+    BOOST_CHECK_EQUAL(model.nUnaries(),2);
+
+    BOOST_CHECK_EQUAL(model.unary(0)->variable(),0);
+    BOOST_CHECK_EQUAL(model.unary(1)->variable(),1);
+
+    BOOST_CHECK_EQUAL(model.factor(0)->variable(0),0);
+    BOOST_CHECK_EQUAL(model.factor(0)->variable(1),1);
+
+    {
+        DiscreteLabel conf[2] = {0,0};
+        BOOST_CHECK_CLOSE(model.eval(conf),4.0, TEST_EPS);
+    }
+    {
+        DiscreteLabel conf[2] = {0,1};
+        BOOST_CHECK_CLOSE(model.eval(conf),11.0, TEST_EPS);
+    }
+    {
+        DiscreteLabel conf[2] = {1,1};
+        BOOST_CHECK_CLOSE(model.eval(conf),9.0, TEST_EPS);
+    }
+    {
+        DiscreteLabel conf[2] = {1,0};
+        BOOST_CHECK_CLOSE(model.eval(conf),8.0, TEST_EPS);
+    }
+
+
+
+
 }

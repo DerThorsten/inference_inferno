@@ -2,8 +2,8 @@
     \brief inferno::value_tables::DiscreteValueTableBase
     is implemented in this header. 
 */
-#ifndef INFERNO_VALUE_TABLES_CONSTRAIN_DISCRETE_VALUE_TYPE_BASE_HXX
-#define INFERNO_VALUE_TABLES_CONSTRAIN_DISCRETE_VALUE_TYPE_BASE_HXX
+#ifndef INFERNO_VALUE_TABLES_DISCRETE_UNARY_VALUE_TABLE_BASE_HXX
+#define INFERNO_VALUE_TABLES_DISCRETE_UNARY_VALUE_TABLE_BASE_HXX
 
 #include <cstdint>
 #include <vector>
@@ -28,14 +28,16 @@ namespace value_tables{
 class DiscreteUnaryValueTableBase
 {
 public:
-    DiscreteUnaryValueTableBase():DiscreteValueTableBase(){
+    DiscreteUnaryValueTableBase(){
     }
     virtual ~DiscreteUnaryValueTableBase() = default;
-    virtual size() const = 0;
-    virtual eval(const DiscreteLabel l ) = 0;
+
+    virtual DiscreteLabel size() const = 0;
+    virtual ValueType eval(const DiscreteLabel l ) const = 0;
+
 };
 
 } // end namespace value_tables
 } // end namespace inferno
 
-#endif /*INFERNO_VALUE_TABLES_CONSTRAIN_DISCRETE_VALUE_TYPE_BASE_HXX*/
+#endif /*INFERNO_VALUE_TABLES_DISCRETE_UNARY_VALUE_TABLE_BASE_HXX*/
