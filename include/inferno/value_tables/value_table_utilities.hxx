@@ -114,7 +114,7 @@ namespace value_tables{
             // minimize
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const ValueType facVal = vt->eval2(l0, l1);
+                const ValueType facVal = vt->eval(l0, l1);
                 outMsgs[0][l0] = std::min(outMsgs[0][l0], facVal + inMsgs[1][l1]);
                 outMsgs[1][l1] = std::min(outMsgs[1][l1], facVal + inMsgs[0][l0]);
             }
@@ -132,7 +132,7 @@ namespace value_tables{
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const ValueType facVal = vt->eval3(l0, l1, l2);
+                const ValueType facVal = vt->eval(l0, l1, l2);
                 outMsgs[0][l0] = std::min(outMsgs[0][l0], facVal + inMsgs[1][l1] + inMsgs[2][l2]);
                 outMsgs[1][l1] = std::min(outMsgs[1][l1], facVal + inMsgs[0][l0] + inMsgs[2][l2]);
                 outMsgs[2][l2] = std::min(outMsgs[2][l2], facVal + inMsgs[0][l0] + inMsgs[1][l1]);
@@ -152,7 +152,7 @@ namespace value_tables{
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const ValueType facVal = vt->eval4(l0, l1, l2, l3);
+                const ValueType facVal = vt->eval(l0, l1, l2, l3);
                 outMsgs[0][l0] = std::min(outMsgs[0][l0], facVal + inMsgs[1][l1] + inMsgs[2][l2] + inMsgs[3][l3]);
                 outMsgs[1][l1] = std::min(outMsgs[1][l1], facVal + inMsgs[0][l0] + inMsgs[2][l2] + inMsgs[3][l3]);
                 outMsgs[2][l2] = std::min(outMsgs[2][l2], facVal + inMsgs[0][l0] + inMsgs[1][l1] + inMsgs[3][l3]);
@@ -174,7 +174,7 @@ namespace value_tables{
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const ValueType facVal = vt->eval4(l0, l1, l2, l3);
+                const ValueType facVal = vt->eval(l0, l1, l2, l3);
                 outMsgs[0][l0] = std::min(outMsgs[0][l0], facVal + inMsgs[1][l1] + inMsgs[2][l2] + inMsgs[3][l3] + inMsgs[4][l4]);
                 outMsgs[1][l1] = std::min(outMsgs[1][l1], facVal + inMsgs[0][l0] + inMsgs[2][l2] + inMsgs[3][l3] + inMsgs[4][l4]);
                 outMsgs[2][l2] = std::min(outMsgs[2][l2], facVal + inMsgs[0][l0] + inMsgs[1][l1] + inMsgs[3][l3] + inMsgs[4][l4]);
@@ -217,7 +217,7 @@ namespace value_tables{
         // minimize
         for(DiscreteLabel l1=0; l1 < nl; ++l1)
         for(DiscreteLabel l0=0; l0 < nl; ++l0){
-            const ValueType facVal = vt->eval2(l0, l1);
+            const ValueType facVal = vt->eval(l0, l1);
             outMsgs[0][l0] = std::min(outMsgs[0][l0], facVal + inMsgs[1][l1]);
             outMsgs[1][l1] = std::min(outMsgs[1][l1], facVal + inMsgs[0][l0]);
         }

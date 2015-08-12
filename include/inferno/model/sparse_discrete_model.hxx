@@ -10,9 +10,9 @@
 #include <unordered_set>
 
 #include "inferno/inferno.hxx"
-#include "inferno/value_tables/base_discrete_value_table.hxx"
+#include "inferno/value_tables/discrete_value_table_base.hxx"
 #include "inferno/model/general_discrete_model.hxx"
-#include "inferno/model/base_discrete_model.hxx"
+#include "inferno/model/discrete_model_base.hxx"
 #include <boost/iterator/counting_iterator.hpp>
 
 namespace inferno{
@@ -24,6 +24,7 @@ namespace models{
 class SparseDiscreteGraphicalModelFactor : public DiscreteFactorBase<SparseDiscreteGraphicalModelFactor> {
 public:
 
+    typedef Vi VariableDescriptor;
 
     SparseDiscreteGraphicalModelFactor()
     :   vis_(),
@@ -68,7 +69,8 @@ public:
     LabelType shape(const size_t d)const{
         return vt_->shape(d);
     }
-    Vi vi(const size_t d)const{
+
+    VariableDescriptor variable(const size_t d)const{
         return vis_[d];
     }
 
@@ -118,7 +120,18 @@ private:
     typedef std::unordered_map<Fi, FacVtiPair>                            FactorStorage;
     typedef std::unordered_map<Vi, DiscreteLabel>                         NlStorage;
 public:
-   
+    
+    typedef Fi FactorDescriptor;
+    typedef Vi VariableDescriptor;
+ 
+
+    typedef boost::transform_iterator<FacStorageKeyAccessor,
+        typename FactorStorage::const_iterator> FactorDescriptorIter;
+
+    typedef boost::transform_iterator<NlStorageKeyAccessor,
+        typename NlStorage::const_iterator> VariableDescriptorIter;
+
+
     typedef boost::transform_iterator<FacStorageKeyAccessor,
         typename FactorStorage::const_iterator> FactorIdIter;
 
@@ -146,8 +159,8 @@ public:
     public:
         VariableMap(const SparseDiscreteGraphicalModel & m, const T & val)
         : std::unordered_map<Vi, T>(){
-            for(const auto vi : m.variableIds()){
-                this->operator[](vi) = val;
+            for(const auto var : m.variableDescriptors()){
+                this->operator[](var) = val;
             }
         }//
         VariableMap(const SparseDiscreteGraphicalModel & m)
@@ -165,8 +178,8 @@ public:
     public:
         FactorMap(const SparseDiscreteGraphicalModel & m, const T & val)
         : std::unordered_map<Fi, T>(m.nFactors(),val){
-            for(const auto vi : m.factorIds()){
-                this->operator[](vi) = val;
+            for(const auto fac : m.factorDescriptors()){
+                this->operator[](fac) = val;
             }
         }
         FactorMap(const SparseDiscreteGraphicalModel & m)
@@ -188,7 +201,56 @@ public:
         return VariableIdIter(numberOfLabels_.end(), NlStorageKeyAccessor());
     }
 
-    FactorProxy operator[](const uint64_t factorId)const{
+
+    FactorDescriptorIter factorDescriptorsBegin()const{
+        return FactorIdIter(factors_.begin(), FacStorageKeyAccessor());
+    }
+    FactorDescriptorIter factorDescriptorsEnd()const{
+        return FactorIdIter(factors_.end(), FacStorageKeyAccessor());
+    }
+    VariableDescriptorIter variableDescriptorsBegin()const{
+        return VariableIdIter(numberOfLabels_.begin(), NlStorageKeyAccessor());
+    }
+    VariableDescriptorIter variableDescriptorsEnd()const{
+        return VariableIdIter(numberOfLabels_.end(), NlStorageKeyAccessor());
+    }
+
+
+    /// \brief convert factor descriptor into factor id
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    Fi factorId(const FactorDescriptor factorDescriptor)const{
+        return factorDescriptor;
+    }
+
+    /// \brief convert variable descriptor into variable id
+    ///
+    /// For this type of graphical model, variable ids and descriptors
+    /// are equivalent
+    Vi variableId(const VariableDescriptor variableDescriptor)const{
+        return variableDescriptor;
+    }
+
+    /// \brief convert factor id into factor descriptor
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    FactorDescriptor factorDescriptor(const Fi fi)const{
+        return fi;
+    }
+
+    /// \brief convert factor id into factor descriptor
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    VariableDescriptor variableDescriptor(const Vi vi)const{
+        return vi;
+    }
+
+
+
+    FactorProxy factor(const FactorDescriptor factorId)const{
         const auto it = factors_.find(factorId);
         return & it->second.first;
     }

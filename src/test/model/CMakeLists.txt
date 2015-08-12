@@ -12,9 +12,9 @@ target_link_libraries(test_model ${TEST_LIBS})
 add_test(test_model test_model)
 
 
-add_executable(test_mmwc test_mmwc.cxx )
-target_link_libraries(test_mmwc ${TEST_LIBS})
-add_test(test_mmwc test_mmwc)
+#add_executable(test_mmwc test_mmwc.cxx )
+#target_link_libraries(test_mmwc ${TEST_LIBS})
+#add_test(test_mmwc test_mmwc)
 
 
 add_executable(test_sparse_model test_sparse_model.cxx )

@@ -4,7 +4,7 @@
 #include <boost/python/def_visitor.hpp> 
 
 #include "inferno/inferno.hxx"
-#include "inferno/value_tables/base_discrete_value_table.hxx"
+#include "inferno/value_tables/discrete_value_table_base.hxx"
 
 namespace inferno{
 namespace export_helper{

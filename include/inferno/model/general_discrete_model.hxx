@@ -5,8 +5,8 @@
 #define INFERNO_MODEL_GENERAL_DISCRETE_MODEL_HXX
 
 #include "inferno/inferno.hxx"
-#include "inferno/value_tables/base_discrete_value_table.hxx"
-#include "inferno/model/base_discrete_model.hxx"
+#include "inferno/value_tables/discrete_value_table_base.hxx"
+#include "inferno/model/discrete_model_base.hxx"
 #include <boost/iterator/counting_iterator.hpp>
 
 namespace inferno{
@@ -22,6 +22,7 @@ template<class MODEL>
 class GeneralDiscreteGraphicalModelFactor : public DiscreteFactorBase<GeneralDiscreteGraphicalModelFactor<MODEL> > {
 public:
 
+    typedef typename MODEL::VariableDescriptor VariableDescriptor;
 
     GeneralDiscreteGraphicalModelFactor()
     :   model_(NULL),
@@ -30,10 +31,6 @@ public:
         visOffset_(0){
 
     }
-
-
-
-
 
 
     GeneralDiscreteGraphicalModelFactor(const MODEL * model ,
@@ -56,7 +53,9 @@ public:
         return model_->facShape(visOffset_, d);
     }
 
-    Vi vi(const size_t d)const{
+
+
+    VariableDescriptor variable(const size_t d)const{
         return model_->facVis(visOffset_, d);
     }
 
@@ -65,6 +64,52 @@ private:
     const value_tables::DiscreteValueTableBase * vt_;
     uint64_t visOffset_;
     size_t arity_;
+
+};
+
+
+/** \brief Factor class for the GeneralDiscreteModel
+*/
+template<class MODEL>
+class GeneralDiscreteGraphicalModelUnary : public DiscreteFactorBase<GeneralDiscreteGraphicalModelUnary<MODEL> > {
+public:
+
+    typedef typename MODEL::VariableDescriptor VariableDescriptor;
+
+    GeneralDiscreteGraphicalModelUnary()
+    :   model_(NULL),
+        vt_(NULL),
+        var_(){
+
+    }
+
+
+    GeneralDiscreteGraphicalModelUnary(const MODEL * model ,
+                                             const value_tables::DiscreteValueTableBase * vt,
+                                             const VariableDescriptor var)
+    :   model_(model),
+        vt_(vt),
+        var_(var){
+
+    }
+    const value_tables::DiscreteValueTableBase * valueTable()const{
+        return vt_;
+    }   
+    uint32_t arity()const{
+        return 1;
+    }
+    LabelType shape(const size_t d)const{
+        return model_->nLabels(var_);
+    }
+
+    VariableDescriptor variable(const size_t d)const{
+        return var_;
+    }
+
+private:
+    const MODEL * model_;
+    const value_tables::DiscreteValueTableBase * vt_;
+    VariableDescriptor var_;
 
 };
 
@@ -87,6 +132,20 @@ private:
 public:
     typedef boost::counting_iterator<uint64_t> FactorIdIter;
     typedef boost::counting_iterator<Vi> VariableIdIter;
+
+
+    typedef Fi       FactorDescriptor;
+    typedef Vi       VariableDescriptor;
+    typedef Vi       UnaryDescriptor;
+
+    typedef boost::counting_iterator<Vi>       UnaryDescriptorIter;
+    typedef boost::counting_iterator<Fi>       FactorDescriptorIter;
+    typedef boost::counting_iterator<Vi>       VariableDescriptorIter;
+
+
+    typedef const GeneralDiscreteGraphicalModelUnary<GeneralDiscreteModel> * UnaryProxy;
+    typedef UnaryProxy UnaryProxyRef;
+
     typedef const GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel> * FactorProxy;
     typedef FactorProxy FactorProxyRef;
 
@@ -105,7 +164,7 @@ public:
 
 
     /** \brief container which can store an instance
-        of T for any variable id.
+        of T for any variable Descriptor.
 
         \warning changing the number of the variables in
         this model will invalidate any instance VariableMap.
@@ -121,7 +180,7 @@ public:
         }
     };
     /** \brief container which can store an instance
-        of T for any factor id.
+        of T for any factor Descriptor.
 
         \warning Adding additional factors or changing the number of the factors in
         this model will invalidate any instance FactorMap.
@@ -134,6 +193,24 @@ public:
         }
         FactorMap(const GeneralDiscreteModel & m)
         : std::vector<T>(m.nFactors()){
+        }
+    };
+
+
+    /** \brief container which can store an instance
+        of T for any unary Descriptor.
+
+        \warning Adding additional factors or changing the number of the factors in
+        this model will invalidate any instance UnaryMap.
+    */
+    template<class T>
+    class UnaryMap : public std::vector<T>{
+    public:
+        UnaryMap(const GeneralDiscreteModel & m, const T & val)
+        : std::vector<T>(m.nUnaries(),val){
+        }
+        UnaryMap(const GeneralDiscreteModel & m)
+        : std::vector<T>(m.nUnaries()){
         }
     };
 
@@ -152,6 +229,9 @@ public:
     }
     */
 
+
+
+
     template<class CONFIG>
     double eval(const CONFIG  & conf)const{
         double sum = 0.0;
@@ -159,7 +239,7 @@ public:
             case 1 :{
                 for(size_t i=0; i<factors_.size(); ++i){
                     const Ftype & fac = factors_[i];
-                    sum += fac.eval1(conf[fac.vi(0)]);
+                    sum += fac.eval(conf[fac.variable(0)]);
                 }
                 return sum;
             }
@@ -168,10 +248,10 @@ public:
                     const Ftype & fac = factors_[i];
                     switch(fac.arity()){
                         case 1:
-                            sum+= fac.eval1(conf[fac.vi(0)]);
+                            sum+= fac.eval(conf[fac.variable(0)]);
                             break;
                         case 2:
-                            sum+= fac.eval2(conf[fac.vi(0)],conf[fac.vi(1)]);
+                            sum+= fac.eval(conf[fac.variable(0)],conf[fac.variable(1)]);
                             break;
                     }
                 }
@@ -183,13 +263,13 @@ public:
                     const uint32_t arity = fac.arity();
                     switch(arity){
                         case 1:
-                            sum+= fac.eval1(conf[fac.vi(0)]);
+                            sum+= fac.eval(conf[fac.variable(0)]);
                             break;
                         case 2:
-                            sum+= fac.eval2(conf[fac.vi(0)],conf[fac.vi(1)]);
+                            sum+= fac.eval(conf[fac.variable(0)],conf[fac.variable(1)]);
                             break;
                         case 3:
-                            sum+= fac.eval3(conf[fac.vi(0)],conf[fac.vi(1)],conf[fac.vi(2)]);
+                            sum+= fac.eval(conf[fac.variable(0)],conf[fac.variable(1)],conf[fac.variable(2)]);
                             break;
                     }
                 }
@@ -208,27 +288,79 @@ public:
     }
 
 
+    // new descriptor iterators
+    FactorDescriptorIter factorDescriptorsBegin()const{
+        return FactorDescriptorIter(0);
+    }
+    FactorDescriptorIter factorDescriptorsEnd()const{
+        return FactorDescriptorIter(factors_.size());
+    }
+    UnaryDescriptorIter unaryDescriptorsBegin()const{
+        return UnaryDescriptorIter(0);
+    }
+    UnaryDescriptorIter unaryDescriptorsEnd()const{
+        return UnaryDescriptorIter(factors_.size());
+    }
+    VariableDescriptorIter variableDescriptorsBegin()const{
+        return VariableDescriptorIter(0);
+    }
+    VariableDescriptorIter variableDescriptorsEnd()const{
+        return VariableDescriptorIter(nVar_);
+    }
 
 
-    FactorIdIter factorIdsBegin()const{
-        return FactorIdIter(0);
-    }
-    FactorIdIter factorIdsEnd()const{
-        return FactorIdIter(factors_.size());
-    }
-    VariableIdIter variableIdsBegin()const{
-        return VariableIdIter(0);
-    }
-    VariableIdIter variableIdsEnd()const{
-        return VariableIdIter(nVar_);
+    /// \brief convert factor descriptor into factor id
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    Fi factorId(const FactorDescriptor factorDescriptor)const{
+        return factorDescriptor;
     }
 
-    FactorProxy operator[](const uint64_t factorId)const{
-        return &factors_[factorId];
+    /// \brief convert variable descriptor into variable id
+    ///
+    /// For this type of graphical model, variable ids and descriptors
+    /// are equivalent
+    Vi variableId(const VariableDescriptor variableDescriptor)const{
+        return variableDescriptor;
     }
 
-    LabelType nLabels(const uint64_t variabeId)const{
-        return variabeId >= numberOfLabels_.size() ? numberOfLabels_[0] : numberOfLabels_[variabeId]; 
+    /// \brief convert factor id into factor descriptor
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    FactorDescriptor factorDescriptor(const Fi fi)const{
+        return fi;
+    }
+
+    /// \brief convert factor id into factor descriptor
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    VariableDescriptor variableDescriptor(const Vi vi)const{
+        return vi;
+    }
+
+    size_t nUnaries()const{
+        return unaries_.size();
+    }
+
+
+
+    FactorProxy factor(const FactorDescriptor factorDescriptor)const{
+        return &factors_[factorDescriptor];
+    }
+    UnaryProxy unary(const UnaryDescriptor unaryDescriptor)const{
+        return &unaries_[unaryDescriptor];
+    }
+
+
+
+
+
+
+    LabelType nLabels(const VariableDescriptor variableDescriptor)const{
+        return variableDescriptor >= numberOfLabels_.size() ? numberOfLabels_[0] : numberOfLabels_[variableDescriptor]; 
     }
 
     Vti nValueTables()const{
@@ -247,15 +379,16 @@ public:
         valueTables_.push_back(vt);
         return valueTables_.size()-1;
     }   
+
     template<class VI_ITER>
     uint64_t addFactor(const uint64_t vti , VI_ITER viBegin, VI_ITER viEnd){
         size_t arity=0;
-        const uint64_t visOffset = facVis_.size();
+        const uint64_t visOffset = facVarDesc_.size();
         for( ;viBegin!=viEnd; ++viBegin){
             const Vi vi = *viBegin;
             INFERNO_CHECK_OP(nLabels(vi),==,valueTables_[vti]->shape(arity),
                 "number of labels does not match value tables shape");
-            facVis_.push_back(vi);
+            facVarDesc_.push_back(vi);
             ++arity;
         }
         INFERNO_CHECK_OP(arity,==,valueTables_[vti]->arity(),
@@ -273,18 +406,20 @@ public:
     }
 private:
 
-    Vi facVis(uint64_t index, const size_t v)const{
-        return facVis_[index + v];
+    VariableDescriptor facVis(uint64_t index, const size_t v)const{
+        return facVarDesc_[index + v];
     }
     DiscreteLabel facShape(uint64_t index, const size_t v)const{
-        return this->nLabels(facVis_[index + v]);
+        return this->nLabels(facVarDesc_[index + v]);
     }
 
     const uint64_t nVar_;
     std::vector<LabelType>              numberOfLabels_;
     std::vector<value_tables::DiscreteValueTableBase * >  valueTables_;
-    std::vector<GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel> >         factors_;
-    std::vector<Vi> facVis_;
+    std::vector<GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel> > factors_;
+    std::vector<GeneralDiscreteGraphicalModelUnary<GeneralDiscreteModel> > unaries_;
+    typedef std::vector<VariableDescriptor> FacVarStorage;
+    FacVarStorage facVarDesc_;
     size_t maxArity_;
     bool functionOwner_;
 

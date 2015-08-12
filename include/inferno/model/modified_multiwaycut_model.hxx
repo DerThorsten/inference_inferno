@@ -10,7 +10,7 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/value_tables/potts.hxx"
-#include "inferno/model/base_discrete_model.hxx"
+#include "inferno/model/discrete_model_base.hxx"
 #include <boost/iterator/counting_iterator.hpp>
 
 namespace inferno{
@@ -41,10 +41,10 @@ namespace detail_mmwc_model{
                 return conf[0] == conf[1] ? 0.0 : *data_;
             }
         }
-        ValueType eval1(const LabelType l0)const{
+        ValueType eval(const LabelType l0)const{
             return data_[l0/nVar_];
         }
-        ValueType eval2(const LabelType l0, const LabelType l1)const{
+        ValueType eval(const LabelType l0, const LabelType l1)const{
             return l0==l1 ? 0 : *data_;
         }
         LabelType shape(const uint32_t d) const{
@@ -210,7 +210,7 @@ public:
         return VariableIdIter(nVar_);
     }
 
-    FactorProxy operator[](const Fi factorId)const{
+    FactorProxy factor(const Fi factorId)const{
         if(factorId<nUnaryFactors()){
             const ValueType * data =  unaries_.data() + factorId*nSemanticClasses_;
             const Vi u = unariesVis_[factorId];

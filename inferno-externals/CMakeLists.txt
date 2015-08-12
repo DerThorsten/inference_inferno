@@ -6,16 +6,19 @@ set(TMP_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/tmp_install)
 option(WITH_QPBO            "DOWNLOAD AND BUILD QPBO"           ON)
 option(WITH_AD3             "DOWNLOAD AND BUILD AD3"            OFF)
 option(WITH_TRWS            "DOWNLOAD AND BUILD TRWS"           OFF)
-option(WITH_MRF            "DOWNLOAD AND BUILD TRWS"            OFF)
+option(WITH_MRF             "DOWNLOAD AND BUILD TRWS"           OFF)
 option(WITH_IBFS            "DOWNLOAD AND BUILD IBFS"           OFF)
 option(WITH_MAXFLOW         "DOWNLOAD AND BUILD MAXFLOW"        OFF)
 option(WITH_GCO             "DOWNLOAD AND BUILD GCO"            OFF)
-option(WITH_COFFICBUNDLE     "DOWNLOAD AND BUILD COFFICBUNDLEO" OFF)
+option(WITH_COFFICBUNDLE    "DOWNLOAD AND BUILD COFFICBUNDLEO"  OFF)
 option(WITH_DAOOPT          "DOWNLOAD AND BUILD DAOOPT"         OFF)
 option(WITH_LIBDAI          "DOWNLOAD AND BUILD LIBDAI"         OFF)
 option(WITH_MPLP            "DOWNLOAD AND BUILD MPLP"           OFF)
 option(WITH_FASTPD          "DOWNLOAD AND BUILD FASTPD"         OFF)
 option(WITH_GRANTE          "DOWNLOAD AND BUILD GRANTE"         OFF)
+option(WITH_PLANARITY       "DOWNLOAD AND BUILD PLANARITY"      OFF)
+option(WITH_BLOSSOMV        "DOWNLOAD AND BUILD BLOSSOMV"       OFF)
+
 
 if(WITH_QPBO)
     add_subdirectory(qpbo)
@@ -61,6 +64,14 @@ endif()
 
 if(WITH_MPLP)
     add_subdirectory(mplp)  
+endif()
+
+if(WITH_PLANARITY)
+    add_subdirectory(planarity)  
+endif()
+
+if(WITH_BLOSSOMV)
+    add_subdirectory(blossomv)  
 endif()
 
 

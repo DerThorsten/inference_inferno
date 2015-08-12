@@ -6,7 +6,7 @@
 
 
 #include "inferno/inferno.hxx"
-#include "inferno/value_tables/base_discrete_value_table.hxx"
+#include "inferno/value_tables/discrete_value_table_base.hxx"
 #include "inferno/utilities/shape_walker.hxx"
 #include "inferno/utilities/marray_wrap.hxx"
 namespace inferno{
@@ -19,6 +19,7 @@ namespace detail_explicit{
 template<class STORAGE>
 class  ExplicitBase : public DiscreteValueTableBase{
 public:
+    using DiscreteValueTableBase::eval;
     template<class STORAGE_IN>
     ExplicitBase(const STORAGE_IN & storage)
     :   DiscreteValueTableBase(),
@@ -27,23 +28,23 @@ public:
     virtual inferno::ValueType eval(const DiscreteLabel *conf)const{
         return storage_(conf);
     }
-    virtual inferno::ValueType eval1(const DiscreteLabel l0)const{
+    virtual inferno::ValueType eval(const DiscreteLabel l0)const{
         return storage_(size_t(l0));
     }
-    virtual inferno::ValueType eval2(const DiscreteLabel l0,const DiscreteLabel l1)const{
+    virtual inferno::ValueType eval(const DiscreteLabel l0,const DiscreteLabel l1)const{
         return storage_(size_t(l0), size_t(l1));
     }
-    virtual inferno::ValueType eval3(const DiscreteLabel l0,const DiscreteLabel l1,
+    virtual inferno::ValueType eval(const DiscreteLabel l0,const DiscreteLabel l1,
                            const DiscreteLabel l2)const{
         return storage_(std::size_t(l0), std::size_t(l1), 
                         std::size_t(l2));
     }
-    virtual inferno::ValueType eval4(const DiscreteLabel l0,const DiscreteLabel l1,
+    virtual inferno::ValueType eval(const DiscreteLabel l0,const DiscreteLabel l1,
                            const DiscreteLabel l2,const DiscreteLabel l3)const{
         return storage_(std::size_t(l0), std::size_t(l1), 
                         std::size_t(l2), std::size_t(l3));
     }
-    virtual inferno::ValueType eval5(const DiscreteLabel l0,const DiscreteLabel l1,
+    virtual inferno::ValueType eval(const DiscreteLabel l0,const DiscreteLabel l1,
                            const DiscreteLabel l2,const DiscreteLabel l3,
                            const DiscreteLabel l4)const{
         return storage_(std::size_t(l0), std::size_t(l1), 

@@ -1,4 +1,4 @@
-/** \file base_discrete_inference.hxx 
+/** \file discrete_inference_base.hxx 
     \brief  Functionality which is shared between all inference algorithms
     is implemented in this header.
 
@@ -14,7 +14,7 @@
 #include <boost/any.hpp> 
 
 #include "inferno/inferno.hxx"
-#include "inferno/inference/base_discrete_inference.hxx"
+#include "inferno/inference/discrete_inference_base.hxx"
     
 namespace inferno{
 
@@ -29,7 +29,6 @@ namespace inferno{
 */
 namespace inference{
 
-    typedef inferno::utilities::Concurrency Concurrency;
 
     template<class MODEL>
     class DiscreteInferenceBase;

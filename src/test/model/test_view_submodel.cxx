@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(TestViewSubmodel)
     auto & labels = submodel.baseModelLabelMap();
 
     BOOST_TEST_CHECKPOINT("fill labels");
-    for(const auto vi : model.variableIds())
+    for(const auto vi : model.variableDescriptors())
         labels[vi] = 0;
 
     // X | 1 | X  
@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(TestViewSubmodel)
 
     // => 11 factors
     BOOST_CHECK_EQUAL(submodel.nFactors(),11);
-    for(const auto fi : submodel.factorIds()){
-        const auto factor = submodel[fi];
+    for(const auto fi : submodel.factorDescriptors()){
+        const auto factor = submodel.factor(fi);
         const auto arity = factor->arity();
         BOOST_CHECK(arity<=2);
         if(arity==1)

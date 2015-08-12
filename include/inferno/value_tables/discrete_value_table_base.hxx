@@ -1,4 +1,4 @@
-/** \file base_discrete_value_table.hxx 
+/** \file discrete_value_table_base.hxx 
     \brief inferno::value_tables::DiscreteValueTableBase
     is implemented in this header. 
 */
@@ -164,7 +164,7 @@ public:
 
         \returns : value at given configuration
     */
-    virtual ValueType eval1(const L l0)const{
+    virtual ValueType eval(const L l0)const{
         return this->eval(&l0);
     }
     /** \brief evaluate an binary / 2-ary value table for a given label
@@ -178,7 +178,7 @@ public:
 
         \returns : value at given configuration
     */
-    virtual ValueType eval2(const L l0, const L l1)const{
+    virtual ValueType eval(const L l0, const L l1)const{
         L conf[] = {l0, l1};
         return this->eval(conf);
     }
@@ -195,7 +195,7 @@ public:
 
         \returns : value at given configuration
     */
-    virtual ValueType eval3(const L l0, const L l1, const L l2)const{
+    virtual ValueType eval(const L l0, const L l1, const L l2)const{
         L conf[] = {l0, l1, l2};
         return this->eval(conf);
     }
@@ -212,7 +212,7 @@ public:
 
         \returns : value at given configuration
     */
-    virtual ValueType eval4(const L l0, const L l1, const L l2, const L l3)const{
+    virtual ValueType eval(const L l0, const L l1, const L l2, const L l3)const{
         L conf[] = {l0, l1, l2, l3};
         return this->eval(conf);
     }
@@ -230,7 +230,7 @@ public:
 
         \returns : value at given configuration
     */
-    virtual ValueType eval5(const L l0, const L l1, const L l2, const L l3, const L l4)const{
+    virtual ValueType eval(const L l0, const L l1, const L l2, const L l3, const L l4)const{
         L conf[] = {l0, l1, l2, l3, l4};
         return this->eval(conf);
     }
@@ -387,11 +387,11 @@ public:
         else if(arity == 2){
             DiscreteLabel s[2];
             this->bufferShape(s);
-            const auto vAA = this->eval2(0l,0l);
-            const auto vAB = this->eval2(0l,1l);
+            const auto vAA = this->eval(0l,0l);
+            const auto vAB = this->eval(0l,1l);
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const auto val = this->eval2(l0, l1);
+                const auto val = this->eval(l0, l1);
                 if(l0==l1){
                     if(!fEq(val,vAA))
                         return false;
@@ -406,13 +406,13 @@ public:
         else if(arity == 3){
             DiscreteLabel s[3];
             this->bufferShape(s);
-            const auto vAA = this->eval3(0l,0l,0l);
-            const auto vAB = this->eval3(0l,0l,1l);
+            const auto vAA = this->eval(0l,0l,0l);
+            const auto vAB = this->eval(0l,0l,1l);
 
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const auto val = this->eval3(l0, l1, l2);
+                const auto val = this->eval(l0, l1, l2);
                 if(l0==l1 && l0==l2){
                     if(!fEq(val,vAA))
                         return false;
@@ -427,14 +427,14 @@ public:
         else if(arity == 4){
             DiscreteLabel s[4];
             this->bufferShape(s);
-            const auto vAA = this->eval4(0l,0l,0l,0l);
-            const auto vAB = this->eval4(0l,0l,0l,1l);
+            const auto vAA = this->eval(0l,0l,0l,0l);
+            const auto vAB = this->eval(0l,0l,0l,1l);
 
             for(DiscreteLabel l3=0; l3 < s[3]; ++l3)
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const auto val = this->eval4(l0, l1, l2, l3);
+                const auto val = this->eval(l0, l1, l2, l3);
                 if(l0==l1 && l0==l2 && l0==l3){
                     if(!fEq(val,vAA))
                         return false;
@@ -449,15 +449,15 @@ public:
         else if(arity == 5){
             DiscreteLabel s[5];
             this->bufferShape(s);
-            const auto vAA = this->eval5(0l,0l,0l,0l,0l);
-            const auto vAB = this->eval5(0l,0l,0l,0l,1l);
+            const auto vAA = this->eval(0l,0l,0l,0l,0l);
+            const auto vAB = this->eval(0l,0l,0l,0l,1l);
 
             for(DiscreteLabel l4=0; l4 < s[4]; ++l4)
             for(DiscreteLabel l3=0; l3 < s[3]; ++l3)
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const auto val = this->eval5(l0, l1, l2, l3, l4);
+                const auto val = this->eval(l0, l1, l2, l3, l4);
                 if(l0==l1 && l0==l2 && l0==l3 && l0==l4){
                     if(!fEq(val,vAA))
                         return false;
@@ -507,7 +507,7 @@ public:
         if(arity == 1){
             const DiscreteLabel s[1] = {this->shape(0)};
             for(DiscreteLabel l0=0; l0<s[0]; ++l0){
-                const ValueType v = this->eval1(l0);
+                const ValueType v = this->eval(l0);
                 if(v<minVal){
                     conf[0] = l0;
                     minVal = v;
@@ -519,7 +519,7 @@ public:
             this->bufferShape(s);
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const ValueType v = this->eval2(l0, l1);
+                const ValueType v = this->eval(l0, l1);
                 if(v<minVal){
                     conf[0] = l0;
                     conf[1] = l1;
@@ -533,7 +533,7 @@ public:
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const ValueType v = this->eval3(l0, l1, l2);
+                const ValueType v = this->eval(l0, l1, l2);
                 if(v<minVal){
                     conf[0] = l0;
                     conf[1] = l1;
@@ -549,7 +549,7 @@ public:
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const ValueType v = this->eval4(l0, l1, l2, l3);
+                const ValueType v = this->eval(l0, l1, l2, l3);
                 if(v<minVal){
                     conf[0] = l0;
                     conf[1] = l1;
@@ -567,7 +567,7 @@ public:
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                const ValueType v = this->eval5(l0, l1, l2, l3, l4);
+                const ValueType v = this->eval(l0, l1, l2, l3, l4);
                 if(v<minVal){
                     conf[0] = l0;
                     conf[1] = l1;
@@ -663,7 +663,7 @@ public:
         if(arity == 1){
             const DiscreteLabel s[1] = {this->shape(0)};
             for(DiscreteLabel l0=0; l0<s[0]; ++l0){
-                buffer[l0] = this->eval1(l0);
+                buffer[l0] = this->eval(l0);
             }
         }
         else if(arity == 2){
@@ -672,7 +672,7 @@ public:
             this->bufferShape(s);
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] = this->eval2(l0, l1);
+                buffer[c] = this->eval(l0, l1);
                 ++c;
             }
         }
@@ -683,7 +683,7 @@ public:
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] = this->eval3(l0, l1, l2);
+                buffer[c] = this->eval(l0, l1, l2);
                 ++c;
             }
         }
@@ -695,7 +695,7 @@ public:
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] = this->eval4(l0, l1, l2, l3);
+                buffer[c] = this->eval(l0, l1, l2, l3);
                 ++c;
             }
         }
@@ -708,7 +708,7 @@ public:
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] = this->eval5(l0, l1, l2, l3, l4);
+                buffer[c] = this->eval(l0, l1, l2, l3, l4);
                 ++c;
             }
         }
@@ -748,7 +748,7 @@ public:
         if(arity == 1){
             const DiscreteLabel s[1] = {this->shape(0)};
             for(DiscreteLabel l0=0; l0<s[0]; ++l0){
-                buffer[l0] += this->eval1(l0);
+                buffer[l0] += this->eval(l0);
             }
         }
         else if(arity == 2){
@@ -757,7 +757,7 @@ public:
             this->bufferShape(s);
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] += this->eval2(l0, l1);
+                buffer[c] += this->eval(l0, l1);
                 ++c;
             }
         }
@@ -768,7 +768,7 @@ public:
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] += this->eval3(l0, l1, l2);
+                buffer[c] += this->eval(l0, l1, l2);
                 ++c;
             }
         }
@@ -780,7 +780,7 @@ public:
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] += this->eval4(l0, l1, l2, l3);
+                buffer[c] += this->eval(l0, l1, l2, l3);
                 ++c;
             }
         }
@@ -793,7 +793,7 @@ public:
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] += this->eval5(l0, l1, l2, l3, l4);
+                buffer[c] += this->eval(l0, l1, l2, l3, l4);
                 ++c;
             }
         }
@@ -832,7 +832,7 @@ public:
         if(arity == 1){
             const DiscreteLabel s[1] = {this->shape(0)};
             for(DiscreteLabel l0=0; l0<s[0]; ++l0){
-                buffer[l0] += w * this->eval1(l0);
+                buffer[l0] += w * this->eval(l0);
             }
         }
         else if(arity == 2){
@@ -841,7 +841,7 @@ public:
             this->bufferShape(s);
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] += w * this->eval2(l0, l1);
+                buffer[c] += w * this->eval(l0, l1);
                 ++c;
             }
         }
@@ -852,7 +852,7 @@ public:
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] += w * this->eval3(l0, l1, l2);
+                buffer[c] += w * this->eval(l0, l1, l2);
                 ++c;
             }
         }
@@ -864,7 +864,7 @@ public:
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] += w * this->eval4(l0, l1, l2, l3);
+                buffer[c] += w * this->eval(l0, l1, l2, l3);
                 ++c;
             }
         }
@@ -877,7 +877,7 @@ public:
             for(DiscreteLabel l2=0; l2 < s[2]; ++l2)
             for(DiscreteLabel l1=0; l1 < s[1]; ++l1)
             for(DiscreteLabel l0=0; l0 < s[0]; ++l0){
-                buffer[c] += w * this->eval5(l0, l1, l2, l3, l4);
+                buffer[c] += w * this->eval(l0, l1, l2, l3, l4);
                 ++c;
             }
         }

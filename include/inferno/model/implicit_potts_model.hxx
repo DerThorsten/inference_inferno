@@ -6,7 +6,7 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/value_tables/potts.hxx"
-#include "inferno/model/base_discrete_model.hxx"
+#include "inferno/model/discrete_model_base.hxx"
 #include <boost/iterator/counting_iterator.hpp>
 
 namespace inferno{
@@ -32,10 +32,10 @@ namespace detail_implicit_potts_model{
                 return  conf[0] == conf[1] ? 0.0 : *data_;
             }
         }
-        ValueType eval1(const LabelType l0)const{
+        ValueType eval(const LabelType l0)const{
             return data_[l0];
         }
-        ValueType eval2(const LabelType l0, const LabelType l1)const{
+        ValueType eval(const LabelType l0, const LabelType l1)const{
             return l0==l1 ? 0 : *data_;
         }
         LabelType shape(const uint32_t d) const{
@@ -72,6 +72,9 @@ namespace detail_implicit_potts_model{
 */
 class ImplicitPottsModelFactor : public DiscreteFactorBase<ImplicitPottsModelFactor>{
 public:
+
+    typedef Vi VariableDescriptor;
+
     ImplicitPottsModelFactor(const DiscreteLabel nl,
                              const uint8_t arity, 
                              const ValueType * data,
@@ -91,17 +94,18 @@ public:
     ValueType eval(const LabelType *conf)const{
         hybridFunction_.eval(conf);
     }
-    ValueType eval1(const LabelType l0)const{
-        hybridFunction_.eval1(l0);
+    ValueType eval(const LabelType l0)const{
+        hybridFunction_.eval(l0);
     }
-    ValueType eval2(const LabelType l0, const LabelType l1)const{
-        hybridFunction_.eval2(l0, l1);
+    ValueType eval(const LabelType l0, const LabelType l1)const{
+        hybridFunction_.eval(l0, l1);
     }
     LabelType shape(const size_t d)const{
         return hybridFunction_.shape(d);
     }
-    Vi vi(const size_t d)const{
-        return d==0? u_ : v_;
+
+    VariableDescriptor variable(const size_t d)const{
+        return d==0? u_ : v_; 
     }
     bool isGeneralizedPotts() const{
         return hybridFunction_.isGeneralizedPotts(); 
@@ -128,6 +132,14 @@ public:
 
     const static bool SortedVariableIds = true;
     const static bool SortedFactorIds = true;
+
+
+    typedef Fi FactorDescriptor;
+    typedef Vi VariableDescriptor;
+
+    typedef boost::counting_iterator<Fi>       FactorDescriptorIter;
+    typedef boost::counting_iterator<Vi>       VariableDescriptorIter;
+
 
     typedef boost::counting_iterator<uint64_t> FactorIdIter;
     typedef boost::counting_iterator<Vi> VariableIdIter;
@@ -217,20 +229,74 @@ public:
         return beta_.empty() ? 1 : 2 ;
     }
 
+
+
+    /// \brief convert factor descriptor into factor id
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    Fi factorId(const FactorDescriptor factorDescriptor)const{
+        return factorDescriptor;
+    }
+
+    /// \brief convert variable descriptor into variable id
+    ///
+    /// For this type of graphical model, variable ids and descriptors
+    /// are equivalent
+    Vi variableId(const VariableDescriptor variableDescriptor)const{
+        return variableDescriptor;
+    }
+
+    /// \brief convert factor id into factor descriptor
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    FactorDescriptor factorDescriptor(const Fi fi)const{
+        return fi;
+    }
+
+    /// \brief convert factor id into factor descriptor
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    VariableDescriptor variableDescriptor(const Vi vi)const{
+        return vi;
+    }
+
+
+
+
+    // new descriptor iterators
+    FactorDescriptorIter factorDescriptorsBegin()const{
+        return FactorDescriptorIter(0);
+    }
+    FactorDescriptorIter factorDescriptorsEnd()const{
+        return FactorDescriptorIter(nVar_ + beta_.size());
+    }
+    VariableDescriptorIter variableDescriptorsBegin()const{
+        return VariableDescriptorIter(0);
+    }
+    VariableDescriptorIter variableDescriptorsEnd()const{
+        return VariableDescriptorIter(nVar_);
+    }
+
+
+
+
     FactorIdIter factorIdsBegin()const{
         return FactorIdIter(0);
     }
     FactorIdIter factorIdsEnd()const{
         return FactorIdIter(nVar_ + beta_.size());
     }
-    VariableIdIter variableIdsBegin()const{
-        return VariableIdIter(0);
-    }
-    VariableIdIter variableIdsEnd()const{
-        return VariableIdIter(nVar_);
-    }
 
-    FactorProxy operator[](const Fi factorId)const{
+
+
+
+
+
+
+    FactorProxy factor(const FactorDescriptor factorId)const{
         // unary
         if(factorId<nVar_){
             const size_t offset =  factorId*nl_;

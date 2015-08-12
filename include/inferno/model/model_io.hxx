@@ -2,7 +2,7 @@
 #define INFERNO_MODEL_BASE_FACTOR_HXX
 
 #include "inferno/inferno.hxx"
-#include "inferno/value_tables/base_discrete_value_table.hxx"
+#include "inferno/value_tables/discrete_value_table_base.hxx"
 #include "inferno/utilities/shape_walker.hxx"
 
 

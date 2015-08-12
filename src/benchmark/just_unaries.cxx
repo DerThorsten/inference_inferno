@@ -36,10 +36,10 @@ static void InfernoUnary(benchmark::State& state) {
 
     state.ResumeTiming();
     while (state.KeepRunning()){
-        res += vt.eval1(0);
-        res += vt.eval1(1);
-        res += vt.eval1(0);
-        res += vt.eval1(1);
+        res += vt.eval(0L);
+        res += vt.eval(1L);
+        res += vt.eval(0L);
+        res += vt.eval(1L);
     }
     std::cout<<"res"<<res<<"\n";
 }
@@ -56,10 +56,10 @@ static void InfernoHeapUnary(benchmark::State& state) {
 
     state.ResumeTiming();
     while (state.KeepRunning()){
-        res += vt->eval1(0);
-        res += vt->eval1(1);
-        res += vt->eval1(0);
-        res += vt->eval1(1);
+        res += vt->eval(0L);
+        res += vt->eval(1L);
+        res += vt->eval(0L);
+        res += vt->eval(1L);
     }
     std::cout<<"res"<<res<<"\n";
     delete vt;

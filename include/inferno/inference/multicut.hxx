@@ -27,7 +27,7 @@
 #include "inferno/inferno.hxx"
 #include "inferno/utilities/timer.hxx"
 #include "inferno/utilities/small_vector.hxx"
-#include "inferno/inference/base_discrete_inference.hxx"
+#include "inferno/inference/discrete_inference_base.hxx"
 
 #include <ilcplex/ilocplex.h>
 //ILOSTLBEGIN
@@ -286,8 +286,8 @@ typename Multicut<MODEL>::LPIndexType Multicut<MODEL>::getNeighborhood
       const auto factor = gm_[fi];
       const auto arity = factor->arity();
       if(arity==2) { // Second Order Potts
-         const Vi u = factor->vi(1);
-         const Vi v = factor->vi(0);
+         const Vi u = factor->variable(1);
+         const Vi v = factor->variable(0);
          if(neighbours[u].find(v)==neighbours[u].end()) {
             neighbours[u][v] = numberOfTerminalEdges+numberOfInternalEdges;
             neighbours[v][u] = numberOfTerminalEdges+numberOfInternalEdges;
@@ -305,8 +305,8 @@ typename Multicut<MODEL>::LPIndexType Multicut<MODEL>::getNeighborhood
          higherOrderTerms.push_back(HigherOrderTerm(fi, false, 0));      
          for(size_t i=0; i<arity;++i) {
             for(size_t j=0; j<i;++j) {
-              const Vi u = factor->vi(i);
-              const Vi v = factor->vi(j);
+              const Vi u = factor->variable(i);
+              const Vi v = factor->variable(j);
                if(neighbours[u].find(v)==neighbours[u].end()) {
                   neighbours[u][v] = numberOfTerminalEdges+numberOfInternalEdges;
                   neighbours[v][u] = numberOfTerminalEdges+numberOfInternalEdges;
@@ -330,7 +330,7 @@ typename Multicut<MODEL>::LPIndexType Multicut<MODEL>::getNeighborhood
          //Find spanning tree vor the variables nb(f) using edges that already exist.
          std::vector<bool> variableInSpanningTree(gm_.nVariables(),true);
          for(size_t i=0; i<arity;++i) {
-            variableInSpanningTree[factor->vi(i)]=false;
+            variableInSpanningTree[factor->variable(i)]=false;
          }     
          size_t connection = 2; 
          // 1 = find a spanning tree and connect higher order auxilary variable to this
@@ -338,7 +338,7 @@ typename Multicut<MODEL>::LPIndexType Multicut<MODEL>::getNeighborhood
          if(connection==2){
             // ADD ALL 
             for(size_t i=0; i<arity;++i) {
-               const Vi u = factor->vi(i);  
+               const Vi u = factor->variable(i);  
                for(typename EdgeMapType::const_iterator it=neighbours[u].begin() ; it != neighbours[u].end(); ++it){
                   const Vi v = (*it).first;
                   if(variableInSpanningTree[v] == false && u<v){
@@ -350,7 +350,7 @@ typename Multicut<MODEL>::LPIndexType Multicut<MODEL>::getNeighborhood
          else if(connection==1){
             // ADD TREE
             for(size_t i=0; i<arity;++i) {
-               const Vi u = factor->vi(i);  
+               const Vi u = factor->variable(i);  
                for(typename EdgeMapType::const_iterator it=neighbours[u].begin() ; it != neighbours[u].end(); ++it){
                   const Vi v = (*it).first;
                   if(variableInSpanningTree[v] == false){
@@ -445,23 +445,23 @@ Multicut<MODEL>::Multicut
          constant_ +=  factor.eval(DiscreteLabel(0));
       }
       else if(arity == 1) {
-         const Vi node = factor->vi(0);
+         const Vi node = factor->variable(0);
          for(DiscreteLabel i=0; i<gm_.nLabels(node); ++i) {
             for(DiscreteLabel j=0; j<gm_.nLabels(node); ++j) {
-               if(i==j) values[node*numberOfTerminals_+i] += (1.0/(numberOfTerminals_-1)-1) * factor->eval1(j);
-               else     values[node*numberOfTerminals_+i] += (1.0/(numberOfTerminals_-1))   * factor->eval1(j);
+               if(i==j) values[node*numberOfTerminals_+i] += (1.0/(numberOfTerminals_-1)-1) * factor->eval(j);
+               else     values[node*numberOfTerminals_+i] += (1.0/(numberOfTerminals_-1))   * factor->eval(j);
             }
          }
       }
       else if(arity == 2) {
 
-         const Vi node0 = factor->vi(0);
-         const Vi node1 = factor->vi(1);
+         const Vi node0 = factor->variable(0);
+         const Vi node1 = factor->variable(1);
 
          if(factor->shape(0)==2 && factor->shape(1)==2){
 
-            const Vi node0 = factor->vi(0);
-            const Vi node1 = factor->vi(1);
+            const Vi node0 = factor->variable(0);
+            const Vi node1 = factor->variable(1);
 
             DiscreteLabel cc[] = {0,0}; ValueType a = factor->eval(cc);
 
@@ -669,7 +669,7 @@ Multicut<MODEL>::Multicut
       }else{
          if(numVar==3) {
 
-            const Vi vis[3] = {factor->vi(0), factor->vi(1), factor->vi(2)};
+            const Vi vis[3] = {factor->variable(0), factor->variable(1), factor->variable(2)};
 
 
             INFERNO_ASSERT(higherOrderTerms[i].valueIndex_<=valuesHigherOrder.size());
@@ -736,7 +736,7 @@ Multicut<MODEL>::Multicut
             INFERNO_ASSERT(higherOrderTerms[i].valueIndex_<=valuesHigherOrder.size());
             LPIndexType edgeIDs[6];
 
-            const Vi vis[4] = {factor->vi(0), factor->vi(1), factor->vi(2), factor->vi(3)};
+            const Vi vis[4] = {factor->variable(0), factor->variable(1), factor->variable(2), factor->variable(3)};
 
 
             edgeIDs[0] = neighbours[ vis[0] ][ vis[1] ];

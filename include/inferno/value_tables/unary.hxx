@@ -6,7 +6,7 @@
 
 
 #include "inferno/inferno.hxx"
-#include "inferno/value_tables/base_discrete_value_table.hxx"
+#include "inferno/value_tables/discrete_value_table_base.hxx"
 #include "inferno/utilities/small_vector.hxx"
 #include "inferno/utilities/marray_wrap.hxx"
 namespace inferno{
@@ -23,6 +23,8 @@ namespace value_tables{
 */
 class  UnaryValueTable : public DiscreteValueTableBase{
 public:
+    using DiscreteValueTableBase::eval;
+    
     UnaryValueTable(const LabelType l)
     :   DiscreteValueTableBase(),
         values_(size_t(l)){
@@ -40,7 +42,7 @@ public:
     ValueType eval(const LabelType * conf)const{
         return values_[*conf];
     }
-    ValueType eval1(const LabelType l1)const{
+    ValueType eval(const LabelType l1)const{
         return values_[l1];
     }
     LabelType shape(const uint32_t d) const{
@@ -64,15 +66,18 @@ private:
 class  UnaryViewValueTable : public DiscreteValueTableBase{
 public:
 
+
+    using DiscreteValueTableBase::eval; // D::m is public
+
     UnaryViewValueTable(const DiscreteLabel nLabels, const ValueType * data)
     :   DiscreteValueTableBase(),
         nLabels_(nLabels),
         data_(data){
     }
-    ValueType eval(const LabelType * conf)const{
+    ValueType eval(const LabelType * conf)const {
         return 0.0; //data_[*conf];
     }
-    ValueType eval1(const LabelType l1)const{
+    virtual ValueType eval(const LabelType l1)const {
         return 0.0; //data_[l1];
     }
     LabelType shape(const uint32_t d) const{

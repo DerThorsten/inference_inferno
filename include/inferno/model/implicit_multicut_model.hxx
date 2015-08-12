@@ -6,7 +6,7 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/value_tables/potts.hxx"
-#include "inferno/model/base_discrete_model.hxx"
+#include "inferno/model/discrete_model_base.hxx"
 #include <boost/iterator/counting_iterator.hpp>
 
 
@@ -28,6 +28,7 @@ namespace models{
 */
 class ImplicitMulticutModelFactor : public DiscreteFactorBase<ImplicitMulticutModelFactor>{
 public:
+    typedef Vi VariableDescriptor;
     ImplicitMulticutModelFactor(const Vi nLabels = Vi(), const Vi u = Vi(), const Vi v=Vi(), const ValueType beta=ValueType())
     :   u_(u),
         v_(v),
@@ -43,9 +44,11 @@ public:
     LabelType shape(const size_t d)const{
         return pottsFunction_.shape(d);
     }
-    Vi vi(const size_t d)const{
-        return d==0? u_ : v_;
+
+    VariableDescriptor variable(const size_t d)const{
+        return d==0? u_ : v_; 
     }
+
 private:
     Vi u_,v_;
     value_tables::PottsValueTable pottsFunction_;
@@ -63,7 +66,16 @@ public DiscreteGraphicalModelBase<ImplicitMulticutModel>{
 
 public:
 
-    typedef boost::counting_iterator<uint64_t> FactorIdIter;
+    typedef uint64_t FactorDescriptor;
+    typedef Vi       VariableDescriptor;
+
+    typedef boost::counting_iterator<Fi> FactorDescriptorIter;
+    typedef boost::counting_iterator<Vi>       VariableDescriptorIter;
+    
+
+    /// \deprecated
+    typedef boost::counting_iterator<Fi> FactorIdIter;
+    /// \deprecated
     typedef boost::counting_iterator<Vi> VariableIdIter;
 
     /// \todo rename / re-factor this typedef
@@ -123,21 +135,73 @@ public:
         return 2;
     }
 
+
+    FactorDescriptorIter factorDescriptorsBegin()const{
+        return FactorDescriptorIter(0);
+    }
+    FactorDescriptorIter factorDescriptorsEnd()const{
+        return FactorDescriptorIter(beta_.size());
+    }
+    VariableDescriptorIter variableDescriptorsBegin()const{
+        return VariableDescriptorIter(0);
+    }
+    VariableDescriptorIter variableDescriptorsEnd()const{
+        return VariableDescriptorIter(nVar_);
+    }
+
+
+    /// \brief convert factor descriptor into factor id
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    Fi factorId(const FactorDescriptor factorDescriptor)const{
+        return factorDescriptor;
+    }
+
+    /// \brief convert variable descriptor into variable id
+    ///
+    /// For this type of graphical model, variable ids and descriptors
+    /// are equivalent
+    Vi variableId(const VariableDescriptor variableDescriptor)const{
+        return variableDescriptor;
+    }
+
+    /// \brief convert factor id into factor descriptor
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    FactorDescriptor factorDescriptor(const Fi fi)const{
+        return fi;
+    }
+
+    /// \brief convert factor id into factor descriptor
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    VariableDescriptor variableDescriptor(const Vi vi)const{
+        return vi;
+    }
+
+
+    /// \deprecated
     FactorIdIter factorIdsBegin()const{
         return FactorIdIter(0);
     }
+    /// \deprecated
     FactorIdIter factorIdsEnd()const{
         return FactorIdIter(beta_.size());
     }
+    /// \deprecated
     VariableIdIter variableIdsBegin()const{
         return VariableIdIter(0);
     }
+    /// \deprecated
     VariableIdIter variableIdsEnd()const{
         return VariableIdIter(nVar_);
     }
 
-    FactorProxy operator[](const uint64_t factorId)const{
-        const uint64_t uu = factorId*2;
+    FactorProxy factor(const FactorDescriptor facDesc)const{
+        const uint64_t uu = facDesc*2;
         const uint64_t vv = uu+1;
         return FactorProxy(nVar_,edges_[uu],edges_[vv],beta_[uu/2]);
     }

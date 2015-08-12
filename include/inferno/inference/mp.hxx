@@ -11,9 +11,8 @@
 #include "boost/format.hpp"
 #include "inferno/inferno.hxx"
 #include "inferno/utilities/delegate.hxx"
-#include "inferno/utilities/parallel/parallel.hxx"
 #include "inferno/utilities/parallel/pool.hxx"
-#include "inferno/inference/base_discrete_inference.hxx"
+#include "inferno/inference/discrete_inference_base.hxx"
 #include "inferno/inference/utilities/movemaker.hxx"
 #include "inferno/model/factors_of_variables.hxx"
 
@@ -33,11 +32,12 @@ namespace inference{
     class MessageStoring{
     public:
         typedef MODEL Model;
+        typedef typename Model::FactorDescriptor FactorDescriptor;
+        typedef typename Model::VariableDescriptor VariableDescriptor;
         typedef typename MODEL:: template FactorMap<uint64_t> FacToVarMsgOffset;
         typedef typename MODEL:: template VariableMap<uint64_t>   VarToFacMsgOffset;
         typedef typename MODEL:: template FactorMap< std::array<uint32_t,2> >   ReverseMsgIndex;
-
-        typedef typename MODEL:: template VariableMap< VectorSet<Fi>  >   VarsHoFacs;        
+     
 
         MessageStoring(const Model & model, const models::HigherOrderAndUnaryFactorsOfVariables<Model> & factorsOfVariables)
         :   model_(model),
@@ -53,8 +53,7 @@ namespace inference{
             uint64_t nFacToVar = 0;
             uint64_t msgSpace = 0;
             // count messages
-            for(const auto fi : model_.factorIds()){
-                const auto factor = model_[fi];
+            for(const auto factor : model_.factors()){
                 const auto arity = factor->arity();
                 if(arity>1){
                     nFacToVar +=arity;
@@ -69,12 +68,12 @@ namespace inference{
             uint64_t vOffset = 0;
             uint64_t mIndex = 0;
 
-            for(auto vi: model_.variableIds()){              
-                const DiscreteLabel nl = model_.nLabels(vi);
-                const auto & facsOfVar = factorsOfVariables_[vi];
-                varToFacOffset_[vi] = mIndex;
-                for(auto fi : facsOfVar.higherOrderFactors()){
-                    const auto factor = model_[fi];
+            for(auto varDesc: model_.variableDescriptors()){              
+                const DiscreteLabel nl = model_.nLabels(varDesc);
+                const auto & facsOfVar = factorsOfVariables_[varDesc];
+                varToFacOffset_[varDesc] = mIndex;
+                for(auto facDesc : facsOfVar.higherOrderFactors()){
+                    const auto factor = model_[facDesc];
                     if(factor->arity()>1){
                         msgPtrs_.push_back(Msg{msgStorage_.data()+ vOffset , NULL});
                         vOffset += nl;
@@ -83,49 +82,49 @@ namespace inference{
                 }
             }
 
-            for(const auto fi : model_.factorIds()){
-                const auto factor = model_[fi];
+            for(const auto fDesc : model_.factorDescriptors()){
+                const auto factor = model_[fDesc];
                 const auto arity = factor->arity();
                 if(arity>1){
                     // set vOffset
                     for(auto a=0; a<arity; ++a){
 
-                        // find out at which position fi is in hfacs
-                        const Vi vi = factor->vi(a);
-                        const DiscreteLabel nl = model_.nLabels(vi);
-                        const auto  & hfacs = factorsOfVariables_[vi].higherOrderFactors();
-                        const auto pos = std::distance(hfacs.begin(), hfacs.find(fi));
+                        // find out at which position fDesc is in hfacs
+                        const VariableDescriptor var = factor->variable(a);
+                        const DiscreteLabel nl = model_.nLabels(var);
+                        const auto  & hfacs = factorsOfVariables_[var].higherOrderFactors();
+                        const auto pos = std::distance(hfacs.begin(), hfacs.find(fDesc));
 
-                        auto  & varToFacMsgHolder = msgPtrs_[varToFacOffset_[vi]+pos];
+                        auto  & varToFacMsgHolder = msgPtrs_[varToFacOffset_[var]+pos];
 
                         const auto facToVarMsgHolder  = Msg{msgStorage_.data()+ vOffset, varToFacMsgHolder.msg_};
                         varToFacMsgHolder.oMsg_ = facToVarMsgHolder.msg_;
                         msgPtrs_.push_back(facToVarMsgHolder);
                         vOffset += nl;
                     }
-                    facToVarOffset_[fi] = mIndex;
+                    facToVarOffset_[fDesc] = mIndex;
                     mIndex += arity; 
                 }
             }
         }
 
-        ValueType * facToVarMsg(const Fi fi, const size_t mi){
-            const uint64_t offset = facToVarOffset_[fi];
+        ValueType * facToVarMsg(const FactorDescriptor facDesc, const size_t mi){
+            const uint64_t offset = facToVarOffset_[facDesc];
             return msgPtrs_[offset + mi].msg_;
         }
 
-        ValueType * oppToFacToVarMsg(const Fi fi, const size_t mi){
-            const uint64_t offset = facToVarOffset_[fi];
+        ValueType * oppToFacToVarMsg(const FactorDescriptor facDesc, const size_t mi){
+            const uint64_t offset = facToVarOffset_[facDesc];
             return msgPtrs_[offset + mi].oMsg_;
         }
 
-        ValueType * varToFacMsg(const Vi vi, const size_t mi){
-            const uint64_t offset = varToFacOffset_[vi];
+        ValueType * varToFacMsg(const VariableDescriptor var, const size_t mi){
+            const uint64_t offset = varToFacOffset_[var];
             return msgPtrs_[offset + mi].msg_;
         }
 
-        ValueType * oppToVarToFacMsg(const Vi vi, const size_t mi){
-            const uint64_t offset = varToFacOffset_[vi];
+        ValueType * oppToVarToFacMsg(const VariableDescriptor var, const size_t mi){
+            const uint64_t offset = varToFacOffset_[var];
             return msgPtrs_[offset + mi].oMsg_;
         }
 
@@ -155,6 +154,8 @@ namespace inference{
     class MessagePassing  : public DiscreteInferenceBase<MODEL> {
     public:
         typedef MODEL Model;
+        typedef typename Model::FactorDescriptor FactorDescriptor;
+        typedef typename Model::VariableDescriptor VariableDescriptor;
         typedef MessagePassing<MODEL> Self;
         typedef DiscreteInferenceBase<MODEL> BaseInf;
         typedef typename BaseInf::Visitor Visitor;
@@ -205,8 +206,8 @@ namespace inference{
 
             sMsgBuffer_.resize(maxNumLabels_*nThreads_);
 
-            for(const auto vi : model_.variableIds())
-                conf_[vi]  = 0;
+            for(const auto var : model_.variableDescriptors())
+                conf_[var]  = 0;
         }
 
 
@@ -254,9 +255,9 @@ namespace inference{
         void sendAllVarToFac(){
             std::vector<ValueType> sum(nThreads_, 0.0);
             utilities::parallel_foreach(pool_, model_.nVariables(), 
-                model_.variableIdsBegin(), model_.variableIdsEnd(),
-                [this, &sum] (int id, inferno::Vi vi) {
-                    sum[id] += this->sendVarToFac(vi,id);
+                model_.variableDescriptorsBegin(), model_.variableDescriptorsEnd(),
+                [this, &sum] (int id,VariableDescriptor var) {
+                    sum[id] += this->sendVarToFac(this->model().variableId(var),id);
                 }
             );
 
@@ -270,23 +271,24 @@ namespace inference{
         // NON random access iterator
         void sendAllFacToVar(){
             utilities::parallel_foreach(pool_, model_.nFactors(),
-                model_.factorIdsBegin(),model_.factorIdsEnd(),
-                [this] (int id, inferno::Fi fi) {
-                    this->sendFacToVar(fi);
+                model_.factorDescriptorsBegin(),model_.factorDescriptorsEnd(),
+                [this] (int id, FactorDescriptor fDesc) {
+                    const auto facDesc  = this->model().factorId(fDesc);
+                    this->sendFacToVar(facDesc);
                 }
             );  
         }
 
-        void sendFacToVar(const Fi fi){
-            const auto factor = model_[fi];
+        void sendFacToVar(const FactorDescriptor facDesc){
+            const auto factor = model_[facDesc];
             const auto arity  = factor->arity();
 
             #define SEND_FAC_TO_VAR_MS(ARITY) \
                 ValueType * facToVar[ARITY]; \
                 const ValueType * varToFac[ARITY]; \
                 for(auto i=0; i<ARITY; ++i){ \
-                    facToVar[i] = msg_.facToVarMsg(fi, i); \
-                    varToFac[i] = msg_.oppToFacToVarMsg(fi, i); \
+                    facToVar[i] = msg_.facToVarMsg(facDesc, i); \
+                    varToFac[i] = msg_.oppToFacToVarMsg(facDesc, i); \
                 } \
                 factor->facToVarMsg(varToFac, facToVar); \
                 break
@@ -294,8 +296,8 @@ namespace inference{
             switch(arity){
                 case 1 : {break;}
                 case 2 : {
-                    ValueType * facToVar[2] = {msg_.facToVarMsg(fi, 0), msg_.facToVarMsg(fi, 1)};
-                    const ValueType * varToFac[2] = {msg_.oppToFacToVarMsg(fi, 0), msg_.oppToFacToVarMsg(fi, 1)}; 
+                    ValueType * facToVar[2] = {msg_.facToVarMsg(facDesc, 0), msg_.facToVarMsg(facDesc, 1)};
+                    const ValueType * varToFac[2] = {msg_.oppToFacToVarMsg(facDesc, 0), msg_.oppToFacToVarMsg(facDesc, 1)}; 
                     factor->facToVarMsg(varToFac, facToVar);
                     break;
                 }
@@ -317,8 +319,8 @@ namespace inference{
                     std::vector<ValueType *>       facToVar(arity);
                     std::vector<const ValueType *> varToFac(arity);
                     for(auto i=0; i<arity; ++i){ 
-                        facToVar[i] = msg_.facToVarMsg(fi, i); 
-                        varToFac[i] = msg_.oppToFacToVarMsg(fi, i); 
+                        facToVar[i] = msg_.facToVarMsg(facDesc, i); 
+                        varToFac[i] = msg_.oppToFacToVarMsg(facDesc, i); 
                     } 
                     factor->facToVarMsg(varToFac.data(), facToVar.data()); 
                     break;
@@ -346,8 +348,8 @@ namespace inference{
                 std::fill(buffer, buffer + nl, 0.0);
 
                 // unary factors
-                for(const auto fi : uFacs)
-                    model_[fi]->addToBuffer(buffer);
+                for(const auto facDesc : uFacs)
+                    model_[facDesc]->addToBuffer(buffer);
 
                 // nHigher order factors
                 const auto nHo = hoFacs.size();

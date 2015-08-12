@@ -1,7 +1,7 @@
 #define BOOST_TEST_MODULE FactorTEst
 #include <boost/test/unit_test.hpp>
 
-#include "inferno/model/base_discrete_factor.hxx"
+#include "inferno/model/discrete_factor_base.hxx"
 #define TEST_EPS 0.00001
 
 

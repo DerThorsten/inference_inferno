@@ -36,38 +36,37 @@ class VariablesNeighbours{
 
 public:
     typedef MODEL Model;
-    typedef VectorSet<Vi> ViSet;
-    typedef ViSet VariableNeighbours;
+    typedef typename Model::VariableDescriptor VariableDescriptor;
+    typedef typename Model::FactorDescriptor FactorDescriptor;
+    typedef VectorSet<VariableDescriptor> VariableNeighbours;
 
     VariablesNeighbours(const Model & model)
     : storage_(model){
-        for(const auto fi : model.factorIds()){
-            const auto factor = model[fi];
+        for(const auto fac : model.factorDescriptors()){
+            const auto factor = model[fac];
             const auto arity = factor->arity();
-
             for(uint32_t va=0; va<arity-1; ++va){
-                const auto viA = factor->vi(va);
+                const auto varA = factor->variable(va);
                 for(uint32_t vb=va+1; vb<arity; ++vb){
-                    const auto viB = factor->vi(vb);
-                    storage_[viA].insert(viB);
-                    storage_[viB].insert(viA);
+                    const auto varB = factor->variable(vb);
+                    storage_[varA].insert(varB);
+                    storage_[varB].insert(varA);
                 }
             }
         };
     };
 
-    const VariableNeighbours & operator[](const Vi vi)const{
-        return storage_[vi];
+    const VariableNeighbours & operator[](const VariableDescriptor varDesc)const{
+        return storage_[varDesc];
     }
     
-    const VariableNeighbours & operator[](const Vi vi){
-        return storage_[vi];
+    const VariableNeighbours & operator[](const VariableDescriptor varDesc){
+        return storage_[varDesc];
     }
 
 
 private:
     typedef typename Model:: template VariableMap<VariableNeighbours>  Storage;
-
     Storage storage_;
 };
 
@@ -93,26 +92,29 @@ class FactorsOfVariables{
 
 public:
     typedef MODEL Model;
-    typedef VectorSet<Fi> FiSet;
+    typedef typename Model::VariableDescriptor VariableDescriptor;
+    typedef typename Model::FactorDescriptor FactorDescriptor;
+    
+    typedef VectorSet<FactorDescriptor> FiSet;
     typedef FiSet FactorsOfVariable;
 
     FactorsOfVariables(const Model & model)
     : storage_(model){
-        for(const auto fi : model.factorIds()){
-            const auto factor = model[fi];
+        for(const auto facDesc : model.factorDescriptors()){
+            const auto factor = model.factor(facDesc);
             const auto arity = factor->arity();
             for(auto v=0; v<arity; ++v){
-                storage_[factor->vi(v)].insert(fi);
+                storage_[factor->variable(v)].insert(facDesc);
             };
         };
     };
 
-    const FactorsOfVariable & operator[](const Vi vi)const{
-        return storage_[vi];
+    const FactorsOfVariable & operator[](const VariableDescriptor var)const{
+        return storage_[var];
     }
     
-    const FactorsOfVariable & operator[](const Vi vi){
-        return storage_[vi];
+    const FactorsOfVariable & operator[](const VariableDescriptor var){
+        return storage_[var];
     }
 
 
@@ -140,18 +142,21 @@ class HigherOrderAndUnaryFactorsOfVariables{
 
 public:
     typedef MODEL Model;
-    typedef VectorSet<Fi> FiSet;
+    typedef typename Model::VariableDescriptor VariableDescriptor;
+    typedef typename Model::FactorDescriptor FactorDescriptor;
+
+    typedef VectorSet<FactorDescriptor> FiSet;
     typedef FiSet HigherOrderFactorsOfVariable;
     typedef FiSet UnaryFactorsOfVariable;
 
     struct Facs{
     public:
-        void insert(const Fi fi, const uint32_t arity){
+        void insert(const FactorDescriptor facDesc, const uint32_t arity){
             if(arity == 1){
-                unaryFactors_.insert(fi);
+                unaryFactors_.insert(facDesc);
             }
             else{
-                higherOrderFactors_.insert(fi);
+                higherOrderFactors_.insert(facDesc);
             }
         }
         const UnaryFactorsOfVariable & unaryFactors()const{
@@ -168,21 +173,22 @@ public:
 
     HigherOrderAndUnaryFactorsOfVariables(const Model & model)
     : storage_(model){
-        for(const auto fi : model.factorIds()){
-            const auto factor = model[fi];
+        for(const auto facDesc : model.factorDescriptors()){
+            const auto factor = model[facDesc];
+            const auto fi = model.factorId(facDesc);
             const auto arity = factor->arity();
             for(auto v=0; v<arity; ++v){
-                storage_[factor->vi(v)].insert(fi, arity);
+                storage_[factor->variable(v)].insert(facDesc, arity);
             };
         };
     };
 
-    const Facs & operator[](const Vi vi)const{
-        return storage_[vi];
+    const Facs & operator[](const VariableDescriptor var)const{
+        return storage_[var];
     }
     
-    const Facs & operator[](const Vi vi){
-        return storage_[vi];
+    const Facs & operator[](const VariableDescriptor var){
+        return storage_[var];
     }
 
 
@@ -207,13 +213,15 @@ template<class MODEL>
 class FactorsOfMultipleVariables{
 private:
     typedef MODEL Model;
+    typedef typename Model::VariableDescriptor VariableDescriptor;
+    typedef typename Model::FactorDescriptor FactorDescriptor;
     typedef HigherOrderAndUnaryFactorsOfVariables<Model> FactorsOfVars;
     typedef typename Model:: template FactorMap<unsigned char> UsedFac;
-    typedef std::vector<Fi>::const_iterator const_iterator;
+    typedef typename std::vector<FactorDescriptor>::const_iterator const_iterator;
 
 public:
     FactorsOfMultipleVariables(const Model & model, 
-                       const FactorsOfVariables<Model> & factorsOfVariables)
+                               const FactorsOfVariables<Model> & factorsOfVariables)
     :   factorsOfVariables_(factorsOfVariables),
         facToRecomp_(model.nFactors()),
         usedFac_(model, 0),
@@ -236,16 +244,16 @@ public:
         return facToRecomp_.begin() + nFactors_;
     }
 
-    template<class VI_ITER>
-    void addVariables(VI_ITER viBegin, VI_ITER viEnd){
-        for( ;viBegin!=viEnd; ++viBegin){
-            const auto vi = *viBegin;
-            const auto & fset = factorsOfVariables_[vi];
-            for(const auto fi: fset){
-                if(usedFac_[fi] == 0){
-                    facToRecomp_[nFactors_] = fi;
+    template<class VAR_ITER>
+    void addVariables(VAR_ITER varDescBegin, VAR_ITER varDescEnd){
+        for( ;varDescBegin!=varDescEnd; ++varDescBegin){
+            const auto varDesc = *varDescBegin;
+            const auto & fset = factorsOfVariables_[varDesc];
+            for(const auto fDesc: fset){
+                if(usedFac_[fDesc] == 0){
+                    facToRecomp_[nFactors_] = fDesc;
                     ++nFactors_;
-                    usedFac_[fi] = 1;
+                    usedFac_[fDesc] = 1;
                 }
                 // do nothing if this factors 
                 // is already in the set
@@ -255,10 +263,10 @@ public:
     }
 
 private:
-    const FactorsOfVariables<MODEL> & factorsOfVariables_;
-    std::vector<Fi>             facToRecomp_;
-    UsedFac                     usedFac_;
-    uint64_t                    nFactors_;
+    const FactorsOfVariables<MODEL> &   factorsOfVariables_;
+    std::vector<FactorDescriptor>       facToRecomp_;
+    UsedFac                             usedFac_;
+    uint64_t                            nFactors_;
 };
 
 

@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <random>
+#include <cmath>
 
 #include <boost/iterator/counting_iterator.hpp>
 
@@ -31,6 +32,16 @@
 }
 
 
+#define _CHECK_CLOSE(aa, bb, tol) { \
+    if(std::isinf(aa) && std::isinf(bb)){ \
+        BOOST_CHECK_EQUAL(aa, bb); \
+    } \
+    else{ \
+        BOOST_CHECK_CLOSE(aa, bb, tol);\
+    } \
+}
+
+
 #define INFERNO_TEST_VT(vt, trueVt) \
 { \
     BOOST_CHECK_EQUAL(vt->arity(), trueVt.dimension()); \
@@ -41,29 +52,29 @@
     for(const auto & conf : vt->confs()){ \
         const auto vtVal = vt->eval(conf.data()); \
         const auto trueVal = trueVt(conf.data()); \
-        BOOST_CHECK_CLOSE(vtVal, trueVal, TEST_EPS); \
+        _CHECK_CLOSE(vtVal, trueVal, TEST_EPS); \
     } \
     if(arity==1){ \
         for(auto l=0; l < vt->shape(0); ++l) \
-            BOOST_CHECK_CLOSE(vt->eval1(l), trueVt(l), TEST_EPS); \
+            _CHECK_CLOSE(vt->eval(l), trueVt(l), TEST_EPS); \
     } \
     if(arity==2){ \
         for(auto l1=0; l1 < vt->shape(1); ++l1) \
         for(auto l0=0; l0 < vt->shape(0); ++l0) \
-            BOOST_CHECK_CLOSE(vt->eval2(l0,l1), trueVt(l0,l1), TEST_EPS); \
+            _CHECK_CLOSE(vt->eval(l0,l1), trueVt(l0,l1), TEST_EPS); \
     } \
     if(arity==3){ \
         for(auto l2=0; l2 < vt->shape(2); ++l2) \
         for(auto l1=0; l1 < vt->shape(1); ++l1) \
         for(auto l0=0; l0 < vt->shape(0); ++l0) \
-            BOOST_CHECK_CLOSE(vt->eval3(l0,l1, l2), trueVt(l0,l1, l2), TEST_EPS); \
+            _CHECK_CLOSE(vt->eval(l0,l1, l2), trueVt(l0,l1, l2), TEST_EPS); \
     } \
     if(arity==4){ \
         for(auto l3=0; l3 < vt->shape(3); ++l3) \
         for(auto l2=0; l2 < vt->shape(2); ++l2) \
         for(auto l1=0; l1 < vt->shape(1); ++l1) \
         for(auto l0=0; l0 < vt->shape(0); ++l0) \
-            BOOST_CHECK_CLOSE(vt->eval4(l0,l1, l2, l3), trueVt(l0,l1, l2, l3), TEST_EPS); \
+            _CHECK_CLOSE(vt->eval(l0,l1, l2, l3), trueVt(l0,l1, l2, l3), TEST_EPS); \
     } \
     if(arity==5){ \
         for(auto l4=0; l4 < vt->shape(4); ++l4) \
@@ -71,7 +82,7 @@
         for(auto l2=0; l2 < vt->shape(2); ++l2) \
         for(auto l1=0; l1 < vt->shape(1); ++l1) \
         for(auto l0=0; l0 < vt->shape(0); ++l0) \
-            BOOST_CHECK_CLOSE(vt->eval5(l0,l1, l2, l3, l4), trueVt(l0,l1, l2, l3, l4), TEST_EPS); \
+            _CHECK_CLOSE(vt->eval(l0,l1, l2, l3, l4), trueVt(l0,l1, l2, l3, l4), TEST_EPS); \
     } \
     std::vector<inferno::DiscreteLabel> shapeBuffer(arity); \
     vt->bufferShape(shapeBuffer.data()); \
@@ -81,7 +92,7 @@
     vt->bufferValueTable(valueBuffer.data()); \
     auto c = 0; \
     for(const auto & conf : vt->confs()){ \
-        BOOST_CHECK_CLOSE(valueBuffer[c], trueVt(c), TEST_EPS); \
+        _CHECK_CLOSE(valueBuffer[c], trueVt(c), TEST_EPS); \
         ++c; \
     } \
     /* no test / or very simple tests  for next functions */ \

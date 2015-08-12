@@ -2,7 +2,7 @@
 #define INFERNO_MODEL_ALGORITHMS_CONNECTED_COMPONENTS_HXX
 
 #include "inferno/inferno.hxx"
-#include "inferno/model/base_discrete_model.hxx"
+#include "inferno/model/discrete_model_base.hxx"
 #include "inferno/utilities/ufd.hxx"
 
 
@@ -37,10 +37,10 @@ namespace models{
             for(const auto factor : model_.factors()){
                 const auto arity = factor->arity();
                 for(auto v0=0; v0<arity -1; ++v0){
-                    const auto vi0 = factor->vi(v0);
+                    const auto vi0 = factor->variable(v0);
                     const auto l0 = conf[vi0];
                     for(auto v1=v0+1; v1<arity; ++v1){
-                        const auto vi1 = factor->vi(v1);
+                        const auto vi1 = factor->variable(v1);
                         const auto l1 = conf[vi1];
                         if(l0 == l1){
                             ufd_.merge(denseIds_.toDense(vi0),denseIds_.toDense(vi1));
@@ -53,7 +53,8 @@ namespace models{
             if(makeDense)
                 ufd_.representativeLabeling(relabeling_);
             DiscreteLabel maxLabel = 0;
-            for(const auto vi : model_.variableIds()){
+            for(const auto varDesc : model_.variableDescriptors()){
+                const auto vi = model_.variableId(varDesc);
                 const auto denseVi = denseIds_.toDense(vi);
                 const DiscreteLabel reprLabel = ufd_.find(denseVi);
                 if(reprLabel == denseVi){

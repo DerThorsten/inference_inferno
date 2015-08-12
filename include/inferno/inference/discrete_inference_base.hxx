@@ -1,4 +1,4 @@
-/** \file base_discrete_inference.hxx 
+/** \file discrete_inference_base.hxx 
     \brief  Functionality which is shared between all inference algorithms
     is implemented in this header.
 
@@ -19,7 +19,6 @@
 #include "inferno/inference/utilities/movemaker.hxx"
 #include "inferno/inference/inference_options.hxx"
 #include "inferno/model/factors_of_variables.hxx"
-#include "inferno/utilities/parallel/parallel.hxx"
     
 namespace inferno{
 
@@ -34,7 +33,6 @@ namespace inferno{
 */
 namespace inference{
 
-    typedef inferno::utilities::Concurrency Concurrency;
 
     template<class MODEL>
     class DiscreteInferenceBase{

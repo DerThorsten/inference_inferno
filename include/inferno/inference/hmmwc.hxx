@@ -1,4 +1,4 @@
-/** \file base_discrete_inference.hxx 
+/** \file discrete_inference_base.hxx 
     \brief  Functionality which is shared between all inference algorithms
     is implemented in this header.
 
@@ -9,11 +9,10 @@
 
 
 #include "inferno/inferno.hxx"
-#include "inferno/inference/base_discrete_inference.hxx"
+#include "inferno/inference/discrete_inference_base.hxx"
 #include "inferno/utilities/ufd.hxx"
 #include "inferno/model/algorithms/connected_components.hxx"
     
-#include "inferno/utilities/parallel/parallel.hxx"
 #include "inferno/utilities/parallel/pool.hxx"
 
 namespace inferno{
@@ -76,14 +75,14 @@ namespace inference{
                     auto minVal = infVal();
                     DiscreteLabel argMin = 0;
                     for(const auto label : startLabel_){
-                        const auto val = fac->eval1(label);
+                        const auto val = fac->eval(label);
                         if(val<minVal){
                             minVal = val;
                             argMin = label;
                         }
                     }
                     std::cout<<argMin<<" ["<<minVal<<"]\n";
-                    const auto vi = fac->vi(0);
+                    const auto vi = fac->variable(0);
                     conf_[vi] = argMin;
                     semanticConf_[vi] = argMin;
                     partitionConf_[vi] = argMin;
@@ -137,8 +136,8 @@ namespace inference{
         }
         // get result
         virtual void conf(Conf & confMap ) {
-            for(const auto vi : model_.variableIds())
-                confMap[vi] = conf_[vi];
+            for(const auto varDesc : model_.variableDescriptors())
+                confMap[varDesc] = conf_[varDesc];
         }
         virtual DiscreteLabel label(const Vi vi ) {
             return conf_[vi];

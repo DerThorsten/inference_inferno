@@ -1,15 +1,9 @@
-/** \file base_discrete_inference.hxx 
-    \brief  Functionality which is shared between all inference algorithms
-    is implemented in this header.
-
-    \warning Not yet finished
-*/
 #ifndef INFERNO_INFERENCE_ICM_HXX
 #define INFERNO_INFERENCE_ICM_HXX
 
 #include "inferno/inferno.hxx"
 #include "inferno/utilities/delegate.hxx"
-#include "inferno/inference/base_discrete_inference.hxx"
+#include "inferno/inference/discrete_inference_base.hxx"
 #include "inferno/inference/utilities/movemaker.hxx"
 #include "inferno/model/factors_of_variables.hxx"
 namespace inferno{
@@ -55,8 +49,8 @@ namespace inference{
 
             const auto factorOfVariables  = movemaker_.factorsOfVariabes();
 
-            for(const auto vi : model_.variableIds())
-                isLocalOpt_[vi] = false;
+            for(const auto varDesc : model_.variableDescriptors())
+                isLocalOpt_[varDesc] = false;
 
             if(visitor!=NULL)
                 visitor->begin(this);
@@ -64,21 +58,21 @@ namespace inference{
             bool changes = true;
             while(changes){
                 changes = false;
-                for(const auto vi : model_.variableIds()){
+                for(const auto varDesc : model_.variableDescriptors()){
                     if(stopInference_){
                         changes = false;
                         break;
                     }
-                    if(!isLocalOpt_[vi]){
-                        const auto currentLabel = movemaker_.label(vi);
-                        movemaker_.moveOptimally(&vi, &vi+1);
-                        const auto newLabel = movemaker_.label(vi);
-                        isLocalOpt_[vi] = true;
+                    if(!isLocalOpt_[varDesc]){
+                        const auto currentLabel = movemaker_.label(varDesc);
+                        movemaker_.moveOptimally(&varDesc, &varDesc+1);
+                        const auto newLabel = movemaker_.label(varDesc);
+                        isLocalOpt_[varDesc] = true;
                         if(newLabel != currentLabel){
                             if(visitor!=NULL)
                                 visitor->visit(this);
                             changes = true;
-                            for(const auto ovi : variablesNeighbours_[vi])
+                            for(const auto ovi : variablesNeighbours_[varDesc])
                                 isLocalOpt_[ovi] = false;
                         }
                     }

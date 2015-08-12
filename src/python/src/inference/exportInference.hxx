@@ -7,7 +7,7 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/inferno_python.hxx"
-#include "inferno/inference/base_discrete_inference.hxx"
+#include "inferno/inference/discrete_inference_base.hxx"
 #include "inferno/inference/base_discrete_inference_factory.hxx"
 
 
@@ -145,8 +145,10 @@ namespace inference{
         out.reshapeIfEmpty(shape);
         {
             ScopedGILRelease _gil;
-            for(const auto vi : model.variableIds())
-                out(vi) = inf->label(vi);
+            for(const auto var : model.variableDescriptors()){
+                const auto vi = model.variableId(var);
+                out(vi) = inf->label(var);
+            }
         }
         return out;
 

@@ -29,7 +29,7 @@
 
 
 #include "inferno/inferno.hxx"
-#include "inferno/value_tables/base_discrete_value_table.hxx"
+#include "inferno/value_tables/discrete_value_table_base.hxx"
 #include "inferno/value_tables/potts.hxx"
 
 namespace inferno{
@@ -47,7 +47,7 @@ namespace inferno{
         bp::class_<export_helper::BaseVtWrap, boost::noncopyable>("DiscreteValueTableBase")
 
             // pure virtual functions
-            .def("eval", bp::pure_virtual( &BaseVt::eval))
+            //.def("eval", bp::pure_virtual( &BaseVt::eval))
             .def("shape", bp::pure_virtual(&BaseVt::shape))
             .def("arity", bp::pure_virtual(&BaseVt::arity))
             

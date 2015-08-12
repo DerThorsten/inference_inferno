@@ -23,10 +23,10 @@ struct  Benchmark{
         EvalAt(const MODEL & model, bool atZero = true) 
         :   model_(model),labels_(model),atZero_(atZero){
             if(atZero_)
-                for(auto vi : model.variableIds())
+                for(auto vi : model.variableDescriptors())
                     labels_[vi] = DiscreteLabel(0);
             else
-                for(auto vi : model.variableIds())
+                for(auto vi : model.variableDescriptors())
                     labels_[vi] = vi % model.nLabels(vi);
         }
         std::string name()const{

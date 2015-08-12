@@ -72,8 +72,8 @@ public:
     ValueType moveOptimally(IndexIterator, IndexIterator);
 
     void conf(Conf & confMap){
-        for(const auto vi: model_.variableIds())
-            confMap[vi] = state_[vi];
+        for(const auto varDesc: model_.variableDescriptors())
+            confMap[varDesc] = state_[varDesc];
     }
 
     const models::FactorsOfVariables<Model> & factorsOfVariabes()const{
@@ -131,18 +131,18 @@ void Movemaker<MODEL>::initialize
    const CONF_MAP & conf
 ) {
    energy_ = model_.eval(conf); 
-   for (const auto vi : model_.variableIds()) {
-      state_[vi] = conf[vi];
-      stateBuffer_[vi] = conf[vi];
+   for (const auto varDesc : model_.variableDescriptors()) {
+      state_[varDesc] = conf[varDesc];
+      stateBuffer_[varDesc] = conf[varDesc];
    }
 }
 
 template<class MODEL>
 void
 Movemaker<MODEL>::reset() {
-   for (const auto vi : model_.varibleIds()) {
-      state_[vi] = 0;
-      stateBuffer_[vi] = 0;
+   for (const auto varDesc : model_.variableDescriptors()) {
+      state_[varDesc] = 0;
+      stateBuffer_[varDesc] = 0;
    }
    energy_ = model_.eval(state_);
 }

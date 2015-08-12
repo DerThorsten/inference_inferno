@@ -8,7 +8,7 @@
 #ifndef INFERNO_INFERENCE_HIGHER_ORDER_QPBO_HXX
 #define INFERNO_INFERENCE_HIGHER_ORDER_QPBO_HXX
 
-#include "inferno/inference/base_discrete_inference.hxx"
+#include "inferno/inference/discrete_inference_base.hxx"
 #include "inferno/inference/utilities/fix-fusion/fusion-move.hpp"
 
 #ifdef WITH_QPBO
@@ -77,8 +77,8 @@ namespace inference{
             std::vector<ValueType> coeffs(1 << maxArity);
             std::vector<DiscreteLabel> cliqueLabels(maxArity);
 
-            for (const auto fi : model_.factorIds()){
-                const auto  factor = model_[fi];
+            for (const auto factor : model_.factors()){
+                //const auto  factor = model_[fi];
                 const ArityType arity = factor->arity();
                 const LabelType l0 = 0;
                 const LabelType l1 = 1;
@@ -86,9 +86,9 @@ namespace inference{
                                        "Please contact the developers to inform them how you "
                                        "could create a model with zero arity factor");
                 if (arity == 1){
-                    const Vi var = denseVarIds_.toDense(factor->vi(0));
-                    const ValueType e0 = factor->eval1(l0);
-                    const ValueType e1 = factor->eval1(l1);
+                    const Vi var = denseVarIds_.toDense(factor->variable(0));
+                    const ValueType e0 = factor->eval(l0);
+                    const ValueType e1 = factor->eval(l1);
                     hoe_.AddUnaryTerm(var, e1 - e0);
                 }
                 else{
@@ -122,7 +122,7 @@ namespace inference{
                         int degree = 0;
                         for (unsigned int b = 0; b < arity; ++b)
                             if (subset & (1 << b))
-                                vars[degree++] = denseVarIds_.toDense(factor->vi(b));
+                                vars[degree++] = denseVarIds_.toDense(factor->variable(b));
 
                         // this sort could be redundant
                         /// \todo add policy check 
@@ -159,7 +159,8 @@ namespace inference{
 
             bound_ = constTerm_ + 0.5 * qr.ComputeTwiceLowerBound();
 
-            for (const auto vi : model_.variableIds()){
+            for (const auto varDesc : model_.variableDescriptors()){
+                const auto vi = model_.variableId(varDesc);
                 int label = qr.GetLabel(denseVarIds_.toDense(vi));
                 if (label == 0 || label == 1)
                     conf_[vi] == static_cast<DiscreteLabel>(label);
@@ -172,8 +173,8 @@ namespace inference{
         }
         // get result
         virtual void conf(Conf & confMap ) {
-            for(const Vi vi : model_.variableIds())
-                confMap[vi] = conf_[vi];
+            for(const auto varDesc : model_.variableDescriptors())
+                confMap[varDesc] = conf_[varDesc];
         }
         virtual DiscreteLabel label(const Vi vi ) {
             return conf_[vi];

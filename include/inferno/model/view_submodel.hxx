@@ -12,15 +12,17 @@
 #include <boost/iterator/counting_iterator.hpp>
 
 #include "inferno/inferno.hxx"
-#include "inferno/value_tables/base_discrete_value_table.hxx"
-#include "inferno/model/base_discrete_factor.hxx"
-#include "inferno/model/base_discrete_model.hxx"
+#include "inferno/value_tables/discrete_value_table_base.hxx"
+#include "inferno/model/discrete_factor_base.hxx"
+#include "inferno/model/discrete_model_base.hxx"
 
 
 namespace inferno{
 namespace models{
 
-
+// forward declaration
+template<class BASE_MODEL, class BASE_MODEL_FACTORS_OF_VARIABLES>
+class ViewSubmodel;
 
 /** \namespace inferno::models::detail_view_submodel
     \brief detail namespace only for functionality of
@@ -41,8 +43,9 @@ namespace detail_view_submodel{
     template<class VIEW_SUBMODEL>
     class FactorBase : public inferno::models::DiscreteFactorBase< FactorBase<VIEW_SUBMODEL> >{
     public:
+        typedef typename VIEW_SUBMODEL::VariableDescriptor VariableDescriptor;
         virtual ~FactorBase(){}
-        virtual Vi vi(const size_t d) const = 0;
+        virtual VariableDescriptor variable(const size_t d) const = 0;
         virtual const inferno::value_tables::DiscreteValueTableBase * valueTable()const=0;
     };
     /** \brief factor class of  inferno::models::ViewSubmodel implementing a fully included factor
@@ -53,18 +56,19 @@ namespace detail_view_submodel{
     class FullyIncludedFactor :  public FactorBase<VIEW_SUBMODEL>
     {
     private:
+        typedef typename VIEW_SUBMODEL::VariableDescriptor VariableDescriptor;
         typedef typename VIEW_SUBMODEL::BaseModelFactorProxy BaseModelFactorProxy;
     public:
         FullyIncludedFactor(const VIEW_SUBMODEL & viewSubmodel, const Fi baseFi)
         :   viewSubmodel_(&viewSubmodel),
-            baseModelFactor_(viewSubmodel.baseModel()[baseFi]){
+            baseModelFactor_(viewSubmodel.baseModel().factor(baseFi)){
 
         }
         uint32_t arity()const{
             return baseModelFactor_->arity();
         }
-        virtual Vi vi(const size_t d) const {
-            return viewSubmodel_->baseViToVi(baseModelFactor_->vi(d));
+        virtual VariableDescriptor variable(const size_t d) const {
+            return viewSubmodel_->fromBaseModelVariableDescriptor(baseModelFactor_->variable(d));
         }
         virtual const inferno::value_tables::DiscreteValueTableBase * valueTable()const{
             return baseModelFactor_->valueTable();
@@ -115,7 +119,10 @@ namespace detail_view_submodel{
     template<class VIEW_SUBMODEL>
     class PartiallyIncludedFactor :  public FactorBase<VIEW_SUBMODEL>
     {
+        template<class BASE_MODEL, class BASE_MODEL_FACTORS_OF_VARIABLES>
+        friend class inferno::models::ViewSubmodel;
     private:
+        typedef typename VIEW_SUBMODEL::VariableDescriptor VariableDescriptor;
         typedef typename VIEW_SUBMODEL::BaseModelFactorProxy BaseModelFactorProxy;
     public:
         PartiallyIncludedFactor(
@@ -127,7 +134,7 @@ namespace detail_view_submodel{
             const uint64_t confBufferOffset
         )
         :   viewSubmodel_(&viewSubmodel),
-            baseModelFactor_(viewSubmodel.baseModel()[baseFi]),
+            baseModelFactor_(viewSubmodel.baseModel().factor(baseFi)),
             newArity_(newArity),
             indexMappingOffset_(indexMappingOffset),
             fixedVarPosOffset_(fixedVarPosOffset),
@@ -149,25 +156,26 @@ namespace detail_view_submodel{
             const auto nFixed = baseArity  - newArity_;
             for(size_t i=0; i<nFixed; ++i){
                 const auto p = viewSubmodel_->fixedVarPos_[fixedVarPosOffset_+i];
-                buffer[p] = viewSubmodel_->baseModelLabels_[baseModelFactor_->vi(p)];
+                buffer[p] = viewSubmodel_->baseModelLabels_[baseModelFactor_->variable(p)];
             }
             return baseModelFactor_->eval(buffer);
         }
-        virtual Vi shape(const size_t d) const {
+        virtual DiscreteLabel shape(const size_t d) const {
             const size_t baseFacD = viewSubmodel_->indexMapping_[indexMappingOffset_ + d];
             return baseModelFactor_->shape(baseFacD);
         }
-        virtual Vi vi(const size_t d) const {
+        virtual VariableDescriptor variable(const size_t d) const {
             const size_t baseFacD = viewSubmodel_->indexMapping_[indexMappingOffset_ + d];
-            return viewSubmodel_->baseViToVi(baseModelFactor_->vi(baseFacD));
+            return viewSubmodel_->fromBaseModelVariableDescriptor(baseModelFactor_->variable(baseFacD));
         }
         virtual const inferno::value_tables::DiscreteValueTableBase * valueTable()const{
             return &newVt_;
         }
+        
+    private:
         void finish(){
             newVt_.setFactorPtr(this);
         }
-    private:
         const VIEW_SUBMODEL * viewSubmodel_;
         const BaseModelFactorProxy baseModelFactor_;
         const size_t  newArity_;
@@ -181,16 +189,26 @@ namespace detail_view_submodel{
 
     /// \cond
     template<class BASE_MODEL>
-    class ViMapping{
+    class VariableMapping{
 
     public:
+        typedef BASE_MODEL BaseModel;
+
+
+
+        typedef typename BaseModel::VariableDescriptor BaseModelVariableDescriptor;
+        typedef Vi VariableDescriptor;
+
+        typedef boost::counting_iterator<VariableDescriptor> VariableDescriptorIter; 
+
+
+
         typedef boost::counting_iterator<Vi> VariableIdIter;
 
-        typedef BASE_MODEL BaseModel;
-        ViMapping(const BaseModel & baseModel)
+        VariableMapping(const BaseModel & baseModel)
         :   notInSubmodelId_(baseModel.maxVarId()+1),
-            baseViToVi_(baseModel,notInSubmodelId_),
-            viToBaseVi_(){
+            fromBaseVarDesc_(baseModel,notInSubmodelId_),
+            toBaseVarDesc_(){
 
         }
 
@@ -199,26 +217,36 @@ namespace detail_view_submodel{
             BASE_VI_ITER baseViIter,
             BASE_VI_ITER baseViEnd
         ){
-            viToBaseVi_.resize(0);
+            toBaseVarDesc_.resize(0);
             // forward and backward mapping 
             // between vi and baseVi
             nVar_ = 0 ;
             for( ; baseViIter!=baseViEnd; ++baseViIter, ++nVar_){
                 const Vi baseVi = *baseViIter;
-                baseViToVi_[baseVi] = nVar_;
-                viToBaseVi_.push_back(baseVi);
+                fromBaseVarDesc_[baseVi] = nVar_;
+                toBaseVarDesc_.push_back(baseVi);
             }
         }
 
+
+        VariableDescriptorIter variableDescriptorsBegin()const{
+            return VariableDescriptorIter(0);
+        }
+        VariableDescriptorIter variableDescriptorsEnd()const{
+            return VariableDescriptorIter(nVar_);
+        }
+
+        /// \deprecated
         VariableIdIter variableIdsBegin()const{
             return VariableIdIter(0);
         }
-
+        
+        /// \deprecated
         VariableIdIter variableIdsEnd()const{
             return VariableIdIter(nVar_);
         }
         Vi nVariables()const{
-            return viToBaseVi_.size();
+            return toBaseVarDesc_.size();
         }
         Vi maxVarId()const{
             return nVariables()-1;
@@ -226,23 +254,48 @@ namespace detail_view_submodel{
         Vi minVarId()const{
             return 0;
         }
-        Vi baseViToVi(const Vi baseVi)const{
-            return baseViToVi_[baseVi];
-        }
-        Vi viToBaseVi(const Vi vi)const{
-            return viToBaseVi_[vi];
+
+
+        VariableDescriptor fromBaseModelVariableDescriptor(
+            const BaseModelVariableDescriptor baseModelVariableDescriptor
+        )const{
+            return fromBaseVarDesc_[baseModelVariableDescriptor];
         }
 
+        BaseModelVariableDescriptor toBaseModelVariableDescriptor(
+            const VariableDescriptor variableDescriptor
+        )const{
+            return toBaseVarDesc_[variableDescriptor];
+        }
+
+
+        /// \deprecated
+        Vi baseViToVi(const Vi baseVi)const{
+            return fromBaseVarDesc_[baseVi];
+        }
+
+        /// \deprecated
+        Vi viToBaseVi(const Vi vi)const{
+            return toBaseVarDesc_[vi];
+        }
+
+
+        /// \brief check if a variable of the base model is part of the submodel
+        bool inSubmodel(const BaseModelVariableDescriptor baseModelVariableDescriptor)const{
+            return fromBaseVarDesc_[baseModelVariableDescriptor] < nVariables() ; 
+        }
+
+        /// \deprecated
         bool isInSubmodel(const Vi baseVi)const{
             // \todo buffer max id
-            return baseViToVi_[baseVi] < nVariables() ;
+            return fromBaseVarDesc_[baseVi] < nVariables() ;
         }
 
     private:
-        typedef typename BASE_MODEL:: template VariableMap<Vi> BaseModelViMap;
+        typedef typename BASE_MODEL:: template VariableMap<VariableDescriptor> BaseModelViMap;
         Vi notInSubmodelId_;
-        BaseModelViMap baseViToVi_;
-        std::vector<Vi> viToBaseVi_;
+        BaseModelViMap fromBaseVarDesc_;
+        std::vector<BaseModelVariableDescriptor> toBaseVarDesc_;
         Vi nVar_;
     };
     /// \endcond
@@ -287,7 +340,7 @@ private:
         FullyIncluded = 2
     };
 
-    typedef detail_view_submodel::ViMapping<BASE_MODEL> ViMapping;
+    typedef detail_view_submodel::VariableMapping<BASE_MODEL> VariableMapping;
     typedef detail_view_submodel::FactorBase<Self> FactorBase;
     typedef detail_view_submodel::FullyIncludedFactor<Self> FullyIncludedFactor;
     typedef detail_view_submodel::PartiallyIncludedFactor<Self> PartiallyIncludedFactor;
@@ -336,8 +389,24 @@ public:
     const static bool SortedVariableIds = true;
     const static bool SortedFactorIds = true;
 
-    typedef typename ViMapping::VariableIdIter VariableIdIter;
+
+    typedef typename VariableMapping::VariableDescriptorIter VariableDescriptorIter;
+    typedef boost::counting_iterator<Fi> FactorDescriptorIter;
+
+
+    /// \deprecated
+    typedef typename VariableMapping::VariableIdIter VariableIdIter;
+
+    /// \ deprecated
     typedef boost::counting_iterator<Fi> FactorIdIter;
+
+    typedef Fi FactorDescriptor;
+
+    typedef typename  VariableMapping::BaseModelVariableDescriptor BaseModelVariableDescriptor;
+    typedef typename  VariableMapping::VariableDescriptor VariableDescriptor;
+
+
+
     // typedefs of adapter API
 
     /** \var typedef BaseModel 
@@ -354,7 +423,7 @@ public:
     :   baseModel_(baseModel),
         baseModelFacOfVars_(baseModelFactorsOfVariables),
         baseModelLabels_(baseModel),
-        viMapping_(baseModel),
+        variableMapping_(baseModel),
         baseFiIncluding_(baseModel, NotIncluded),
         includedFactors_(baseModel.nFactors(),0),
         includedFactorsStorageIndex_(baseModel.nFactors(),0),
@@ -388,7 +457,7 @@ public:
         // forward and backward mapping 
         // between vi and baseVi
 
-        viMapping_.setSubmodelVariables(baseViIter, baseViEnd);
+        variableMapping_.setSubmodelVariables(baseViIter, baseViEnd);
 
         #ifdef INFERNO_DO_DEBUG
             const auto dist = std::distance(baseViIter, baseViEnd);
@@ -406,7 +475,7 @@ public:
             for(const auto  baseFi : baseModelFacOfVars_[baseVi]){
                 if(baseFiIncluding_[baseFi]==NotIncluded){
                     INFERNO_ASSERT_OP(baseFi,<,baseModel_.maxFactorId()+1);
-                    const auto factor = baseModel_[baseFi];
+                    const auto factor = baseModel_.factor(baseFi);
                     const auto arity = factor->arity();
                     // two cases can happen
                     // -factor is partial included 
@@ -416,7 +485,7 @@ public:
                     auto nNotFixed = 0;
                     auto nFixed  = 0;
                     for(size_t a=0; a<arity; ++a){
-                        const auto baseVi = factor->vi(a);
+                        const auto baseVi = factor->variable(a);
                         if(this->isInSubmodel(baseVi)){
                            notFixedPos[nNotFixed] =a;
                            ++nNotFixed;
@@ -475,18 +544,29 @@ public:
             pFac.finish();
     }
 
+
+    VariableIdIter variableDescriptorsBegin()const{
+        return variableMapping_.variableDescriptorsBegin();
+    }
+
+    VariableIdIter variableDescriptorsEnd()const{
+        return variableMapping_.variableDescriptorsEnd();
+    }
+
+
+
     /** \brief begin iterator to the variable indices
         of the model
     */
     VariableIdIter variableIdsBegin()const{
-        return viMapping_.variableIdsBegin();
+        return variableMapping_.variableIdsBegin();
     }
 
     /** \brief begin iterator to the variable indices
         of the model
     */
     VariableIdIter variableIdsEnd()const{
-        return viMapping_.variableIdsEnd();
+        return variableMapping_.variableIdsEnd();
     }
 
     /** \brief number of variables in the model
@@ -495,7 +575,7 @@ public:
 
     */
     uint64_t nVariables()const{
-        return viMapping_.nVariables();
+        return variableMapping_.nVariables();
     }
     /** \brief get the minimal variable id in the model 
         
@@ -507,7 +587,7 @@ public:
 
     */
     Vi minVarId()const{
-        return viMapping_.minVarId();
+        return variableMapping_.minVarId();
     }
     /** \brief get the maximal variable id in the model
 
@@ -518,8 +598,21 @@ public:
             calling this function will have undefined behavior.
     */
     Vi maxVarId()const{
-        return viMapping_.maxVarId();
+        return variableMapping_.maxVarId();
     }
+
+
+    FactorDescriptorIter factorDescriptorsBegin()const{
+        return FactorDescriptorIter(0);
+    }
+    /** \brief end iterator of the factor indices
+        of the model
+    */
+    FactorDescriptorIter factorDescriptorsEnd()const{
+        return FactorDescriptorIter(nFac_);
+    }
+
+
     /** \brief begin iterator to the factor indices
         of the model
     */
@@ -546,7 +639,7 @@ public:
 
         \param fi : factor index
     */
-    FactorProxy operator[](const Fi fi) const {
+    FactorProxy factor(const Fi fi) const {
         const Fi baseFi = includedFactors_[fi];
         FactorIncluding facIncType = baseFiIncluding_[baseFi];
         INFERNO_ASSERT(facIncType!=NotIncluded);
@@ -560,6 +653,30 @@ public:
         }
     }
 
+
+
+
+
+
+
+    VariableDescriptor fromBaseModelVariableDescriptor(
+        const BaseModelVariableDescriptor baseModelVariableDescriptor
+    )const{
+        return variableMapping_.fromBaseModelVariableDescriptor(baseModelVariableDescriptor);
+    }
+
+    BaseModelVariableDescriptor toBaseModelVariableDescriptor(
+        const VariableDescriptor variableDescriptor
+    )const{
+        return variableMapping_.toBaseModelVariableDescriptor(variableDescriptor);
+    }
+
+    bool inSubmodel(const BaseModelVariableDescriptor baseModelVariableDescriptor)const{
+        return variableMapping_.inSubmodel();
+    }
+
+
+
     /** \brief get variable index of this
         from a variable index of the base model
 
@@ -571,7 +688,7 @@ public:
         otherwise the result is undefined
     */
     Vi baseViToVi(const Vi baseVi)const{
-        return viMapping_.baseViToVi(baseVi);
+        return variableMapping_.baseViToVi(baseVi);
     }
 
     /** \brief get variable index of the
@@ -582,7 +699,7 @@ public:
         \return : variable index w.r.t. base model
     */
     Vi viToBaseVi(const Vi vi)const{
-        return viMapping_.viToBaseVi(vi);
+        return variableMapping_.viToBaseVi(vi);
     }
 
     /** \brief query if a base-model variable
@@ -591,7 +708,7 @@ public:
         \param baseVi : variable index w.r.t. the base-model
     */
     bool isInSubmodel(const Vi baseVi)const{
-        return viMapping_.isInSubmodel(baseVi);
+        return variableMapping_.isInSubmodel(baseVi);
     }
 
     /** \brief query if a factor of the base-model
@@ -630,9 +747,9 @@ public:
     ValueType constTerm()const{
         ValueType constT = 0.0;
         SmallVector<DiscreteLabel> conf(maxArity_);
-        for(const auto baseFi : baseModel_.factorIds()){
+        for(const auto baseFi : baseModel_.factorDescriptors()){
             if(baseFiIncluding_[baseFi] == NotIncluded){
-                const auto baseFactor = baseModel_[baseFi];
+                const auto baseFactor = baseModel_.factor(baseFi);
                 baseFactor->getFactorConf(baseModelLabels_, conf.begin());
                 constT += baseFactor->eval(conf.data());
             }
@@ -640,11 +757,46 @@ public:
         return constT;
     }
 
+
+    /// \brief convert factor descriptor into factor id
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    Fi factorId(const FactorDescriptor factorDescriptor)const{
+        return factorDescriptor;
+    }
+
+    /// \brief convert variable descriptor into variable id
+    ///
+    /// For this type of graphical model, variable ids and descriptors
+    /// are equivalent
+    Vi variableId(const VariableDescriptor variableDescriptor)const{
+        return variableDescriptor;
+    }
+
+    /// \brief convert factor id into factor descriptor
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    FactorDescriptor factorDescriptor(const Fi fi)const{
+        return fi;
+    }
+
+    /// \brief convert factor id into factor descriptor
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    VariableDescriptor variableDescriptor(const Vi vi)const{
+        return vi;
+    }
+
+
+
 private:
     const BASE_MODEL & baseModel_;
     const BASE_MODEL_FACTORS_OF_VARIABLES & baseModelFacOfVars_;
     BaseModelLabelMap baseModelLabels_;
-    ViMapping viMapping_;
+    VariableMapping variableMapping_;
     
     IncludedFactorMap baseFiIncluding_;
     std::vector<Fi> includedFactors_;

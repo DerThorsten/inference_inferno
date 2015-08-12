@@ -70,12 +70,12 @@ BOOST_AUTO_TEST_CASE(TestAddFactorSimple)
         Vi vis[2] = {0,1};
         const auto fi = model.addFactor(vti, vis,vis+2);
         BOOST_CHECK_EQUAL(fi, 0);
-        const auto factor = model[0];
+        const auto factor = model.factor(0);
         //const auto vt = factor->valueTable();
         ValueType beta;
         factor->isPotts(beta);
-        BOOST_CHECK_CLOSE(factor->eval2(0l,0l),0.0, TEST_EPS);
-        BOOST_CHECK_CLOSE(factor->eval2(0l,1l),1.0, TEST_EPS);
+        BOOST_CHECK_CLOSE(factor->eval(0l,0l),0.0, TEST_EPS);
+        BOOST_CHECK_CLOSE(factor->eval(0l,1l),1.0, TEST_EPS);
     }
 
    

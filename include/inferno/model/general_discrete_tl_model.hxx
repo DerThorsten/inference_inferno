@@ -8,8 +8,8 @@
 #include <boost/iterator/counting_iterator.hpp>
 
 #include "inferno/inferno.hxx"
-#include "inferno/model/base_discrete_model.hxx"
-#include "inferno/value_tables/base_discrete_value_table.hxx"
+#include "inferno/model/discrete_model_base.hxx"
+#include "inferno/value_tables/discrete_value_table_base.hxx"
 
 
 
@@ -73,43 +73,43 @@ namespace functors{
         }
         ValueType * v_;
     };
-    struct Eval1{
+    struct eval1{
         typedef ValueType result_type;
         template<class VT>
         result_type operator()(const VT & vt)const{
-            return vt.eval1(l0_);
+            return vt.eval(l0_);
         }
         const DiscreteLabel  l0_;
     };
-    struct Eval2{
+    struct eval2{
         typedef ValueType result_type;
         template<class VT>
         result_type operator()(const VT & vt)const{
-            return vt.eval2(l0_, l1_);
+            return vt.eval(l0_, l1_);
         }
         const DiscreteLabel  l0_,l1_;
     };
-    struct Eval3{
+    struct eval3{
         typedef ValueType result_type;
         template<class VT>
         result_type operator()(const VT & vt)const{
-            return vt.eval3(l0_, l1_, l2_);
+            return vt.eval(l0_, l1_, l2_);
         }
         const DiscreteLabel  l0_,l1_,l2_;
     };
-    struct Eval4{
+    struct eval4{
         typedef ValueType result_type;
         template<class VT>
         result_type operator()(const VT & vt)const{
-            return vt.eval4(l0_, l1_, l2_, l3_);
+            return vt.eval(l0_, l1_, l2_, l3_);
         }
         const DiscreteLabel  l0_,l1_,l2_,l3_;
     };
-    struct Eval5{
+    struct eval5{
         typedef ValueType result_type;
         template<class VT>
         result_type operator()(const VT & vt)const{
-            return vt.eval5(l0_, l1_, l2_, l3_, l4_);
+            return vt.eval(l0_, l1_, l2_, l3_, l4_);
         }
         const DiscreteLabel  l0_,l1_,l2_,l3_,l4_;
     };
@@ -150,6 +150,9 @@ namespace functors{
 template<class MODEL>
 class TlModelFactor  : public DiscreteFactorBase<TlModelFactor<MODEL> > {
 public:
+
+    typedef typename MODEL::VariableDescriptor VariableDescriptor;
+
     TlModelFactor(
         const MODEL *  model, 
         const uint32_t arity, 
@@ -169,8 +172,8 @@ public:
         return arity_;
     }
 
-    Vi vi(const size_t d)const{
-        return model_->factorsVi_[visOffset_ + d];
+    VariableDescriptor variable(const size_t d)const{
+        return model_->factorsVi_[visOffset_ + d]; 
     }
 
     DiscreteLabel shape(const size_t d)const{
@@ -181,7 +184,7 @@ public:
         const detail_tl_model::functors::ValueTable f;
         return callFunctor(f);
     }
-    bool size()const{
+    uint64_t size()const{
         const detail_tl_model::functors::Size f;
         return size(f);
     }
@@ -207,28 +210,28 @@ public:
         const detail_tl_model::functors::EvalN f = {conf};
         return callFunctor(f);
     }
-    ValueType eval1(const DiscreteLabel l0)const{
-        const detail_tl_model::functors::Eval1 f{l0};
+    ValueType eval(const DiscreteLabel l0)const{
+        const detail_tl_model::functors::eval1 f{l0};
         return callFunctor(f);
     }
-    ValueType eval2(const DiscreteLabel l0, const DiscreteLabel l1)const{
-        const detail_tl_model::functors::Eval2 f{l0,l1};
+    ValueType eval(const DiscreteLabel l0, const DiscreteLabel l1)const{
+        const detail_tl_model::functors::eval2 f{l0,l1};
         return callFunctor(f);
     }
-    ValueType eval3(const DiscreteLabel l0, const DiscreteLabel l1,
+    ValueType eval(const DiscreteLabel l0, const DiscreteLabel l1,
                     const DiscreteLabel l2)const{
-        const detail_tl_model::functors::Eval3 f{l0,l1,l2};
+        const detail_tl_model::functors::eval3 f{l0,l1,l2};
         return callFunctor(f);
     }
-    ValueType eval4(const DiscreteLabel l0, const DiscreteLabel l1,
+    ValueType eval(const DiscreteLabel l0, const DiscreteLabel l1,
                     const DiscreteLabel l2, const DiscreteLabel l3)const{
-        const detail_tl_model::functors::Eval4 f{l0,l1,l2,l3};
+        const detail_tl_model::functors::eval4 f{l0,l1,l2,l3};
         return callFunctor(f);
     }
-    ValueType eval4(const DiscreteLabel l0, const DiscreteLabel l1,
+    ValueType eval(const DiscreteLabel l0, const DiscreteLabel l1,
                     const DiscreteLabel l2, const DiscreteLabel l3,
                     const DiscreteLabel l4)const{
-        const detail_tl_model::functors::Eval5 f{l0,l1,l2,l3,l4};
+        const detail_tl_model::functors::eval5 f{l0,l1,l2,l3,l4};
         return callFunctor(f);
     }
 
@@ -266,8 +269,20 @@ struct TlModel : public DiscreteGraphicalModelBase<TlModel<VALUE_TABLE ... > >
     friend class WrapValueTables;
 
 public:
-    typedef boost::counting_iterator<uint64_t> FactorIdIter;
+
+    
+    typedef Fi FactorDescriptor;
+    typedef Vi VariableDescriptor;
+
+    typedef boost::counting_iterator<Fi> FactorDescriptorIter;
+    typedef boost::counting_iterator<Vi>       VariableDescriptorIter;
+    
+    /// \deprecated
+    typedef boost::counting_iterator<Fi> FactorIdIter;
+    /// \deprecated
     typedef boost::counting_iterator<Vi> VariableIdIter;
+
+
 
     typedef std::pair<uint8_t, uint64_t> ValueTableId;
 
@@ -297,6 +312,53 @@ public:
     }
     VariableIdIter variableIdsEnd()const{
         return VariableIdIter(nVar_);
+    }
+
+
+    FactorDescriptorIter factorDescriptorsBegin()const{
+        return FactorDescriptorIter(0);
+    }
+    FactorDescriptorIter factorDescriptorsEnd()const{
+        return FactorDescriptorIter(factors_.size());
+    }
+    VariableDescriptorIter variableDescriptorsBegin()const{
+        return VariableDescriptorIter(0);
+    }
+    VariableDescriptorIter variableDescriptorsEnd()const{
+        return VariableDescriptorIter(nVar_);
+    }
+
+
+    /// \brief convert factor descriptor into factor id
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    Fi factorId(const FactorDescriptor factorDescriptor)const{
+        return factorDescriptor;
+    }
+
+    /// \brief convert variable descriptor into variable id
+    ///
+    /// For this type of graphical model, variable ids and descriptors
+    /// are equivalent
+    Vi variableId(const VariableDescriptor variableDescriptor)const{
+        return variableDescriptor;
+    }
+
+    /// \brief convert factor id into factor descriptor
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    FactorDescriptor factorDescriptor(const Fi fi)const{
+        return fi;
+    }
+
+    /// \brief convert factor id into factor descriptor
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    VariableDescriptor variableDescriptor(const Vi vi)const{
+        return vi;
     }
 
 
@@ -334,8 +396,8 @@ public:
         return factors_.size()-1;
     }
 
-    FactorProxy operator[](const Fi fi)const{
-        return  & (factors_[fi]);
+    FactorProxy factor(const FactorDescriptor fac)const{
+        return  & (factors_[fac]);
     }
 
     uint32_t maxArity()const{
@@ -348,7 +410,7 @@ public:
             case 1 :{
                 for(size_t i=0; i<factors_.size(); ++i){
                     const FactorType & fac = factors_[i];
-                    sum += fac.eval1(conf[fac.vi(0)]);
+                    sum += fac.eval(conf[fac.variable(0)]);
                 }
                 return sum;
             }
@@ -357,10 +419,10 @@ public:
                     const FactorType & fac = factors_[i];
                     switch(fac.arity()){
                         case 1:
-                            sum+= fac.eval1(conf[fac.vi(0)]);
+                            sum+= fac.eval(conf[fac.variable(0)]);
                             break;
                         case 2:
-                            sum+= fac.eval2(conf[fac.vi(0)],conf[fac.vi(1)]);
+                            sum+= fac.eval(conf[fac.variable(0)],conf[fac.variable(1)]);
                             break;
                     }
                 }
@@ -372,13 +434,13 @@ public:
                     const uint32_t arity = fac.arity();
                     switch(arity){
                         case 1:
-                            sum+= fac.eval1(conf[fac.vi(0)]);
+                            sum+= fac.eval(conf[fac.variable(0)]);
                             break;
                         case 2:
-                            sum+= fac.eval2(conf[fac.vi(0)],conf[fac.vi(1)]);
+                            sum+= fac.eval(conf[fac.variable(0)],conf[fac.variable(1)]);
                             break;
                         case 3:
-                            sum+= fac.eval3(conf[fac.vi(0)],conf[fac.vi(1)],conf[fac.vi(2)]);
+                            sum+= fac.eval(conf[fac.variable(0)],conf[fac.variable(1)],conf[fac.variable(2)]);
                             break;
                     }
                 }

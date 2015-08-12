@@ -9,10 +9,10 @@
 #include <boost/iterator/transform_iterator.hpp>
 
 #include "inferno/inferno.hxx"
-#include "inferno/value_tables/base_discrete_value_table.hxx"
+#include "inferno/value_tables/discrete_value_table_base.hxx"
 #include "inferno/utilities/small_vector.hxx"
 #include "inferno/model/model_policies.hxx"
-#include "inferno/model/base_discrete_factor.hxx"
+#include "inferno/model/discrete_factor_base.hxx"
 
 
 
@@ -31,6 +31,7 @@ struct MinElement<ITER_TAG, true>{
         return  begin;
     }
 };
+
 template<class ITER_TAG>
 struct MinElement<ITER_TAG, false>{
     template<class ITER>
@@ -78,18 +79,18 @@ struct MaxElement<std::bidirectional_iterator_tag, true>{
     for models variables ids
 */
 template<class MODEL>
-class ModelsVariableIds{
+class ModelVariableDescriptors{
 public:
-    ModelsVariableIds(const MODEL & model) 
+    ModelVariableDescriptors(const MODEL & model) 
     :   model_(model){
 
     }//
     typedef typename MODEL::VariableIdIter const_iterator;
     const_iterator begin()const{
-        return model_.variableIdsBegin();
+        return model_.variableDescriptorsBegin();
     }
     const_iterator end()const{
-        return model_.variableIdsEnd();
+        return model_.variableDescriptorsEnd();
     }
 private:
     const MODEL & model_;
@@ -99,22 +100,53 @@ private:
     for models factor ids
 */
 template<class MODEL>
-class ModelsFactorIds{
+class ModelsFactorDescriptors{
 public:
-    ModelsFactorIds(const MODEL & model) 
+    ModelsFactorDescriptors(const MODEL & model) 
     :   model_(model){
 
     }//
-    typedef typename MODEL::FactorIdIter const_iterator;
+    typedef typename MODEL::FactorDescriptorIter const_iterator;
     const_iterator begin()const{
-        return model_.factorIdsBegin();
+        return model_.factorDescriptorsBegin();
     }
     const_iterator end()const{
-        return model_.factorIdsEnd();
+        return model_.factorDescriptorsEnd();
     }
 private:
     const MODEL & model_;
 };
+
+
+/// \cond
+template<class MODEL>
+struct FactorDescriptorToId{
+    typedef Fi result_type;
+
+    FactorDescriptorToId(const MODEL & model)
+    : model_(&model){
+
+    }//
+    result_type operator()(const typename MODEL::FactorDescriptor f)const{
+        return model_->factorId(f);
+    }
+    const MODEL * model_;
+};
+
+template<class MODEL>
+struct VariableDescriptorToId{
+    typedef Vi result_type;
+
+    VariableDescriptorToId(const MODEL & model)
+    : model_(&model){
+
+    }//
+    result_type operator()(const typename MODEL::VariableDescriptor f)const{
+        return model_->variableId(f);
+    }
+    const MODEL * model_;
+};
+/// \endcond
 
 
 
@@ -128,7 +160,21 @@ struct FactorIdToFactorProxy{
 
     }//
     result_type operator()(const uint64_t fId)const{
-        return model_->operator[](fId);
+        return model_->factor(fId);
+    }
+    const MODEL * model_;
+};
+
+template<class MODEL>
+struct FactorDescriptorToFactorProxy{
+    typedef typename MODEL::FactorProxy result_type;
+    typedef typename MODEL::FactorDescriptor FactorDescriptor;
+    FactorDescriptorToFactorProxy(const MODEL & model)
+    : model_(&model){
+
+    }//
+    result_type operator()(const FactorDescriptor fdesc)const{
+        return model_->factor(fdesc);
     }
     const MODEL * model_;
 };
@@ -144,15 +190,15 @@ public:
     :   model_(model){
 
     }//
-    typedef typename MODEL::FactorIdIter FactorIdIter;
-    typedef FactorIdToFactorProxy<MODEL> UnaryFunction;
-    typedef boost::transform_iterator<UnaryFunction, FactorIdIter> const_iterator;
+    typedef typename MODEL::FactorDescriptorIter FactorDescriptorIter;
+    typedef FactorDescriptorToFactorProxy<MODEL> UnaryFunction;
+    typedef boost::transform_iterator<UnaryFunction, FactorDescriptorIter> const_iterator;
 
     const_iterator begin()const{
-        return boost::make_transform_iterator(model_.factorIdsBegin(), UnaryFunction(model_));
+        return boost::make_transform_iterator(model_.factorDescriptorsBegin(), UnaryFunction(model_));
     }
     const_iterator end()const{
-        return boost::make_transform_iterator(model_.factorIdsEnd(), UnaryFunction(model_));
+        return boost::make_transform_iterator(model_.factorDescriptorsEnd(), UnaryFunction(model_));
     }
 private:
     const MODEL & model_;
@@ -188,11 +234,15 @@ public:
 
 
     // POLICIES
-    typedef policies::VariableIdsPolicy<MODEL> VariableIdsPolicy;
-    typedef policies::FactorIdsPolicy<MODEL> FactorIdsPolicy;
+    typedef MODEL Model;
+    typedef policies::VariableIdsPolicy<Model> VariableIdsPolicy;
+    typedef policies::FactorIdsPolicy<Model> FactorIdsPolicy;
 
 
-    typedef FactorIdToFactorProxy<MODEL> U; 
+
+
+
+
 
 
 
@@ -207,7 +257,7 @@ public:
         auto fiterEnd = model().factorIdsEnd();
         for(;fiter!=fiterEnd; ++fiter){
             const auto factorId = *fiter;
-            const auto factor = model()[factorId];
+            const auto factor = model().factor(factorId);
             
             // get the configuration of the factor
             factor->getFactorConf(conf, confBuffer.begin());
@@ -232,7 +282,7 @@ public:
         auto fiterEnd = model().factorIdsEnd();
         for(;fiter!=fiterEnd; ++fiter){
             auto factorId = *fiter;
-            auto factor = model()[factorId];
+            auto factor = model().factor(factorId);
             maxArity = std::max(factor->arity(), maxArity);
         }
         return maxArity;
@@ -277,8 +327,8 @@ public:
     void minMaxNLabels(DiscreteLabel & minNumberOfLabels, DiscreteLabel & maxNumberOfLabels)const{
         minNumberOfLabels = std::numeric_limits<DiscreteLabel>::max();
         maxNumberOfLabels = 0;
-        for(const auto vi : model().variableIds()){
-            const DiscreteLabel lvi = model().nLabels(vi);
+        for(const auto var : model().variableDescriptors()){
+            const DiscreteLabel lvi = model().nLabels(var);
             minNumberOfLabels = std::min(lvi, minNumberOfLabels);
             maxNumberOfLabels = std::max(lvi, maxNumberOfLabels);
         }   
@@ -287,12 +337,12 @@ public:
 
     /// \brief number of variables in the graphical model
     uint64_t nVariables() const {
-        return std::distance(model().variableIdsBegin(), model().variableIdsEnd());
+        return std::distance(model().variableDescriptorsBegin(), model().variableDescriptorsEnd());
     }
 
     /// \brief number of factors in the graphical model
     uint64_t nFactors() const {
-        return std::distance(model().factorIdsBegin(), model().factorIdsEnd());
+        return std::distance(model().factorDescriptorsBegin(), model().factorDescriptorsEnd());
     }
 
     /** \brief get the minimal variable id in the model
@@ -305,10 +355,14 @@ public:
 
     */
     Vi minVarId() const{
-        typedef typename std::iterator_traits<typename MODEL::VariableIdIter>::iterator_category  IterTag;
-        return * MinElement<IterTag, VariableIdsPolicy::HasSortedIds>::minElement(
-            model().variableIdsBegin(), model().variableIdsEnd()
-        );
+        typedef typename Model::VariableDescriptorIter Iter;
+        typedef VariableDescriptorToId<Model> UnaryFunction;
+        typedef boost::transform_iterator<UnaryFunction, Iter> IdIter;
+        typedef typename std::iterator_traits<IdIter>::iterator_category  IterTag;
+        const auto & m  = this->model();
+        auto begin = boost::make_transform_iterator(m.variableDescriptorsBegin(), UnaryFunction(m));
+        auto end   = boost::make_transform_iterator(m.variableDescriptorsEnd(), UnaryFunction(m));
+        return * MinElement<IterTag, VariableIdsPolicy::HasSortedIds>::minElement(begin,end);
     }
     /** \brief get the maximal variable id in the model
 
@@ -319,10 +373,14 @@ public:
           this default implementation is O(N)
     */
     Vi maxVarId() const{
-        typedef typename std::iterator_traits<typename MODEL::VariableIdIter>::iterator_category  IterTag;
-        return * MaxElement<IterTag, VariableIdsPolicy::HasSortedIds>::maxElement(
-            model().variableIdsBegin(), model().variableIdsEnd()
-        );
+        typedef typename Model::VariableDescriptorIter Iter;
+        typedef VariableDescriptorToId<Model> UnaryFunction;
+        typedef boost::transform_iterator<UnaryFunction, Iter> IdIter;
+        typedef typename std::iterator_traits<IdIter>::iterator_category  IterTag;
+        const auto & m  = this->model();
+        auto begin = boost::make_transform_iterator(m.variableDescriptorsBegin(), UnaryFunction(m));
+        auto end   = boost::make_transform_iterator(m.variableDescriptorsEnd(), UnaryFunction(m));
+        return * MaxElement<IterTag, VariableIdsPolicy::HasSortedIds>::maxElement(begin,end);
     }
 
 
@@ -332,10 +390,14 @@ public:
         calling this function will have undefined behavior.
     */
     Fi minFactorId() const{
-        typedef typename std::iterator_traits<typename MODEL::FactorIdIter>::iterator_category  IterTag;
-        return * MinElement<IterTag, FactorIdsPolicy::HasSortedIds >::minElement(
-            model().factorIdsBegin(), model().factorIdsEnd()
-        );
+        typedef typename Model::FactorDescriptorIter Iter;
+        typedef FactorDescriptorToId<Model> UnaryFunction;
+        typedef boost::transform_iterator<UnaryFunction, Iter> IdIter;
+        typedef typename std::iterator_traits<IdIter>::iterator_category  IterTag;
+        const auto & m  = this->model();
+        auto begin = boost::make_transform_iterator(m.factorDescriptorsBegin(), UnaryFunction(m));
+        auto end   = boost::make_transform_iterator(m.factorDescriptorsEnd(), UnaryFunction(m));
+        return * MinElement<IterTag, FactorIdsPolicy::HasSortedIds>::minElement(begin,end);
     }
     /** \brief get the maximal variable id in the model
 
@@ -343,14 +405,20 @@ public:
         calling this function will have undefined behavior.
     */
     Fi maxFactorId() const{
-        typedef typename std::iterator_traits<typename MODEL::FactorIdIter>::iterator_category  IterTag;
-        return * MaxElement<IterTag, FactorIdsPolicy::HasSortedIds >::maxElement(
-            model().factorIdsBegin(), model().factorIdsEnd()
-        );
+        typedef typename Model::FactorDescriptorIter Iter;
+        typedef FactorDescriptorToId<Model> UnaryFunction;
+        typedef boost::transform_iterator<UnaryFunction, Iter> IdIter;
+        typedef typename std::iterator_traits<IdIter>::iterator_category  IterTag;
+        const auto & m  = this->model();
+        auto begin = boost::make_transform_iterator(m.factorDescriptorsBegin(), UnaryFunction(m));
+        auto end   = boost::make_transform_iterator(m.factorDescriptorsEnd(), UnaryFunction(m));
+        return * MaxElement<IterTag, FactorIdsPolicy::HasSortedIds>::maxElement(begin,end);
     }
 
     /** check if the variables are dense
-    
+        
+        \todo fixme!!!!
+
         dense means the variables can start at 
         any id, but from there on the ids must be
         consecutive without holes.
@@ -380,7 +448,7 @@ public:
         auto fiterEnd = model().factorIdsEnd();
         for(;fiter!=fiterEnd; ++fiter){
             auto factorId = *fiter;
-            auto factor = model()[factorId];
+            auto factor = model().factor(factorId);
             if(factor->arity()==1){
                 ++nUnarys;
             }
@@ -404,11 +472,8 @@ public:
     /// efficiently
     Fi nPairwiseFactors()const{
         Fi nPairwise = 0;
-        auto fiter = model().factorIdsBegin();
-        auto fiterEnd = model().factorIdsEnd();
-        for(;fiter!=fiterEnd; ++fiter){
-            auto factorId = *fiter;
-            auto factor = model()[factorId];
+
+        for(const auto factor : model().factors()){
             if(factor->arity()==2){
                 ++nPairwise;
             }
@@ -416,11 +481,11 @@ public:
         return nPairwise;
     }
 
-    ModelsVariableIds<MODEL> variableIds() const{
-        return ModelsVariableIds<MODEL>(model());
+    ModelVariableDescriptors<MODEL> variableDescriptors() const{
+        return ModelVariableDescriptors<MODEL>(model());
     }
-    ModelsFactorIds<MODEL> factorIds() const{
-        return ModelsFactorIds<MODEL>(model());
+    ModelsFactorDescriptors<MODEL> factorDescriptors() const{
+        return ModelsFactorDescriptors<MODEL>(model());
     }
     ModelsFactors<MODEL> factors() const{
         return ModelsFactors<MODEL>(model());

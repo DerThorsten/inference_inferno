@@ -10,8 +10,8 @@
 
 #include <unordered_map>
 
-#include "inferno/model/base_discrete_model.hxx"
-#include "inferno/inference/base_discrete_inference.hxx"
+#include "inferno/model/discrete_model_base.hxx"
+#include "inferno/inference/discrete_inference_base.hxx"
 
 #ifdef WITH_QPBO
 #include <inferno_externals/qpbo/QPBO.h>
@@ -87,15 +87,15 @@ namespace inference{
                     constTerm_ += factor->eval(0l);
                 }
                 else if(arity == 1){
-                    const int qpboVi0 = denseVarIds_.toDense(factor->vi(0));
-                    qpbo_->AddUnaryTerm(qpboVi0, factor->eval1(0l), factor->eval1(1l));
+                    const int qpboVi0 = denseVarIds_.toDense(factor->variable(0));
+                    qpbo_->AddUnaryTerm(qpboVi0, factor->eval(0l), factor->eval(1l));
                 }
                 else if(arity == 2){
-                    const int qpboVi0 = denseVarIds_.toDense(factor->vi(0));
-                    const int qpboVi1 = denseVarIds_.toDense(factor->vi(1));
+                    const int qpboVi0 = denseVarIds_.toDense(factor->variable(0));
+                    const int qpboVi1 = denseVarIds_.toDense(factor->variable(1));
                     INFERNO_CHECK_OP(qpboVi0,!=,qpboVi1,"");
-                    qpbo_->AddPairwiseTerm(qpboVi0, qpboVi1,factor->eval2(0,0), factor->eval2(0,1),
-                        factor->eval2(1,0), factor->eval2(1,1));
+                    qpbo_->AddPairwiseTerm(qpboVi0, qpboVi1,factor->eval(0,0), factor->eval(0,1),
+                        factor->eval(1,0), factor->eval(1,1));
                 }
                 else{
                     throw RuntimeError("INTERNAL ERROR: model_.maxArity() must have a bug");
@@ -138,7 +138,8 @@ namespace inference{
         }
         // get result
         virtual void conf(Conf & confMap ) {
-            for(const Vi vi : model_.variableIds()){
+            for(const auto varDesc : model_.variableDescriptors()){
+                const auto vi = model_.variableId(varDesc);
                 const auto qpboLabel = qpbo_->GetLabel(denseVarIds_.toDense(vi));
                 if(qpboLabel==0)
                     confMap[vi] = 0;

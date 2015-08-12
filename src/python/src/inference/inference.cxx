@@ -34,14 +34,14 @@ namespace inference{
     void exportInferenceOptions();
     void exportVisitors();
     void exportGeneralDiscreteModelInference();
-    void exportModifiedMultiwaycutModelInference();
+    //void exportModifiedMultiwaycutModelInference();
 
     void exportInference(){
         
         exportInferenceOptions();
         exportVisitors();
         exportGeneralDiscreteModelInference();
-        exportModifiedMultiwaycutModelInference();
+        //exportModifiedMultiwaycutModelInference();
     }
 
 

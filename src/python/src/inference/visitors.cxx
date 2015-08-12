@@ -16,7 +16,7 @@
 #include "inferno/inferno.hxx"
 #include "inferno/model/general_discrete_model.hxx"
 #include "inferno/model/modified_multiwaycut_model.hxx"
-#include "inferno/inference/base_discrete_inference.hxx"
+#include "inferno/inference/discrete_inference_base.hxx"
 #include "inferno/inference/visitors.hxx"
 
 namespace inferno{
@@ -79,7 +79,7 @@ namespace inference{
 
     void exportVisitors(){
         exportVisitorsT<inferno::models::GeneralDiscreteModel>("GeneralDiscreteModel");
-        exportVisitorsT<inferno::models::ModifiedMultiwaycutModel>("ModifiedMultiwaycutModel");
+        //exportVisitorsT<inferno::models::ModifiedMultiwaycutModel>("ModifiedMultiwaycutModel");
     }
 
 }

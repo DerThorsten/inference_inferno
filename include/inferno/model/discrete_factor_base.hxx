@@ -2,7 +2,7 @@
 #define INFERNO_MODEL_BASE_FACTOR_HXX
 
 #include "inferno/inferno.hxx"
-#include "inferno/value_tables/base_discrete_value_table.hxx"
+#include "inferno/value_tables/discrete_value_table_base.hxx"
 #include "inferno/utilities/shape_walker.hxx"
 
 
@@ -23,7 +23,8 @@ class Lifetime{
 
 
 
-
+/** \brief Base CRT Factor Base
+*/
 template<class FACTOR >
 class DiscreteFactorBase{
 
@@ -75,34 +76,34 @@ public:
     ValueType eval(const LabelType * conf)const{
         return factor()->valueTable()->eval(conf);
     }
-    ValueType eval1(const LabelType l0)const{
-        return factor()->valueTable()->eval1(l0);
+    ValueType eval(const LabelType l0)const{
+        return factor()->valueTable()->eval(l0);
     }
 
-    ValueType eval2(const LabelType l0, 
+    ValueType eval(const LabelType l0, 
                          const LabelType l1)const{
-        return factor()->valueTable()->eval2(l0, l1);
+        return factor()->valueTable()->eval(l0, l1);
     }
 
-    ValueType eval3(const LabelType l0, 
+    ValueType eval(const LabelType l0, 
                     const LabelType l1, 
                     const LabelType l2)const{
-        return factor()->valueTable()->eval3(l0, l1, l2);
+        return factor()->valueTable()->eval(l0, l1, l2);
     }
 
-    ValueType eval4(const LabelType l0, 
+    ValueType eval(const LabelType l0, 
                     const LabelType l1, 
                     const LabelType l2, 
                     const LabelType l3)const{
-        return factor()->valueTable()->eval4(l0, l1, l2, l3);
+        return factor()->valueTable()->eval(l0, l1, l2, l3);
     }
 
-    ValueType eval5(const LabelType l0, 
-                         const LabelType l1, 
-                         const LabelType l2, 
-                         const LabelType l3,
-                         const LabelType l4)const{
-        return factor()->valueTable()->eval5(l0, l1, l2, l3, l4);
+    ValueType eval(const LabelType l0, 
+                    const LabelType l1, 
+                    const LabelType l2, 
+                    const LabelType l3,
+                    const LabelType l4)const{
+        return factor()->valueTable()->eval(l0, l1, l2, l3, l4);
     }
     size_t arity()const{
         return factor()->valueTable()->arity();
@@ -153,7 +154,7 @@ public:
     )const{
         const auto arity = factor()->arity();
         for(auto a=0; a<arity; ++a){
-            factorConf[a] = gmConf[factor()->vi(a)];
+            factorConf[a] = gmConf[factor()->variable(a)];
         }
     }
 private:
@@ -208,10 +209,10 @@ std::ostream& operator <<(std::ostream& stream, const io::FactorVariableIdsCout<
     stream<<"f(";
     for(size_t d=0; d<arity; ++d){
         if(d==arity-1){
-            stream<<"x="<<factor->vi(d);
+            stream<<"x="<<factor->variable(d);
         }
         else
-            stream<<"x="<<factor->vi(d)<<", ";
+            stream<<"x="<<factor->variable(d)<<", ";
     }
     stream<<")";
     return stream;
@@ -226,14 +227,14 @@ std::ostream& operator <<(std::ostream& stream, const io::FactorValueTableCout<F
     }
     else if(arity == 1 ){
         for(LabelType l0=0; l0<factor->shape(0); ++l0){
-            stream<<"f(x"<<factor->vi(0)<<"="<<l0<<") = ";
+            stream<<"f(x"<<factor->variable(0)<<"="<<l0<<") = ";
             stream<<factor->eval(l0)<<"\n";
         }
     }
     else if(arity == 2 ){
         for(LabelType l1=0; l1<factor->shape(1); ++l1)
         for(LabelType l0=0; l0<factor->shape(0); ++l0){
-            stream<<"f(x"<<factor->vi(0)<<"="<<l0<<" x"<<factor->vi(1)<<"="<<l1<<") = ";
+            stream<<"f(x"<<factor->variable(0)<<"="<<l0<<" x"<<factor->variable(1)<<"="<<l1<<") = ";
             stream<<factor->eval(l0, l1)<<"\n";
         }
     }

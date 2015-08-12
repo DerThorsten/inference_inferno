@@ -5,25 +5,12 @@
 #define INFERNO_MODEL_GENERAL_DISCRETE_MODEL_HXX
 
 #include "inferno/inferno.hxx"
-#include "inferno/value_tables/base_discrete_value_table.hxx"
-#include "inferno/model/base_discrete_model.hxx"
+#include "inferno/value_tables/discrete_value_table_base.hxx"
+#include "inferno/model/discrete_model_base.hxx"
 #include <boost/iterator/counting_iterator.hpp>
 
 namespace inferno{
 namespace models{
-
-
-    namespace detail_grid_model{
-
-        Grid2dFacGraph{
-            Vi gridShape_[2]
-        };
-    }
-
-    class DiscreteGridModel{
-
-    };
-
 
 
 } // end namespace models

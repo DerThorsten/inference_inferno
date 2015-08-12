@@ -34,13 +34,13 @@ namespace models{
     
     void exportGeneralDiscreteGraphicalModel();
     void exportGeneralDiscreteTlGraphicalModel();
-    void exportModifiedMultiwaycutModel();
+    //void exportModifiedMultiwaycutModel();
 
    
     void exportModels(){
         exportGeneralDiscreteGraphicalModel();
         exportGeneralDiscreteTlGraphicalModel();
-        exportModifiedMultiwaycutModel();
+        //exportModifiedMultiwaycutModel();
     }
 
 } // end namespace inferno::models  

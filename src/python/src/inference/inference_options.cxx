@@ -24,7 +24,7 @@
 #include <map>
 
 // inferno related
-#include "inferno/inference/base_discrete_inference.hxx"
+#include "inferno/inference/discrete_inference_base.hxx"
 
 
 

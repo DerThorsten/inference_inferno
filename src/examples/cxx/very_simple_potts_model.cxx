@@ -37,6 +37,6 @@ int main(){
         auto vti = model.addValueTable(new inferno::value_tables::PottsValueTable(nLabes, beta));
         auto fi = model.addFactor(vti ,{vi, vi+1});
 
-        const auto factor = model[fi];
+        const auto factor = model.factor(fi);
     }
 }

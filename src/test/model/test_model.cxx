@@ -170,14 +170,7 @@ BOOST_AUTO_TEST_CASE(TestModel)
         auto vti = model.addValueTable(new value_tables::PottsValueTable(nLabes, beta));
         auto fi = model.addFactor(vti ,{vi, vi+1});
 
-        const auto factor = model[fi];
+        const auto factor = model.factor(fi);
 
     }
-
-
-    for(auto fiter=model.factorIdsBegin(); fiter != model.factorIdsEnd(); ++fiter){
-        //std::cout<<*fiter<<" "<<io::varibleIds(model[*fiter])<<"\n"<<io::valueTable(model[*fiter])<<"\n";
-    }
-    
-
 }

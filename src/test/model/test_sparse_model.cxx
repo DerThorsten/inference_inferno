@@ -105,8 +105,8 @@ BOOST_AUTO_TEST_CASE(TestSparseModelGrid2x2_AddAndErase)
 
     // add h potts factors
     auto fi_p13 = model.addFactor(ph, 11,  {1l, 3l});
-    BOOST_CHECK_EQUAL(model[fi_p13]->vi(0),1);
-    BOOST_CHECK_EQUAL(model[fi_p13]->vi(1),3);
+    BOOST_CHECK_EQUAL(model.factor(fi_p13)->variable(0),1);
+    BOOST_CHECK_EQUAL(model.factor(fi_p13)->variable(1),3);
     BOOST_CHECK_EQUAL(model.minVarId(),1);
     BOOST_CHECK_EQUAL(model.maxVarId(),7);
     BOOST_CHECK_EQUAL(model.minFactorId(),11);
@@ -115,8 +115,8 @@ BOOST_AUTO_TEST_CASE(TestSparseModelGrid2x2_AddAndErase)
     BOOST_CHECK_EQUAL(model.nFactors(),1);
 
     auto fi_p57 = model.addFactor(ph, 9, {5l, 7l});
-    BOOST_CHECK_EQUAL(model[fi_p57]->vi(0),5);
-    BOOST_CHECK_EQUAL(model[fi_p57]->vi(1),7);
+    BOOST_CHECK_EQUAL(model.factor(fi_p57)->variable(0),5);
+    BOOST_CHECK_EQUAL(model.factor(fi_p57)->variable(1),7);
     BOOST_CHECK_EQUAL(model.minVarId(),1);
     BOOST_CHECK_EQUAL(model.maxVarId(),7);
     BOOST_CHECK_EQUAL(model.minFactorId(),9);
@@ -126,8 +126,8 @@ BOOST_AUTO_TEST_CASE(TestSparseModelGrid2x2_AddAndErase)
 
     // add v potts factors
     auto fi_p15 = model.addFactor(pv, 13,  {1l, 5l});
-    BOOST_CHECK_EQUAL(model[fi_p15]->vi(0),1);
-    BOOST_CHECK_EQUAL(model[fi_p15]->vi(1),5);
+    BOOST_CHECK_EQUAL(model.factor(fi_p15)->variable(0),1);
+    BOOST_CHECK_EQUAL(model.factor(fi_p15)->variable(1),5);
     BOOST_CHECK_EQUAL(model.minVarId(),1);
     BOOST_CHECK_EQUAL(model.maxVarId(),7);
     BOOST_CHECK_EQUAL(model.minFactorId(),9);
@@ -136,8 +136,8 @@ BOOST_AUTO_TEST_CASE(TestSparseModelGrid2x2_AddAndErase)
     BOOST_CHECK_EQUAL(model.nFactors(),3);
 
     auto fi_p37 = model.addFactor(pv, 15, {3l, 7l});
-    BOOST_CHECK_EQUAL(model[fi_p37]->vi(0),3);
-    BOOST_CHECK_EQUAL(model[fi_p37]->vi(1),7);
+    BOOST_CHECK_EQUAL(model.factor(fi_p37)->variable(0),3);
+    BOOST_CHECK_EQUAL(model.factor(fi_p37)->variable(1),7);
     BOOST_CHECK_EQUAL(model.minVarId(),1);
     BOOST_CHECK_EQUAL(model.maxVarId(),7);
     BOOST_CHECK_EQUAL(model.minFactorId(),9);
@@ -177,10 +177,10 @@ BOOST_AUTO_TEST_CASE(TestSparseModelGrid2x2_AddAndErase)
     BOOST_CHECK_EQUAL(model.factorsVti(fi_p37),pv);
     BOOST_CHECK_EQUAL(model.factorsVti(fi_p57),ph);
 
-    BOOST_CHECK_EQUAL(model[fi_p37]->vi(0),3);
-    BOOST_CHECK_EQUAL(model[fi_p37]->vi(1),7);
-    BOOST_CHECK_EQUAL(model[fi_p57]->vi(0),5);
-    BOOST_CHECK_EQUAL(model[fi_p57]->vi(1),7);
+    BOOST_CHECK_EQUAL(model.factor(fi_p37)->variable(0),3);
+    BOOST_CHECK_EQUAL(model.factor(fi_p37)->variable(1),7);
+    BOOST_CHECK_EQUAL(model.factor(fi_p57)->variable(0),5);
+    BOOST_CHECK_EQUAL(model.factor(fi_p57)->variable(1),7);
 
     // erase a variable 5
     // this will remove fac 9

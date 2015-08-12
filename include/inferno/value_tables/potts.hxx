@@ -6,7 +6,7 @@
 
 
 #include "inferno/inferno.hxx"
-#include "inferno/value_tables/base_discrete_value_table.hxx"
+#include "inferno/value_tables/discrete_value_table_base.hxx"
 
 namespace inferno{
 
@@ -23,6 +23,7 @@ namespace value_tables{
 */
 class  PottsValueTable : public DiscreteValueTableBase{
 public:
+    using DiscreteValueTableBase::eval;
     PottsValueTable(const LabelType l,  const ValueType beta)
     :   DiscreteValueTableBase(),
         nl_(l),
@@ -31,7 +32,7 @@ public:
     ValueType eval(const LabelType *conf)const{
         return conf[0] == conf[1] ? 0.0 : beta_;
     }
-    ValueType eval2(const LabelType l1, const LabelType l2)const{
+    ValueType eval(const LabelType l1, const LabelType l2)const{
         return l1==l2 ? 0 : beta_;
     }
     LabelType shape(const uint32_t d) const{
@@ -59,16 +60,17 @@ private:
 
 class  L1ValueTable : public DiscreteValueTableBase{
 public:
+    using DiscreteValueTableBase::eval;
     L1ValueTable(const LabelType l,  const ValueType beta)
     :   DiscreteValueTableBase(),
         nl_(l),
         beta_(beta){
     }
-    ValueType eval2(const LabelType l1, const LabelType l2)const{
+    ValueType eval(const LabelType l1, const LabelType l2)const{
         return beta_*std::abs(l1-l2);
     }
     ValueType eval(const LabelType *conf)const{
-        return this->eval2(conf[0], conf[1]);
+        return this->eval(conf[0], conf[1]);
     }
     LabelType shape(const uint32_t d) const{
         return nl_;
@@ -99,18 +101,19 @@ private:
 
 class  TruncatedL1ValueTable : public DiscreteValueTableBase{
 public:
+    using DiscreteValueTableBase::eval;
     TruncatedL1ValueTable(const LabelType l,  const ValueType beta, const ValueType truncateAt)
     :   DiscreteValueTableBase(),
         nl_(l),
         beta_(beta),
         truncateAt_(truncateAt){
     }
-    ValueType eval2(const LabelType l1, const LabelType l2)const{
+    ValueType eval(const LabelType l1, const LabelType l2)const{
         const ValueType r =  beta_*std::abs(l1-l2);
         return r > truncateAt_ ? truncateAt_ : r;
     }
     ValueType eval(const LabelType *conf)const{
-        return this->eval2(conf[0], conf[1]);
+        return this->eval(conf[0], conf[1]);
     }
     LabelType shape(const uint32_t d) const{
         return nl_;

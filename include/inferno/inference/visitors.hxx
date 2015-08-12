@@ -1,4 +1,4 @@
-/** \file base_discrete_inference.hxx 
+/** \file discrete_inference_base.hxx 
     \brief  Functionality which is shared between all inference algorithms
     is implemented in this header.
 
@@ -11,7 +11,7 @@
 #include <iomanip>
 
 #include "inferno/inferno.hxx"
-#include "inferno/inference/base_discrete_inference.hxx"
+#include "inferno/inference/discrete_inference_base.hxx"
 
 namespace inferno{
 namespace inference{
