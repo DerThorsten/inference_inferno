@@ -12,10 +12,12 @@ namespace models{
 
 
 
+
 /** \brief Base CRT Unary Base
 */
-template<class UNARY >
-class DiscreteUnaryBase{
+template<class UNARY, class MODEL>
+class DiscreteUnaryBase : 
+public DiscreteFactorBase< DiscreteUnaryBase<UNARY, MODEL>, MODEL > {
 
 public:
     const UNARY * operator ->()const{
@@ -24,8 +26,21 @@ public:
 
 
     ValueType eval(const DiscreteLabel l)const{
-        return unary()->unaryValueTable()->eval(l);
+        return unary()->valueTable()->eval(l);
     }
+
+
+    DiscreteLabel shape(const size_t d)const{
+        return unary()->shape();
+    }
+
+    //typedef typename UNARY::VariableDescriptor VariableDescriptor;
+
+    typename MODEL::VariableDescriptor
+    variable(const size_t d)const{
+        return unary()->variable();
+    }
+
 private:
     const UNARY * unary()const{
         return static_cast<const UNARY *>(this);

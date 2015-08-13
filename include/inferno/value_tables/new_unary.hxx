@@ -43,7 +43,7 @@ public:
     ValueType eval(const DiscreteLabel l1)const{
         return values_[l1];
     }
-    DiscreteLabel size() const{
+    DiscreteLabel shape() const{
         return values_.size();
     }
 private:
@@ -70,7 +70,7 @@ public:
     virtual ValueType eval(const LabelType l1)const {
         return 0.0; //data_[l1];
     }
-    DiscreteLabel size() const{
+    DiscreteLabel shape() const{
         return nLabels_;
     }
 private:

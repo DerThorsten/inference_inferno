@@ -19,14 +19,14 @@ namespace models{
 
 template<class MODEL>
 class DiscreteLemonModelFactor :
-public DiscreteFactorBase<MODEL>
+public DiscreteFactorBase< DiscreteLemonModelFactor<MODEL>, MODEL>
 {
 
 };
 
 template<class MODEL>
 class DiscreteLemonModelUnary :
-public DiscreteUnaryBase<MODEL>
+public DiscreteUnaryBase<DiscreteLemonModelUnary<MODEL>, MODEL>
 {
     
 };

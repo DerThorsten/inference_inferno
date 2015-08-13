@@ -25,7 +25,7 @@ class Lifetime{
 
 /** \brief Base CRT Factor Base
 */
-template<class FACTOR >
+template<class FACTOR, class MODEL >
 class DiscreteFactorBase{
 
 private:
@@ -157,6 +157,22 @@ public:
             factorConf[a] = gmConf[factor()->variable(a)];
         }
     }
+
+    void updateWeights(const learning::Weights & weights){ 
+        factor()->valueTable()->updateWeights(weights);
+    }
+    uint64_t nWeights(){
+        return factor()->valueTable()->nWeights();
+    }
+    int64_t weightIndex(const size_t i){
+        return factor()->valueTable()->nWeights();
+    }
+
+    WeightType weightGradient(const size_t factorsWeightIndex, const DiscreteLabel * conf){
+        return factor()->valueTable()->weightGradient(factorsWeightIndex, conf);
+    }
+
+
 private:
     const FACTOR * factor()const{
         return static_cast<const FACTOR *>(this);

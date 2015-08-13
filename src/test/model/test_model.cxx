@@ -8,9 +8,6 @@
 
 
 #include "inferno/model/general_discrete_model.hxx"
-#include "inferno/model/general_discrete_tl_model.hxx"
-#include "inferno/model/sparse_discrete_model.hxx"
-#include "inferno/model/implicit_multicut_model.hxx"
 #include "inferno/value_tables/potts.hxx"
 #include "inferno/value_tables/new_unary.hxx"
 
@@ -199,6 +196,12 @@ BOOST_AUTO_TEST_CASE(TestGeneralDiscreteModel_2)
 
     BOOST_CHECK_EQUAL(model.unary(0)->variable(),0);
     BOOST_CHECK_EQUAL(model.unary(1)->variable(),1);
+
+    BOOST_CHECK_EQUAL(model.unary(0)->variable(0),0);
+    BOOST_CHECK_EQUAL(model.unary(1)->variable(0),1);
+
+    BOOST_CHECK_EQUAL(model.unary(0)->shape(),2);
+    BOOST_CHECK_EQUAL(model.unary(1)->shape(0),2);
 
     BOOST_CHECK_EQUAL(model.factor(0)->variable(0),0);
     BOOST_CHECK_EQUAL(model.factor(0)->variable(1),1);

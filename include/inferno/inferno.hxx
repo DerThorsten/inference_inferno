@@ -240,6 +240,8 @@ typedef double    FunctionValueType;
 typedef double    FactorValueType;
 typedef double    ValueType;
 typedef double    WeightType;
+typedef double    JointFeaturesValueType;
+typedef double    WeightGradientType;
 typedef double    LossType;
 
 typedef std::vector<DiscreteLabel > DiscreteLabelVec;

@@ -22,7 +22,8 @@ class GeneralDiscreteModel;
 /** \brief Factor class for the GeneralDiscreteModel
 */
 template<class MODEL>
-class GeneralDiscreteGraphicalModelFactor : public DiscreteFactorBase<GeneralDiscreteGraphicalModelFactor<MODEL> > {
+class GeneralDiscreteGraphicalModelFactor :
+public DiscreteFactorBase<GeneralDiscreteGraphicalModelFactor<MODEL>, MODEL> {
 public:
 
     typedef typename MODEL::VariableDescriptor VariableDescriptor;
@@ -72,10 +73,14 @@ private:
 /** \brief Factor class for the GeneralDiscreteModel
 */
 template<class MODEL>
-class GeneralDiscreteGraphicalModelUnary : public DiscreteUnaryBase<GeneralDiscreteGraphicalModelUnary<MODEL> > {
+class GeneralDiscreteGraphicalModelUnary :
+    public DiscreteUnaryBase<GeneralDiscreteGraphicalModelUnary<MODEL>, MODEL> {
 public:
-
+    typedef DiscreteUnaryBase<GeneralDiscreteGraphicalModelUnary<MODEL>, MODEL > BaseType;
     typedef typename MODEL::VariableDescriptor VariableDescriptor;
+
+    using BaseType::shape;
+    using BaseType::variable;
 
     GeneralDiscreteGraphicalModelUnary()
     :   model_(NULL),
@@ -93,7 +98,7 @@ public:
         var_(var){
 
     }
-    const value_tables::DiscreteUnaryValueTableBase * unaryValueTable()const{
+    const value_tables::DiscreteUnaryValueTableBase * valueTable()const{
         return vt_;
     }   
     uint32_t arity()const{

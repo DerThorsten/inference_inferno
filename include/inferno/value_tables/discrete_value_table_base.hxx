@@ -12,6 +12,8 @@
 #include "inferno/inferno.hxx"
 #include "inferno/utilities/shape_walker.hxx"
 #include "inferno/value_tables/value_table_utilities.hxx"
+
+#include "inferno/learning/weights.hxx"
     
 namespace inferno{
 
@@ -899,7 +901,54 @@ public:
     }
 
 
+    /**
+        \brief make the value table update its weights.
 
+        The complete weight vector is passed as argument,
+        and the value-table itself needs to know its
+        weight indexes.
+
+        \warning any value table which has weights needs
+        to overwrite this function
+    */
+    virtual void updateWeights(const learning::Weights & weights){
+    }
+
+    /**
+        \brief total number of weights the value table
+        is parametrized with
+
+        \warning any value table which has weights needs
+        to overwrite this function
+    */
+    virtual uint64_t nWeights(){
+        return 0;
+    }
+
+
+    /**
+        \brief get the global weight index of the i'th weight 
+        
+        get the global weight index of the i'th weight 
+        the value table is parametrized with.
+
+        \warning any value table which has weights needs
+        to overwrite this function
+    */
+    virtual int64_t weightIndex(const size_t i){
+        throw  NotImplementedException("weightIndex is not implemented for this value-table-type");
+        return -1;
+    }
+
+
+
+    /**
+        \brief get the gradient of the value tables i's weight w.r.t the given configuration
+    */
+    virtual WeightType weightGradient(const size_t vtsWeightIndex, const DiscreteLabel * conf){
+        throw  NotImplementedException("weightGradient is not implemented for this value-table-type");
+        return -1;
+    }
 
 
 

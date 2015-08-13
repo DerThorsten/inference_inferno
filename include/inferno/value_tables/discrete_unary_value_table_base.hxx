@@ -10,8 +10,7 @@
 #include <limits>
 
 #include "inferno/inferno.hxx"
-#include "inferno/utilities/shape_walker.hxx"
-#include "inferno/value_tables/value_table_utilities.hxx"
+#include "inferno/value_tables/discrete_value_table_base.hxx"
     
 namespace inferno{
 
@@ -25,15 +24,29 @@ namespace inferno{
 namespace value_tables{
 
 
-class DiscreteUnaryValueTableBase
+class DiscreteUnaryValueTableBase :
+    public DiscreteValueTableBase
 {
 public:
+    using DiscreteValueTableBase::eval;
+    using DiscreteValueTableBase::shape;
+
     DiscreteUnaryValueTableBase(){
     }
-    virtual ~DiscreteUnaryValueTableBase() = default;
 
-    virtual DiscreteLabel size() const = 0;
+    virtual ~DiscreteUnaryValueTableBase() = default;
+    virtual DiscreteLabel shape() const = 0;
     virtual ValueType eval(const DiscreteLabel l ) const = 0;
+
+    virtual uint32_t arity() const final{
+        return 1;
+    }
+    virtual DiscreteLabel shape(const uint32_t i) const final{
+        return this->shape();
+    }
+    virtual ValueType eval(const DiscreteLabel * l) const final{
+        this->eval(*l);
+    }
 
 };
 
