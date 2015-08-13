@@ -235,10 +235,12 @@ typedef int64_t Fi;
 typedef int64_t Vti;
 
 typedef LabelType DiscreteLabel;
-typedef double  ContinousLabel;
-typedef double  FunctionValueType;
-typedef double  FactorValueType;
-typedef double ValueType;
+typedef double    ContinousLabel;
+typedef double    FunctionValueType;
+typedef double    FactorValueType;
+typedef double    ValueType;
+typedef double    WeightType;
+typedef double    LossType;
 
 typedef std::vector<DiscreteLabel > DiscreteLabelVec;
 typedef std::vector<ContinousLabel > ContinousLabelVec;
