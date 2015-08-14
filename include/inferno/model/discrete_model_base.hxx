@@ -613,6 +613,18 @@ public:
         }
     }
 
+    
+    
+    void updateWeights(const learning::Weights & weights){ 
+        for(const auto factor : model.factors()){
+            factor->updateWeights(weights);
+        }
+        for(const auto unary: model.unaries()){
+            unary>updateWeights(weights);
+        }
+    }
+
+
 private:
    
 

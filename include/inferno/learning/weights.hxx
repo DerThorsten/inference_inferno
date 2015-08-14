@@ -25,9 +25,6 @@ namespace learning{
 
         }
 
-        void pertubate(){
-
-        }
     private:
 
     };
@@ -35,23 +32,25 @@ namespace learning{
     typedef Weights WeightVector;
     /** \brief Weights class holding weights for structured learning
     */
-    class WeightMatrix : public vigra::MultiArray<2, WeightType>{
+    class WeightMatrix : public std::vector< WeightVector >{
     private:
-        typedef vigra::MultiArray<2, WeightType> BaseType;
+        typedef std::vector< WeightVector > BaseType;
     public:
         typedef uint32_t WeightDescriptor;
 
-        WeightMatrix(const WeightVector & weightVector, const size_t arrayLength = 0 , WeightType initValue = WeightType())
-        : BaseType(typename BaseType::difference_type(weightVector.size(), arrayLength), initValue){
+        WeightMatrix(const WeightVector & weightVector, const size_t arrayLength = 0)
+        : BaseType(arrayLength, weightVector){
 
         }
 
-
-        WeightMatrix(const size_t nWeights = 0, const size_t arrayLength = 0 , WeightType initValue = WeightType())
-        : BaseType(typename BaseType::difference_type(nWeights, arrayLength), initValue){
-
+        template<class F>
+        void pertubate(const type WeightType & source, F && functor){
+            for(auto wVec & : *this){
+                for(size_t wi=0; wi<wVec.size(); ++wi){
+                    wVec[wi] = source[wi] + functor(); 
+                }
+            }
         }
-
     private:
 
     };
