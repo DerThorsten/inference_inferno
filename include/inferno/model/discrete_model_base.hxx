@@ -739,7 +739,7 @@ public:
         descriptorToDenseVi_(model)
     {
         Vi denseVi = 0;
-        for(const auto var : model.variables()){
+        for(const auto var : model.variableDescriptors()){
             const auto vi = model.variableId(var);
             denseViToDescriptor_[denseVi] = var;
             descriptorToDenseVi_[var] = denseVi;
