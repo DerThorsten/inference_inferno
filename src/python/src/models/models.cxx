@@ -33,13 +33,15 @@ namespace models{
 
     
     void exportGeneralDiscreteGraphicalModel();
-    void exportGeneralDiscreteTlGraphicalModel();
+    void exportParametrizedMulticutModel();
+    //void exportGeneralDiscreteTlGraphicalModel();
     //void exportModifiedMultiwaycutModel();
 
    
     void exportModels(){
         exportGeneralDiscreteGraphicalModel();
-        exportGeneralDiscreteTlGraphicalModel();
+        exportParametrizedMulticutModel();
+        //exportGeneralDiscreteTlGraphicalModel();
         //exportModifiedMultiwaycutModel();
     }
 

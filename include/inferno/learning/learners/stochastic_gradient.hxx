@@ -4,6 +4,12 @@
 #define INFERNO_LEARNING_LEARNERS_STOCHASTIC_GRADIENT_HXX
 
 
+#include "inferno/learning/learners/learners.hxx"
+#include "inferno/utilities/index_vector.hxx"
+#include "inferno/utilities/line_search/line_search.hxx"
+#include "inferno/inference/base_discrete_inference_factory.hxx"
+
+
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
 
@@ -19,24 +25,33 @@ namespace learners{
     public:
         typedef DATASET Dataset;
         typedef typename Dataset::Model         Model;
-        typedef typename Dataset::GtConf        GtConf;
+        typedef typename Dataset::GroundTruth   GroundTruth;
         typedef typename Dataset::LossFunction  LossFunction;
-
+        typedef typename Model:: template VariableMap<DiscreteLabel> ConfMap;
+        typedef std::vector<ConfMap> ConfMapVector;
         typedef inference::BaseDiscreteInferenceFactory<Model> InferenceFactoryBase;
 
         struct Options{
             Options(
-
-            ){
-
+                const uint64_t nPertubations = 100,
+                const uint64_t maxIterations = 10000,
+                const double   sigma = 1.0,
+                const int      verbose =2
+            )
+            :   nPertubations_(nPertubations),
+                maxIterations_(maxIterations),
+                sigma_(sigma),
+                verbose_(verbose)
+            {
             }
 
             uint64_t nPertubations_;
             uint64_t maxIterations_;
-            double sigma_;
+            double   sigma_;
+            int      verbose_;
         };
 
-        StochasticGradient(Dataset & dset, const Options & options)
+        StochasticGradient(Dataset & dset, const Options & options = Options())
         :   dataset_(dset),
             options_(options){
         }
@@ -45,30 +60,32 @@ namespace learners{
             return dataset_;
         }
 
-        template<class DATASET>
-        void learn(InferenceFactoryBase & inferenceFactory){
+        void learn(InferenceFactoryBase * inferenceFactory, WeightVector & weightVector){
 
             // get dataset
             auto & dset = dataset();
 
-            WeightType weights = //....
+            auto & weights = weightVector;
 
             // multiple weight-vectors stacked as matrix
-            WeightMatrix weightMatrix(weights,options_.nPertubations_);   
-            
+            WeightMatrix  weightMatrix(weights,options_.nPertubations_);   
+         
+
             // random gen
             boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
-            boost::normal_distribution<> nd(0.0, sigma_);
+            boost::normal_distribution<> nd(0.0, options_.sigma_);
             boost::variate_generator<boost::mt19937&, boost::normal_distribution<> > normalDist(rng, nd);
 
             // indices
-            IndexVector< > indices(dset.size());
+            utilities::IndexVector< > indices(dset.size());
 
 
             for(size_t i=0; i<options_.maxIterations_; ++i){
+                std::cout<<"Iteration "<<i<<" "<<options_.maxIterations_<<"\n";
 
                 // iterate in random order
-                indices.randomShuffle(rng);
+                indices.randomShuffle();
+                // FIXME indices.randomShuffle(rng);
 
                 for(const auto trainingInstanceIndex : indices){
 
@@ -77,48 +94,66 @@ namespace learners{
 
                     // get model, gt, and loss-function
                     auto & model = dset.model(trainingInstanceIndex);
-                    const auto & gt = dset.gt(trainingInstanceIndex);
+                    const auto & gt = dset.groundTruth(trainingInstanceIndex);
                     auto & lossFunction = dset.lossFunction(trainingInstanceIndex);
 
 
                     // get perturbed weight matrix
                     weightMatrix.pertubate(weights, normalDist);
-
+                    ConfMapVector confMapVector(options_.nPertubations_, ConfMap(model));
 
                     // argmin for perturbed model
+                    auto cc=0;
                     for(const auto & perturbedWeightVector : weightMatrix){
                         // set perturbed weights
                         model.updateWeights(perturbedWeightVector);
 
                         // get argmin 
-
+                        auto inference = inferenceFactory->create(model);
+                        inference->infer();
+                        inference->conf(confMapVector[cc]);  
+                        ++cc;
                     }
 
+
+                    
+
+                    // reset the weights to the current weights
+                    model.updateWeights(weights);
 
                     // accumulate gradients
-                    WeightType gradient(weights.size());
-
-                    for( ){
-
-                    }
+                    WeightVector gradient(weights.size(),0);
+                    for(const auto & conf : confMapVector)
+                        model.accumulateJointFeatures(gradient, conf);
+                    gradient /= options_.nPertubations_;
 
                     // take gradient step
-                    WeightType weightAfterStep(weights);
+                    WeightVector weightAfterStep(weights);
+
+
 
 
                     // line-seach lambda
                     auto  evalGradientStep = [&] (const WeightType & stepSize){
-                        weightAfterStep = stepSize*gradient;
+                        //weightAfterStep = stepSize*gradient;
                         dset.updateWeights(weightAfterStep);
-                        return dset.eval(inferenceFactory)
-                    }
+                        return 0.0;
+                        //return dset.eval(inferenceFactory);
+                    };
 
                     // do the line search
-                    utilities::line_search::BinarySearch lineSearch;
-                    optStepSize = lineSearch(evalGradientStep,0.0001, 10.0);
+                    typedef utilities::line_search::BinarySearch<double,double> LineSearch;
+                    typedef typename LineSearch::Options LineSearchOptions;
+                    LineSearchOptions opts;
+                    LineSearch lineSearch(opts);
+                    const auto optStepSize = lineSearch(evalGradientStep,0.0000001, 10.0);
 
                     // apply opt step size
-                    weightAfterStep = stepSize*optStepSize;
+                    using namespace vigra::multi_math;
+
+                    weightAfterStep = weights;
+                    weightAfterStep*=optStepSize;
+
                     dset.updateWeights(weightAfterStep);
 
                     // lock
@@ -131,8 +166,15 @@ namespace learners{
             }
         }
     private:
-        Options options_;
 
+
+
+        void takeGradientStep(){
+
+        }
+
+        Dataset & dataset_;
+        Options options_;
     };
 
 } // end namespace inferno::learning::learners

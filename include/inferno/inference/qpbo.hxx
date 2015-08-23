@@ -70,8 +70,17 @@ namespace inference{
             bound_(-1.0*infVal()),
             value_(infVal()){
 
-            INFERNO_CHECK_OP(model_.maxArity(),<=,2,
-                "qpbo is only allowed for models with maxArity<=2");
+
+            // check for valid models
+            {
+                INFERNO_CHECK_OP(model.maxArity(),<=,2,
+                    "Qpbo is only allowed for models with maxArity<=2");
+
+                LabelType nLabels;
+                const bool simpleLabelSpace  =  model_.hasSimpleLabelSpace(nLabels);
+                INFERNO_CHECK(simpleLabelSpace && nLabels == 2, "HigherOrderQpbo is only implemented for models "
+                                                                "where all variables  have a binary label space");
+            } 
             
             const Vi nVar = model_.nVariables();
 
@@ -80,19 +89,15 @@ namespace inference{
             qpbo_->AddNode(nVar);
 
 
+            for(const auto unary : model_.unaries()){
+                const int qpboVi0 = denseVarIds_.toDenseId(unary->variable());
+                qpbo_->AddUnaryTerm(qpboVi0, unary->eval(0l), unary->eval(1l));
+            }
             for(const auto factor : model_.factors()){
                 const auto arity = factor->arity();
-                if(arity == 0){
-                    INFERNO_CHECK(false, "constant factors are not allowed anymore!");
-                    constTerm_ += factor->eval(0l);
-                }
-                else if(arity == 1){
-                    const int qpboVi0 = denseVarIds_.toDense(factor->variable(0));
-                    qpbo_->AddUnaryTerm(qpboVi0, factor->eval(0l), factor->eval(1l));
-                }
-                else if(arity == 2){
-                    const int qpboVi0 = denseVarIds_.toDense(factor->variable(0));
-                    const int qpboVi1 = denseVarIds_.toDense(factor->variable(1));
+                if(arity == 2){
+                    const int qpboVi0 = denseVarIds_.toDenseId(factor->variable(0));
+                    const int qpboVi1 = denseVarIds_.toDenseId(factor->variable(1));
                     INFERNO_CHECK_OP(qpboVi0,!=,qpboVi1,"");
                     qpbo_->AddPairwiseTerm(qpboVi0, qpboVi1,factor->eval(0,0), factor->eval(0,1),
                         factor->eval(1,0), factor->eval(1,1));
@@ -140,7 +145,7 @@ namespace inference{
         virtual void conf(Conf & confMap ) {
             for(const auto varDesc : model_.variableDescriptors()){
                 const auto vi = model_.variableId(varDesc);
-                const auto qpboLabel = qpbo_->GetLabel(denseVarIds_.toDense(vi));
+                const auto qpboLabel = qpbo_->GetLabel(denseVarIds_.toDenseId(vi));
                 if(qpboLabel==0)
                     confMap[vi] = 0;
                 if(qpboLabel==1)
@@ -150,7 +155,7 @@ namespace inference{
             }
         }
         virtual DiscreteLabel label(const Vi vi ) {
-            const auto qpboLabel = qpbo_->GetLabel(denseVarIds_.toDense(vi));
+            const auto qpboLabel = qpbo_->GetLabel(denseVarIds_.toDenseId(vi));
             if(qpboLabel==0)
                 return 0;
             if(qpboLabel==1)
@@ -160,7 +165,7 @@ namespace inference{
         }
 
         virtual bool isPartialOptimal(const Vi vi){
-            const auto qpboLabel = qpbo_->GetLabel(denseVarIds_.toDense(vi));
+            const auto qpboLabel = qpbo_->GetLabel(denseVarIds_.toDenseId(vi));
             return qpboLabel == 0 || qpboLabel == 1;
         }
 

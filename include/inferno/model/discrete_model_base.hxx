@@ -11,15 +11,19 @@
 #include "inferno/inferno.hxx"
 #include "inferno/value_tables/discrete_value_table_base.hxx"
 #include "inferno/utilities/small_vector.hxx"
+#include "inferno/learning/weights.hxx"
+
 #include "inferno/model/model_policies.hxx"
 #include "inferno/model/discrete_factor_base.hxx"
 
+#include "inferno/model/maps/map_iterators.hxx"
 
 
 namespace inferno{
 namespace models{
 
     
+
 /// \cond
 template<class ITER_TAG, bool IS_SORTED>
 struct MinElement;
@@ -85,7 +89,7 @@ public:
     :   model_(model){
 
     }//
-    typedef typename MODEL::VariableIdIter const_iterator;
+    typedef typename MODEL::VariableDescriptorIter const_iterator;
     const_iterator begin()const{
         return model_.variableDescriptorsBegin();
     }
@@ -294,30 +298,27 @@ public:
     typedef policies::VariableIdsPolicy<Model> VariableIdsPolicy;
     typedef policies::FactorIdsPolicy<Model> FactorIdsPolicy;
 
-
-
-
-
-
-
-
+    /// \brief get the constant term of the model
+    ValueType constTerm()const{
+        return static_cast<ValueType>(0);
+    }
 
     /// \brief evaluate the energy of the model for a certain configuration
     template<class CONFIG>
     double eval(const CONFIG  &conf)const{
         
-        double sum = 0.0;
-        const size_t maxArity = model().maxArity();
+        ValueType sum = 0.0;
+        const ArityType maxArity = model().maxArity();
         std::vector<LabelType> confBuffer(maxArity);
         for(const auto factor : model().factors()){
             // get the configuration of the factor
             factor->getFactorConf(conf, confBuffer.begin());
             sum += factor->eval(confBuffer.data());
         }
-        for(const auto unary: model().unaries()){
+        for(const auto unary: model().unaries())
             sum += unary->eval(conf[unary->variable()]);
-        }
-        return sum;
+
+        return sum + model().constTerm();
     }
 
     /** \brief get the maximum factor order of a model
@@ -330,12 +331,8 @@ public:
 
     */
     size_t maxArity()const{
-        size_t maxArity = 0;
-        auto fiter = model().factorIdsBegin();
-        auto fiterEnd = model().factorIdsEnd();
-        for(;fiter!=fiterEnd; ++fiter){
-            auto factorId = *fiter;
-            auto factor = model().factor(factorId);
+        ArityType maxArity = 0;
+        for(auto factor : model().factors()){
             maxArity = std::max(factor->arity(), maxArity);
         }
         return maxArity;
@@ -515,9 +512,8 @@ public:
         Fi nPairwise = 0;
 
         for(const auto factor : model().factors()){
-            if(factor->arity()==2){
+            if(factor->arity()==2)
                 ++nPairwise;
-            }
         }
         return nPairwise;
     }
@@ -578,9 +574,8 @@ public:
 
                             }
                             else{ // (arity =2 )
-                                if(!factor->isPotts(ValueType())){
+                                if(!factor->isPotts(ValueType()))
                                     return false;
-                                }
                             }
                         }
                     }
@@ -613,21 +608,87 @@ public:
         }
     }
 
+
+    bool isSecondOrderMulticutModel()const{
+        const auto m = model();
+        if(!m.hasUnaries()){
+            DiscreteLabel nl;
+            if(m.hasSimpleLabelSpace(nl)){
+                if(nl==m.nVariables()){
+                    if(m.maxArity()==2){
+                        for(auto factor : m.factors()){
+                            ValueType beta;
+                            if(!factor->isPotts(beta))
+                                return false;
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    bool isMulticutModel()const{
+        const auto m = model();
+        if(!m.hasUnaries()){
+            DiscreteLabel nl;
+            if(m.hasSimpleLabelSpace(nl)){
+                if(nl==m.nVariables()){
+                    for(auto factor : m.factors()){
+                        if(!factor->isGeneralizedPotts())
+                            return false;
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     
-    
-    void updateWeights(const learning::Weights & weights){ 
-        for(const auto factor : model.factors()){
+        
+    void updateWeights(const learning::WeightVector & weights)const{ 
+        for(const auto factor : model().factors())
             factor->updateWeights(weights);
+        for(const auto unary: model().unaries())
+            unary->updateWeights(weights);
+    }
+
+    template<class CONF>
+    void accumulateJointFeatures(
+        learning::WeightVector & accumulatedFeatures,
+        CONF & conf
+    )const{
+        
+
+        for(const auto unary : model().unaries()){
+            const DiscreteLabel label = conf[unary->variable()];
+            const auto vt = unary->valueTable();
+            for(auto wi :vt->weightIndices())
+                accumulatedFeatures[wi.global()] = vt->weightGradient(wi.local(),&label);
         }
-        for(const auto unary: model.unaries()){
-            unary>updateWeights(weights);
+
+        std::vector<DiscreteLabel> factorConf(this->maxArity());
+        for(const auto factor : model().factors()){
+            factor->getFactorConf(conf, factorConf);
+            const auto vt = factor->valueTable();
+            for(auto wi :vt->weightIndices())
+                accumulatedFeatures[wi.global()] = vt->weightGradient(wi.local(),factorConf.data());
         }
+
+    }
+
+    template<class MAP>
+    typename MapIterTypeHelper<MODEL,MAP>::ConstVariableMapIterRange
+    variableMapIter(const MAP & map)  const{
+        return inferno::models::variableMapIter(  this->constModel(),map);
     }
 
 
 private:
    
-
+    const MODEL & constModel()const{
+        return * static_cast<const MODEL *>(this);
+    }
     const MODEL & model()const{
         return * static_cast<const MODEL *>(this);
     }
@@ -651,46 +712,52 @@ template<class MODEL>
 class DenseVariableIdsImpl<MODEL, true>
 {
 public:
-    DenseVariableIdsImpl(const MODEL & model){
+    typedef typename MODEL::VariableDescriptor VariableDescriptor;
+    DenseVariableIdsImpl(const MODEL & model)
+    : model_(model){
     };
 
-    Vi toSparse(const Vi denseVi)const{
-        return denseVi;
+    VariableDescriptor toDescriptor(const Vi denseVi)const{
+        return model_.variableDescritor(denseVi);
     }
 
-    Vi toDense(const Vi sparseId)const{
-        return sparseId;
+    Vi toDenseId(const VariableDescriptor var)const{
+        return model_.variableId(var);
     }
+private:
+    const MODEL & model_;
 };
 
 template<class MODEL>
 class DenseVariableIdsImpl<MODEL, false>
 {
 public:
+    typedef typename MODEL::VariableDescriptor VariableDescriptor;
     typedef MODEL Model;
     DenseVariableIdsImpl(const Model & model)
-    :   denseToSparse_(model.nVariables()),
-        sparseToDense_(model)
+    :   denseViToDescriptor_(model.nVariables()),
+        descriptorToDenseVi_(model)
     {
         Vi denseVi = 0;
-        for(Vi sparseVi : model.variableIds()){
-            denseToSparse_[denseVi] = sparseVi;
-            sparseToDense_[sparseVi] = denseVi;
+        for(const auto var : model.variables()){
+            const auto vi = model.variableId(var);
+            denseViToDescriptor_[denseVi] = var;
+            descriptorToDenseVi_[var] = denseVi;
             ++denseVi;
         }
     };
 
-    Vi toSparse(const Vi denseVi)const{
-        INFERNO_ASSERT_OP(denseVi, <, denseToSparse_.size());
-        return denseToSparse_[denseVi];
+    VariableDescriptor toDescriptor(const Vi denseVi)const{
+        INFERNO_ASSERT_OP(denseVi, <, denseViToDescriptor_.size());
+        return denseViToDescriptor_[denseVi];
     }
 
-    Vi toDense(const Vi sparseId)const{
-        return sparseToDense_[sparseId];
+    Vi toDenseId(const VariableDescriptor var)const{
+        return descriptorToDenseVi_[var];
     }
 private:
-    std::vector<Vi> denseToSparse_;
-    typename  Model:: template VariableMap<Vi> sparseToDense_;
+    std::vector<VariableDescriptor> denseViToDescriptor_;
+    typename  Model:: template VariableMap<Vi> descriptorToDenseVi_;
 };
 
 

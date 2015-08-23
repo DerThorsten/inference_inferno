@@ -1,5 +1,5 @@
-#ifndef INFERNO_UTILITIES_LINE_SEARCH_HXX
-#define INFERNO_UTILITIES_LINE_SEARCH_HXX
+#ifndef INFERNO_UTILITIES_LINE_SEARCH_LINE_SEARCH_HXX
+#define INFERNO_UTILITIES_LINE_SEARCH_LINE_SEARCH_HXX
 
 
 
@@ -8,8 +8,10 @@ namespace utilities{
 namespace line_search{
 
 
+template<class ARG_TYPE, class VALUE_TYPE>
 class BinarySearch{
 public:
+    typedef ARG_TYPE ArgType;
     struct Options{
     };
     BinarySearch(const Options options = Options())
@@ -17,8 +19,9 @@ public:
     }
 
     template<class F>
-    std::result_of<F()> operator()(F && f){
-
+    ArgType operator()(F && f, const ArgType lowerBound, const ArgType upperBound) 
+    {
+        
     }
 private:
     Options options_;
@@ -28,4 +31,4 @@ private:
 } // end namespace inferno::utilities
 } // end namespace inferno
 
-#endif /*INFERNO_UTILITIES_LINE_SEARCH_HXX*/
+#endif /*INFERNO_UTILITIES_LINE_SEARCH_LINE_SEARCH_HXX*/

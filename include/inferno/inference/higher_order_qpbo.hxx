@@ -77,62 +77,58 @@ namespace inference{
             std::vector<ValueType> coeffs(1 << maxArity);
             std::vector<DiscreteLabel> cliqueLabels(maxArity);
 
+
+            for (const auto factor : model_.factors()){
+                const Vi var = denseVarIds_.toDense(factor->variable(0));
+                hoe_.AddUnaryTerm(var, factor->eval(1) - factor->eval(0));
+            }
+
             for (const auto factor : model_.factors()){
                 //const auto  factor = model_[fi];
                 const ArityType arity = factor->arity();
-                const LabelType l0 = 0;
-                const LabelType l1 = 1;
-                INFERNO_CHECK(arity>0, "0-arity factor are deprecated and not allowed anymore.\n"
-                                       "Please contact the developers to inform them how you "
-                                       "could create a model with zero arity factor");
-                if (arity == 1){
-                    const Vi var = denseVarIds_.toDense(factor->variable(0));
-                    const ValueType e0 = factor->eval(l0);
-                    const ValueType e1 = factor->eval(l1);
-                    hoe_.AddUnaryTerm(var, e1 - e0);
-                }
-                else{
-                    const unsigned int numAssignments = 1 << arity;
-                    for (unsigned int subset = 1; subset < numAssignments; ++subset){
-                        coeffs[subset] = 0;
-                    }
-                    // For each boolean assignment, get the clique energy at the
-                    // corresponding labeling
-                    for (unsigned int assignment = 0;  assignment < numAssignments; ++assignment){
-                        for (unsigned int i = 0; i < arity; ++i){
-                            if (assignment & (1 << i))
-                                cliqueLabels[i] = l1;
-                            else
-                                cliqueLabels[i] = l0;
-                        }
-                        const ValueType energy = factor->eval(cliqueLabels.data());
-                        for (unsigned int subset = 1; subset < numAssignments; ++subset){
-                            if (assignment & ~subset)
-                                continue;
-                            else{
-                                int parity = 0;
-                                for (unsigned int b = 0; b < arity; ++b)
-                                    parity ^=  (((assignment ^ subset) & (1 << b)) != 0);
-                                coeffs[subset] += parity ? -energy : energy;
-                            }
-                        }
-                    }
-                    typename HigherOrderEnergy<ValueType, 10>::VarId vars[10];
-                    for (unsigned int subset = 1; subset < numAssignments; ++subset){
-                        int degree = 0;
-                        for (unsigned int b = 0; b < arity; ++b)
-                            if (subset & (1 << b))
-                                vars[degree++] = denseVarIds_.toDense(factor->variable(b));
 
-                        // this sort could be redundant
-                        /// \todo add policy check 
-                        /// here which checks if the variable
-                        /// ids of a factor are sorted
-                        /// (or even a policy within the densifier)
-                        std::sort(vars, vars + degree);
-                        hoe_.AddTerm(coeffs[subset], degree, vars);
+                const unsigned int numAssignments = 1 << arity;
+                for (unsigned int subset = 1; subset < numAssignments; ++subset){
+                    coeffs[subset] = 0;
+                }
+                // For each boolean assignment, get the clique energy at the
+                // corresponding labeling
+                for (unsigned int assignment = 0;  assignment < numAssignments; ++assignment){
+                    for (unsigned int i = 0; i < arity; ++i){
+                        cliqueLabels[i] = (assignment & (1 << i)) ? 1 : 0;
+                    }
+                    const ValueType energy = factor->eval(cliqueLabels);
+                    for (unsigned int subset = 1; subset < numAssignments; ++subset){
+                        if (assignment & ~subset){
+                            continue;
+                        }
+                        else{
+                            int parity = 0;
+                            for (unsigned int b = 0; b < arity; ++b){
+                                parity ^=  (((assignment ^ subset) & (1 << b)) != 0);
+                            }
+                            coeffs[subset] += parity ? -energy : energy;
+                        }
                     }
                 }
+                typename HigherOrderEnergy<ValueType, 10>::VarId vars[10];
+                for (unsigned int subset = 1; subset < numAssignments; ++subset){
+                    int degree = 0;
+                    for (unsigned int b = 0; b < arity; ++b){
+                        if (subset & (1 << b)){
+                            vars[degree++] = denseVarIds_.toDense(factor->variable(b));
+                        }
+                    }
+
+                    // this sort could be redundant
+                    /// \todo add policy check 
+                    /// here which checks if the variable
+                    /// ids of a factor are sorted
+                    /// (or even a policy within the densifier)
+                    std::sort(vars, vars + degree);
+                    hoe_.AddTerm(coeffs[subset], degree, vars);
+                }
+            
             }
         }
 

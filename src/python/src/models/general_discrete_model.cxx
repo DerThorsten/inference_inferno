@@ -136,7 +136,7 @@ namespace models{
 
     void exportGeneralDiscreteGraphicalModel(){
         typedef GeneralDiscreteModel Model;
-        bp::class_<Model>("GeneralDiscreteModel",bp::init<Vi,DiscreteLabel>())
+        bp::class_<Model, boost::noncopyable>("GeneralDiscreteModel",bp::init<Vi,DiscreteLabel>())
             .def(export_helper::ExportModelAPI<Model>("GeneralDiscreteModel"))
 
             // batch add potts value tableS

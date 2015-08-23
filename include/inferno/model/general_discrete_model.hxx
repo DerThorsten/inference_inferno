@@ -4,13 +4,22 @@
 #ifndef INFERNO_MODEL_GENERAL_DISCRETE_MODEL_HXX
 #define INFERNO_MODEL_GENERAL_DISCRETE_MODEL_HXX
 
+
+//boost
+#include <boost/iterator/counting_iterator.hpp>
+
+// std
+
+// inferno
 #include "inferno/inferno.hxx"
 #include "inferno/value_tables/discrete_value_table_base.hxx"
 #include "inferno/value_tables/discrete_unary_value_table_base.hxx"
 #include "inferno/model/discrete_factor_base.hxx"
 #include "inferno/model/discrete_unary_base.hxx"
 #include "inferno/model/discrete_model_base.hxx"
-#include <boost/iterator/counting_iterator.hpp>
+#include "inferno/model/simple_discrete_model_base.hxx"
+#include "inferno/model/maps/model_maps.hxx"
+
 
 namespace inferno{
 namespace models{
@@ -27,6 +36,8 @@ public DiscreteFactorBase<GeneralDiscreteGraphicalModelFactor<MODEL>, MODEL> {
 public:
 
     typedef typename MODEL::VariableDescriptor VariableDescriptor;
+
+
 
     GeneralDiscreteGraphicalModelFactor()
     :   model_(NULL),
@@ -84,7 +95,7 @@ public:
 
     GeneralDiscreteGraphicalModelUnary()
     :   model_(NULL),
-        vt_(NULL),
+    vt_(NULL),
         var_(){
 
     }
@@ -130,32 +141,23 @@ private:
     \todo move this to the namespace inferno::models
 */
 class GeneralDiscreteModel : 
-public DiscreteGraphicalModelBase<GeneralDiscreteModel>{
-
-    friend class GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel>;
+public SimpleDiscreteGraphicalModelBase<GeneralDiscreteModel>{
+    typedef GeneralDiscreteModel Self;
+    friend class GeneralDiscreteGraphicalModelFactor<Self>;
 private:
-    typedef  GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel> Ftype;
-    typedef  GeneralDiscreteGraphicalModelUnary<GeneralDiscreteModel> Utype;
+    typedef  GeneralDiscreteGraphicalModelFactor<Self> Ftype;
+    typedef  GeneralDiscreteGraphicalModelUnary<Self> Utype;
 public:
-    typedef boost::counting_iterator<uint64_t> FactorIdIter;
-    typedef boost::counting_iterator<Vi> VariableIdIter;
 
-
-    typedef Fi       FactorDescriptor;
-    typedef Vi       VariableDescriptor;
-    typedef Vi       UnaryDescriptor;
-
-    typedef boost::counting_iterator<Vi>       UnaryDescriptorIter;
-    typedef boost::counting_iterator<Fi>       FactorDescriptorIter;
-    typedef boost::counting_iterator<Vi>       VariableDescriptorIter;
-
-
-    typedef const GeneralDiscreteGraphicalModelUnary<GeneralDiscreteModel> * UnaryProxy;
+    typedef const GeneralDiscreteGraphicalModelUnary<Self> * UnaryProxy;
     typedef UnaryProxy UnaryProxyRef;
 
-    typedef const GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel> * FactorProxy;
+    typedef const GeneralDiscreteGraphicalModelFactor<Self> * FactorProxy;
     typedef FactorProxy FactorProxyRef;
 
+
+    GeneralDiscreteModel(const GeneralDiscreteModel&) = delete;
+    GeneralDiscreteModel& operator=(const GeneralDiscreteModel&) = delete;
 
     /** \brief destructor for model
 
@@ -169,75 +171,15 @@ public:
         }
     }
 
-
-    /** \brief container which can store an instance
-        of T for any variable Descriptor.
-
-        \warning changing the number of the variables in
-        this model will invalidate any instance VariableMap.
-    */
-    template<class T>
-    class VariableMap : public std::vector<T>{
-    public:
-        VariableMap(const GeneralDiscreteModel & m, const T & val)
-        : std::vector<T>(m.nVariables(),val){
-        }//
-        VariableMap(const GeneralDiscreteModel & m)
-        : std::vector<T>(m.nVariables()){
-        }
-    };
-    /** \brief container which can store an instance
-        of T for any factor Descriptor.
-
-        \warning Adding additional factors or changing the number of the factors in
-        this model will invalidate any instance FactorMap.
-    */
-    template<class T>
-    class FactorMap : public std::vector<T>{
-    public:
-        FactorMap(const GeneralDiscreteModel & m, const T & val)
-        : std::vector<T>(m.nFactors(),val){
-        }
-        FactorMap(const GeneralDiscreteModel & m)
-        : std::vector<T>(m.nFactors()){
-        }
-    };
-
-
-    /** \brief container which can store an instance
-        of T for any unary Descriptor.
-
-        \warning Adding additional factors or changing the number of the factors in
-        this model will invalidate any instance UnaryMap.
-    */
-    template<class T>
-    class UnaryMap : public std::vector<T>{
-    public:
-        UnaryMap(const GeneralDiscreteModel & m, const T & val)
-        : std::vector<T>(m.nUnaries(),val){
-        }
-        UnaryMap(const GeneralDiscreteModel & m)
-        : std::vector<T>(m.nUnaries()){
-        }
-    };
-
-    /*
-    template<class CONFIG>
-    double eval(const CONFIG  &conf)const{
-        double sum = 0.0;
-        std::vector<LabelType> confBuffer(maxArity_);
-        for(size_t i=0; i<factors_.size(); ++i){
-            const Ftype & fac = factors_[i];
-            // get the configuration of the factor
-            fac.getFactorConf(conf, confBuffer.begin());
-            sum += fac.eval(confBuffer.data());
-        }
-        return sum;
+    uint64_t nVariables()const{
+        return nVar_;
     }
-    */
-
-
-
+    uint64_t nFactors()const{
+        return factors_.size();
+    }
+    uint64_t nUnaries()const{
+        return unaries_.size();
+    } 
 
     template<class CONFIG>
     double eval(const CONFIG  & conf)const{
@@ -298,58 +240,6 @@ public:
     }
 
 
-    // new descriptor iterators
-    FactorDescriptorIter factorDescriptorsBegin()const{
-        return FactorDescriptorIter(0);
-    }
-    FactorDescriptorIter factorDescriptorsEnd()const{
-        return FactorDescriptorIter(factors_.size());
-    }
-    UnaryDescriptorIter unaryDescriptorsBegin()const{
-        return UnaryDescriptorIter(0);
-    }
-    UnaryDescriptorIter unaryDescriptorsEnd()const{
-        return UnaryDescriptorIter(unaries_.size());
-    }
-    VariableDescriptorIter variableDescriptorsBegin()const{
-        return VariableDescriptorIter(0);
-    }
-    VariableDescriptorIter variableDescriptorsEnd()const{
-        return VariableDescriptorIter(nVar_);
-    }
-
-
-    /// \brief convert factor descriptor into factor id
-    ///
-    /// For this type of graphical model, factor ids and descriptors
-    /// are equivalent
-    Fi factorId(const FactorDescriptor factorDescriptor)const{
-        return factorDescriptor;
-    }
-
-    /// \brief convert variable descriptor into variable id
-    ///
-    /// For this type of graphical model, variable ids and descriptors
-    /// are equivalent
-    Vi variableId(const VariableDescriptor variableDescriptor)const{
-        return variableDescriptor;
-    }
-
-    /// \brief convert factor id into factor descriptor
-    ///
-    /// For this type of graphical model, factor ids and descriptors
-    /// are equivalent
-    FactorDescriptor factorDescriptor(const Fi fi)const{
-        return fi;
-    }
-
-    /// \brief convert factor id into factor descriptor
-    ///
-    /// For this type of graphical model, factor ids and descriptors
-    /// are equivalent
-    VariableDescriptor variableDescriptor(const Vi vi)const{
-        return vi;
-    }
 
     FactorProxy factor(const FactorDescriptor factorDescriptor)const{
         return &factors_[factorDescriptor];
@@ -357,7 +247,6 @@ public:
     UnaryProxy unary(const UnaryDescriptor unaryDescriptor)const{
         return &unaries_[unaryDescriptor];
     }
-
 
     LabelType nLabels(const VariableDescriptor variableDescriptor)const{
         return variableDescriptor >= numberOfLabels_.size() ? numberOfLabels_[0] : numberOfLabels_[variableDescriptor]; 
@@ -367,7 +256,7 @@ public:
         return valueTables_.size();
     }
 
-    GeneralDiscreteModel(const uint64_t nVar, const LabelType nLabes, const bool functionOwner = true)
+    GeneralDiscreteModel(const uint64_t nVar = 0 , const LabelType nLabes = 0, const bool functionOwner = true)
     :   nVar_(nVar),
         numberOfLabels_(1, nLabes),
         valueTables_(),

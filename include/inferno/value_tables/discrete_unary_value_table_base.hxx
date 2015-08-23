@@ -50,6 +50,27 @@ public:
 
 };
 
+///\cond
+class  DeadCodeUnaryValueTable : public DiscreteUnaryValueTableBase{
+public:
+  
+    
+    DeadCodeUnaryValueTable()
+    :   DiscreteUnaryValueTableBase(){
+    }
+
+
+    ValueType eval(const DiscreteLabel l1)const{
+        return ValueType();
+    }
+    DiscreteLabel shape() const{
+        return DiscreteLabel();
+    }
+private:
+    const std::vector<ValueType> values_;
+};
+///\endcond
+
 } // end namespace value_tables
 } // end namespace inferno
 

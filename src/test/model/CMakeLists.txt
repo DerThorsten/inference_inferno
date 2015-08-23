@@ -16,6 +16,10 @@ target_link_libraries(test_discrete_lemon_model ${TEST_LIBS})
 add_test(test_discrete_lemon_model test_discrete_lemon_model)
 
 
+add_executable(test_parametrized_multicut_model test_parametrized_multicut_model.cxx )
+target_link_libraries(test_parametrized_multicut_model ${TEST_LIBS})
+add_test(test_parametrized_multicut_model test_parametrized_multicut_model)
+
 #add_executable(test_mmwc test_mmwc.cxx )
 #target_link_libraries(test_mmwc ${TEST_LIBS})
 #add_test(test_mmwc test_mmwc)

@@ -1,4 +1,4 @@
-#define PY_ARRAY_UNIQUE_SYMBOL inferno_models_PyArray_API
+#define PY_ARRAY_UNIQUE_SYMBOL inferno_value_tables_PyArray_API
 #define NO_IMPORT_ARRAY
 
 

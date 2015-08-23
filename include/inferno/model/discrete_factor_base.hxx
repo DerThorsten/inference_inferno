@@ -1,10 +1,12 @@
 #ifndef INFERNO_MODEL_BASE_FACTOR_HXX
 #define INFERNO_MODEL_BASE_FACTOR_HXX
 
+#include <boost/iterator/iterator_facade.hpp>
+
 #include "inferno/inferno.hxx"
+#include "inferno/utilities/utilities.hxx"
 #include "inferno/value_tables/discrete_value_table_base.hxx"
 #include "inferno/utilities/shape_walker.hxx"
-
 
 namespace inferno{
 namespace models{
@@ -29,6 +31,55 @@ template<class FACTOR, class MODEL >
 class DiscreteFactorBase{
 
 private:
+    typedef DiscreteFactorBase<FACTOR,MODEL> Self;
+    typedef typename MODEL::VariableDescriptor VariableDescriptor;
+
+    class VariableDescriptorIter : 
+    public  boost::iterator_facade<Self, const VariableDescriptor,
+                                   boost::random_access_traversal_tag> 
+    {
+        friend class boost::iterator_core_access;
+    public:
+        VariableDescriptorIter(const Self * factor, uint32_t fvi)
+        :   factor_(factor),
+            fvi_(fvi),
+
+            arity_(factor->arity(0)){
+            if(fvi_>=0 && fvi_<arity_)
+                var_ = factor_->variable(fvi_);
+        }
+        void increment(){
+            ++fvi_;
+            if(fvi_>=0 && fvi_<arity_)
+                var_ = factor_->variable(fvi_);
+        }
+        void decrement(){
+            --fvi_;
+            if(fvi_>=0 && fvi_<arity_)
+                var_ = factor_->variable(fvi_);
+        }
+        void advance(const size_t n){
+            fvi_+=n;
+            if(fvi_>=0 && fvi_<arity_)
+                var_ = factor_->variable(fvi_);
+        }
+        bool equal(const VariableDescriptorIter & other) const{
+            return this->fvi_ == other.fvi_;
+        }
+
+        const VariableDescriptor & dereference() const { 
+            return var_; 
+        }
+
+    private:
+        const Self * factor_;
+        int64_t fvi_;
+        VariableDescriptor var_;
+        const ArityType arity_;
+    };
+
+
+
 
 
 
@@ -62,11 +113,25 @@ private:
         const_iterator end_;
     };
 
+    typedef utilities::ConstIteratorRange<VariableDescriptorIter> VariableDescriptorIterRange;
 public:
 
     ConfIterator< ShapeFunctor > confIter()const{
         ShapeFunctor shape(factor());
         return ConfIterator< ShapeFunctor >(shape, factor()->arity(), factor()->size());
+    }
+
+
+    VariableDescriptorIter variableDescriptorsBegin()const{
+        return VariableDescriptorIter(this,0);
+    }
+    VariableDescriptorIter variableDescriptorsEnd()const{
+        return VariableDescriptorIter(this,this->arity());
+    }
+
+    VariableDescriptorIterRange variables()const{
+        return VariableDescriptorIterRange(this->variableDescriptorsBegin(),
+                                           this->variableDescriptorsEnd());
     }
 
     ConfRange confs()const{
@@ -76,12 +141,18 @@ public:
     ValueType eval(const LabelType * conf)const{
         return factor()->valueTable()->eval(conf);
     }
-    ValueType eval(const LabelType l0)const{
-        return factor()->valueTable()->eval(l0);
+
+    ValueType eval(const std::vector<DiscreteLabel> & conf)const{
+        return factor()->valueTable()->eval(conf.data());
     }
 
+    ValueType eval(const SmallVector<DiscreteLabel> & conf)const{
+        return factor()->valueTable()->eval(conf.data());
+    }
+
+
     ValueType eval(const LabelType l0, 
-                         const LabelType l1)const{
+                    const LabelType l1)const{
         return factor()->valueTable()->eval(l0, l1);
     }
 
@@ -105,7 +176,7 @@ public:
                     const LabelType l4)const{
         return factor()->valueTable()->eval(l0, l1, l2, l3, l4);
     }
-    size_t arity()const{
+    ArityType arity()const{
         return factor()->valueTable()->arity();
     }
     uint64_t size()const{
@@ -150,7 +221,7 @@ public:
     template<class GM_CONF, class ITER_FACTOR_CONF>
     void getFactorConf(
         const GM_CONF & gmConf,
-        const ITER_FACTOR_CONF factorConf     
+        ITER_FACTOR_CONF factorConf     
     )const{
         const auto arity = factor()->arity();
         for(auto a=0; a<arity; ++a){
@@ -158,17 +229,17 @@ public:
         }
     }
 
-    void updateWeights(const learning::Weights & weights){ 
+    void updateWeights(const learning::Weights & weights)const{ 
         factor()->valueTable()->updateWeights(weights);
     }
-    uint64_t nWeights(){
+    uint64_t nWeights()const{
         return factor()->valueTable()->nWeights();
     }
-    int64_t weightIndex(const size_t i){
+    int64_t weightIndex(const size_t i)const{
         return factor()->valueTable()->nWeights();
     }
 
-    WeightType weightGradient(const size_t factorsWeightIndex, const DiscreteLabel * conf){
+    WeightType weightGradient(const size_t factorsWeightIndex, const DiscreteLabel * conf)const{
         return factor()->valueTable()->weightGradient(factorsWeightIndex, conf);
     }
 

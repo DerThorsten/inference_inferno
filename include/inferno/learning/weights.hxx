@@ -20,7 +20,7 @@ namespace learning{
         typedef vigra::MultiArray<1, WeightType> BaseType;
     public:
         typedef uint32_t WeightDescriptor;
-        Weights(const size_t nWeights = 0 , WeightType initValue = WeightType())
+        Weights(const size_t nWeights = 0 , const WeightType initValue = WeightType())
         : BaseType(typename BaseType::difference_type(nWeights), initValue){
 
         }
@@ -44,8 +44,8 @@ namespace learning{
         }
 
         template<class F>
-        void pertubate(const type WeightType & source, F && functor){
-            for(auto wVec & : *this){
+        void pertubate(const WeightVector & source, F && functor){
+            for(auto & wVec : *this){
                 for(size_t wi=0; wi<wVec.size(); ++wi){
                     wVec[wi] = source[wi] + functor(); 
                 }

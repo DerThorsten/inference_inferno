@@ -9,7 +9,11 @@
 #include <vector>
 #include <limits>
 
+#include <boost/iterator/iterator_facade.hpp>
+
+
 #include "inferno/inferno.hxx"
+#include "inferno/utilities/utilities.hxx"
 #include "inferno/utilities/shape_walker.hxx"
 #include "inferno/value_tables/value_table_utilities.hxx"
 
@@ -63,6 +67,72 @@ bool allValuesEq(const VECTOR vector) {
 
  \ingroup DiscreteValueTableBase
 */
+
+
+struct GlobalLocal{
+    GlobalLocal(const WeightIndex g,const WeightIndex l)
+    :   local_(l),
+        global_(g){
+
+    }
+    WeightIndex local()const{
+        return local_;
+    }
+    WeightIndex global()const{
+        return global_;
+    }
+    WeightIndex local_;
+    WeightIndex global_;
+};
+
+template<class VT_LIKE>
+class WeightIndexIterator : 
+public  boost::iterator_facade< 
+            WeightIndexIterator<VT_LIKE>,
+            const GlobalLocal,
+            boost::random_access_traversal_tag
+        > 
+{
+    friend class boost::iterator_core_access;
+public:
+    WeightIndexIterator(const VT_LIKE * vt, size_t vtWeightIndex)
+    :   vtLike_(vt),
+        gl_(0,vtWeightIndex),
+        vtNWeights_(vt->nWeights()){
+        if(gl_.local()>=0 && gl_.local()<vtNWeights_)
+            gl_.global_ = vtLike_->weightIndex(gl_.local());
+    }
+    void increment(){
+        ++gl_.local_;
+        if(gl_.local()>=0 && gl_.local()<vtNWeights_)
+            gl_.global_ = vtLike_->weightIndex(gl_.local());
+    }
+    void decrement(){
+        --gl_.local_;
+        if(gl_.local()>=0 && gl_.local()<vtNWeights_)
+            gl_.global_ = vtLike_->weightIndex(gl_.local());
+    }
+    void advance(const size_t n){
+        gl_.local_+=n;
+        if(gl_.local()>=0 && gl_.local()<vtNWeights_)
+            gl_.global_ = vtLike_->weightIndex(gl_.local());
+    }
+
+
+    bool equal(const WeightIndexIterator & other) const{
+        return this->gl_.local_ == other.gl_.local_;
+    }
+
+    const GlobalLocal & dereference() const { 
+        return gl_; 
+    }
+
+private:
+    const VT_LIKE * vtLike_;
+    GlobalLocal gl_;
+    const int64_t vtNWeights_;
+};
+
 class DiscreteValueTableBase{
 private:
 
@@ -85,6 +155,23 @@ private:
             end_()
         {
             end_ = begin_.getEnd();
+        }
+        const_iterator begin()const{
+            return begin_;
+        }
+        const_iterator end()const{
+            return end_;
+        }
+        const_iterator begin_;
+        const_iterator end_;
+    };
+
+    struct WeightIndexRange{
+        typedef WeightIndexIterator<DiscreteValueTableBase> const_iterator;
+        WeightIndexRange(const DiscreteValueTableBase * vt)
+        :   begin_(vt,0),
+            end_(vt, vt->nWeights())
+        {
         }
         const_iterator begin()const{
             return begin_;
@@ -136,6 +223,14 @@ public:
     */
     virtual uint32_t  arity()const=0;
 
+
+    virtual ValueType eval(const std::vector<DiscreteLabel> & conf)const{
+        return this->eval(conf.data());
+    }
+
+    virtual ValueType eval(const SmallVector<DiscreteLabel> & conf)const{
+        return this->eval(conf.data());
+    }
 
     /** \brief number of configurations in a value table.
         
@@ -276,15 +371,11 @@ public:
             DiscreteLabel s[3];
             this->bufferShape(s);
 
-            const ValueType v000 = this->eval(l);
-            l[2]=0; l[1]=1; l[0]=1;
-            const ValueType v001 = this->eval(l);
-            l[2]=1; l[1]=0; l[0]=1;
-            const ValueType v010 = this->eval(l);
-            l[2]=1; l[1]=1; l[0]=0;
-            const ValueType v100 = this->eval(l); 
-            l[2]=0; l[1]=0; l[0]=0;
-            const ValueType v111 = this->eval(l);
+            const ValueType v000 = this->eval(0,1,2);
+            const ValueType v001 = this->eval(0,1,1);
+            const ValueType v010 = this->eval(1,0,1);
+            const ValueType v100 = this->eval(1,1,0); 
+            const ValueType v111 = this->eval(0,0,0);
             for(l[0]=0;l[0]<s[0];++l[0]) 
             for(l[1]=0;l[1]<s[1];++l[1]) 
             for(l[2]=0;l[2]<s[2];++l[2]) {
@@ -901,6 +992,11 @@ public:
     }
 
 
+
+    virtual WeightIndexRange weightIndices()const{
+        return WeightIndexRange(this);
+    }
+
     /**
         \brief make the value table update its weights.
 
@@ -911,8 +1007,9 @@ public:
         \warning any value table which has weights needs
         to overwrite this function
     */
-    virtual void updateWeights(const learning::Weights & weights){
+    virtual void updateWeights(const learning::Weights & weights)const{
     }
+
 
     /**
         \brief total number of weights the value table
@@ -921,7 +1018,7 @@ public:
         \warning any value table which has weights needs
         to overwrite this function
     */
-    virtual uint64_t nWeights(){
+    virtual uint64_t nWeights()const{
         return 0;
     }
 
@@ -935,7 +1032,7 @@ public:
         \warning any value table which has weights needs
         to overwrite this function
     */
-    virtual int64_t weightIndex(const size_t i){
+    virtual int64_t weightIndex(const size_t i)const{
         throw  NotImplementedException("weightIndex is not implemented for this value-table-type");
         return -1;
     }
@@ -945,7 +1042,7 @@ public:
     /**
         \brief get the gradient of the value tables i's weight w.r.t the given configuration
     */
-    virtual WeightType weightGradient(const size_t vtsWeightIndex, const DiscreteLabel * conf){
+    virtual WeightType weightGradient(const size_t vtsWeightIndex, const DiscreteLabel * conf)const{
         throw  NotImplementedException("weightGradient is not implemented for this value-table-type");
         return -1;
     }

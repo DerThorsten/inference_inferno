@@ -233,6 +233,7 @@ typedef uint32_t ArityType;
 typedef int64_t Vi;
 typedef int64_t Fi;
 typedef int64_t Vti;
+typedef int64_t WeightIndex;
 
 typedef LabelType DiscreteLabel;
 typedef double    ContinousLabel;

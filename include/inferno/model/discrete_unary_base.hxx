@@ -2,22 +2,17 @@
 #define INFERNO_MODEL_UNARY_BASE_HXX
 
 #include "inferno/inferno.hxx"
-#include "inferno/value_tables/discrete_value_table_base.hxx"
-#include "inferno/utilities/shape_walker.hxx"
-
+#include "inferno/value_tables/discrete_unary_value_table_base.hxx"
 
 namespace inferno{
 namespace models{
-
-
-
 
 
 /** \brief Base CRT Unary Base
 */
 template<class UNARY, class MODEL>
 class DiscreteUnaryBase : 
-public DiscreteFactorBase< DiscreteUnaryBase<UNARY, MODEL>, MODEL > {
+public DiscreteFactorBase< UNARY, MODEL > {
 
 public:
     const UNARY * operator ->()const{
@@ -50,6 +45,35 @@ private:
     }
 };
 
+
+/// \cond
+template<class MODEL>
+class DeadCodeUnary :
+public DiscreteUnaryBase<DeadCodeUnary<MODEL>, MODEL> {
+public:
+    typedef DiscreteUnaryBase<DeadCodeUnary<MODEL>, MODEL > BaseType;
+    typedef typename MODEL::VariableDescriptor VariableDescriptor;
+
+    using BaseType::shape;
+    using BaseType::variable;
+    DeadCodeUnary(){
+
+    }
+    const value_tables::DiscreteUnaryValueTableBase * valueTable()const{
+        return vt_;
+    }   
+
+    LabelType shape( )const{
+        return LabelType();
+    }
+
+    VariableDescriptor variable()const{
+        VariableDescriptor();
+    }
+private:
+    value_tables::DeadCodeUnaryValueTable * vt_;
+};
+/// \endcond
 
 
 } // end namespace inferno::models

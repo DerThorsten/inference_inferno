@@ -1,0 +1,11 @@
+SET(MOD_SRC 
+    loss_functions.cxx 
+)
+
+SET(MOD_EXTRA_LIBS "" )
+
+
+
+INFERNO_ADD_NUMPY_MODULE(inferno/learning/dataset/dataset 
+                         SOURCES ${MOD_SRC} 
+                         LIBRARIES ${MOD_EXTRA_LIBS} )

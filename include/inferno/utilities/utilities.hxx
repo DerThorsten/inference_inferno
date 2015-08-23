@@ -2,31 +2,38 @@
 #define INFERNO_UTILITIES_UTILITIES_HXX
 
 
-
 namespace inferno{
 namespace utilities{
-namespace line_search{
 
 
-template<class T = size_t>
-class IndexVector :std::vector<T>{
-    IndexVector(T size){
-        for(T i=0; i<size; ++i)
-            (*this)[i] = i;
+template<class ITERATOR>
+class ConstIteratorRange{
+public:
+    typedef ITERATOR const_iterator;
+    ConstIteratorRange(const_iterator b, const_iterator e)
+    :   begin_(b),
+        end_(e){
+
     }
-    void reset(){
-        for(T i=0; i<size; ++i)
-            (*this)[i] = i;
+    const_iterator begin()const{
+        return begin_;
+    }
+    const_iterator begin(){
+        return begin_;
     }
 
-
-    void randomShuffle(){
-        std::random_shuffle(this->begin(), this->end());
+    const_iterator end()const{
+        return end_;
     }
+    const_iterator end(){
+        return end_;
+    }
+
+private:
+    ITERATOR begin_,end_;
 };
 
 
-} // end namespace inferno::utilities::line_search
 } // end namespace inferno::utilities
 } // end namespace inferno
 

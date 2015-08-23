@@ -123,7 +123,7 @@ for(const auto f : model.factors()){ \
     BOOST_CHECK_EQUAL(model.nVariables(),0); \
     BOOST_CHECK_EQUAL(model.nFactors(),0); \
 
-
+/// \deprecated
 #define INFERNO_CHECK_MODEL_VIS(MODEL, model, varIds) \
 { \
     const auto SortedVariableIds = MODEL::SortedVariableIds; \
