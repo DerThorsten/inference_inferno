@@ -5,6 +5,10 @@
 #include <random>
 #include <iostream>
 
+#include <opengm/operations/adder.hxx>
+#include <opengm/operations/minimizer.hxx>
+#include <opengm/inference/multicut.hxx>
+
 
 
 #include "inferno/model/parametrized_multicut_model.hxx"
@@ -12,7 +16,7 @@
 #include "inferno/learning/loss_functions/loss_functions.hxx"
 #include "inferno/learning/learners/stochastic_gradient.hxx"
 #include "inferno/inference/qpbo.hxx"
-
+#include "inferno/inference/opengm_inference.hxx"
 
 typedef vigra::TinyVector<uint64_t, 2> Edge;
 typedef vigra::MultiArray<1, vigra::TinyVector<uint64_t, 2> > EdgeArray;
@@ -88,7 +92,11 @@ BOOST_AUTO_TEST_CASE(TestMulticutLearning_1)
 
 
     typedef inference::BaseDiscreteInferenceFactory<Model> FactoryBase;
-    typedef inference::Qpbo<Model> Inference;
+
+
+    typedef opengm::Multicut<inference::ogm::GraphicalModel, opengm::Minimizer> OgmMulticut;
+    typedef inference::OpengmInference<Model, OgmMulticut> Inference;
+    //typedef inference::Qpbo<Model> Inference;
     typedef inference::DiscreteInferenceFactory<Inference> ConcreteFactory;
 
     FactoryBase * factory = new ConcreteFactory();

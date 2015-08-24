@@ -31,8 +31,6 @@ public:
     using DiscreteValueTableBase::eval;
     using DiscreteValueTableBase::shape;
 
-    DiscreteUnaryValueTableBase(){
-    }
 
     virtual ~DiscreteUnaryValueTableBase() = default;
     virtual DiscreteLabel shape() const = 0;
@@ -53,7 +51,9 @@ public:
 ///\cond
 class  DeadCodeUnaryValueTable : public DiscreteUnaryValueTableBase{
 public:
-  
+    using DiscreteUnaryValueTableBase::shape;
+    using DiscreteUnaryValueTableBase::eval;
+ 
     
     DeadCodeUnaryValueTable()
     :   DiscreteUnaryValueTableBase(){

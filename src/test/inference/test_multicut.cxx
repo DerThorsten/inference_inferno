@@ -6,6 +6,7 @@
 
 #include "inferno/model/implicit_multicut_model.hxx"
 #include "inferno/inference/multicut.hxx"
+
 #define TEST_EPS 0.00001
 
 

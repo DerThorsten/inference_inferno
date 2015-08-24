@@ -13,7 +13,9 @@ ENDIF()
 #-------------------------------------------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 2.6)
 cmake_policy(VERSION 2.6)
-cmake_policy(SET CMP0026 OLD)
+if(CMAKE_MAJOR_VERSION STREQUAL "3")
+  cmake_policy(SET CMP0026 OLD)
+endif()
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 
 

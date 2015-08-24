@@ -101,7 +101,7 @@ namespace export_helper{
         VAR_MAP & varMap,
         const MODEL & model,
         const Vi id,
-        const T value
+        const T & value
     ){ 
         varMap[model.variableDescriptor(id)] = value;
     }
@@ -130,6 +130,7 @@ namespace export_helper{
         const std::string clsName = modelClsName + std::string("VariableMap")+tClsName;
 
         bp::class_<VarMap>(clsName.c_str(), bp::init<const MODEL & >())
+            .def(bp::init<const MODEL &, const T &>())
             .def("model",&VarMap::model, bp::return_internal_reference<>())
             .def("assign",assignWithVal<MODEL, VarMap, T>,
                 (

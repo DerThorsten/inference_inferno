@@ -2,41 +2,60 @@ import inferno
 from inferno import models 
 from inferno import learning 
 from inferno.learning import loss_functions
+from inferno.learning import learners
 import numpy
 
 
 
-nFeatures = 3
-weightVector = learning.WeightVector(nFeatures, 0.0)
-
-
-dset = models.ParametrizedMulticutModel.learningDataset(lossFunction='variationOfInformation',
-                                                        nModels=2)
+ParaMcModel = models.ParametrizedMulticutModel
 
 
 
+def makeDset():
+    nFeatures = 3
+    nVar = 4
+    weightVector = learning.WeightVector(nFeatures, 0.0)
+    edges = numpy.require([[0,1],[1,3],[0,2],[2,3]], dtype='uint64')
+    features = [
+                    [0,0,1], # cut edge
+                    [0,0,1],
+                    [0,0,1],
+                    [0,1,1]  # cut edge
+    ]
+    features = numpy.require(features, dtype='float64')
 
-model0 = dset.model(0)
+    ParaMcModel = models.ParametrizedMulticutModel
+    dset = ParaMcModel.learningDataset(lossFunction='variationOfInformation',
+                                       nModels=2)
 
-nVar = 3
-edges = numpy.require([[0,1],[1,2]], dtype='uint64')
-features = numpy.require([[0,0,0],[0,0,0]], dtype='float64')
+    for i in range(2):
+        # assign model
+        model = dset.model(i)
+        model._assign(nVar, edges, features, weightVector)
 
-model0._assign(nVar, edges, features, weightVector)
+        # assign loss function
+        lossFunction = dset.lossFunction(i)
+        sizeMap = model.variableMap('float64', 1.0)
+        lossFunction.assign(model, sizeMap)
+
+        # make gt
+        gt = dset.groundTruth(i)
+        gt.assign(model)
+        gt.idMap[0] = 0
+        gt.idMap[1] = 1
+        gt.idMap[2] = 0
+        gt.idMap[3] = 1
+
+    return dset, weightVector
+
+dset, weightVector = makeDset()
 
 
-
-gt = model0.variableMap('uint64').idMap
-gt[0] = 0
-gt[1] = 1
-gt[2] = 1
+# make the learner
+learner = learners.stochasticGradient(dset, nPertubations=5)
 
 
-sizeMap = model0.variableMap('float64').idMap
-sizeMap[0] = 1
-sizeMap[1] = 1
-sizeMap[2] = 1
-sizeMap = sizeMap.variableMap
+factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)')
 
-dset.lossFunction(0).assign(sizeMap, False, long(-1))
-dset.groundTruth(0) = gt.variableMap
+# do the learning
+learner.learn(factory, weightVector)

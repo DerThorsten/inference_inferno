@@ -78,7 +78,7 @@ namespace inference{
 
                 LabelType nLabels;
                 const bool simpleLabelSpace  =  model_.hasSimpleLabelSpace(nLabels);
-                INFERNO_CHECK(simpleLabelSpace && nLabels == 2, "HigherOrderQpbo is only implemented for models "
+                INFERNO_CHECK(simpleLabelSpace && nLabels == 2, "Qpbo is only implemented for models "
                                                                 "where all variables  have a binary label space");
             } 
             

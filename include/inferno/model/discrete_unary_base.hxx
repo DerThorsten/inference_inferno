@@ -14,6 +14,11 @@ template<class UNARY, class MODEL>
 class DiscreteUnaryBase : 
 public DiscreteFactorBase< UNARY, MODEL > {
 
+
+    typedef DiscreteFactorBase< UNARY, MODEL >  BaseType;
+
+    //using BaseType::eval;
+
 public:
     const UNARY * operator ->()const{
         return static_cast<const UNARY *>(this); 
@@ -56,8 +61,10 @@ public:
 
     using BaseType::shape;
     using BaseType::variable;
-    DeadCodeUnary(){
+    using BaseType::eval;
 
+
+    DeadCodeUnary() : BaseType(){
     }
     const value_tables::DiscreteUnaryValueTableBase * valueTable()const{
         return vt_;

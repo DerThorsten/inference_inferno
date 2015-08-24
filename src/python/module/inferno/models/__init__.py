@@ -37,7 +37,7 @@ def _extendModelsVariableMapClass(varMapCls):
                     return vm.writeAtId(vm.model(), long(key), value)
         
                 def model(self):
-                    return self.variableMap.model
+                    return self.variableMap.model()
 
             def __repr__(self):
                 return "i am a var map"
@@ -50,16 +50,19 @@ def _extendModelsVariableMapClass(varMapCls):
             def descMap(self):
                 return moreVarMap.IdMap(self)
 
-def _extendModelClass(modelCls):
+def _extendModelClass(modelCls, classStr):
     ##inject some methods in the point foo
     class moreModel(injectorClass(modelCls), modelCls):
         def __repr__(self):
             return 'hi i am a gm'
 
 
-        def variableMap(self,dtype):
-            varMap = self.__class__.variableMapClsDict[dtype](self)
-            return varMap
+        def variableMap(self,dtype, initValue=None):
+            varMapCls = self.__class__.variableMapClsDict[dtype]
+            if initValue is None:
+                return varMapCls(self)
+            else:
+                return varMapCls(self, initValue)
 
         def confMap(self):
             return self.variableMap(dtype='int64')
@@ -68,7 +71,7 @@ def _extendModelClass(modelCls):
         def learningDataset(cls, lossFunction, nModels=0):
             dsetCls = None
             if lossFunction == 'variationOfInformation':
-                dsetClsStr = "VectorDataset"+rawClsStr+'VariationOfInformation'
+                dsetClsStr = "VectorDataset"+classStr+'VariationOfInformation'
                 dsetCls = learning.dataset.__dict__[dsetClsStr]
             else:
                 raise RuntimeError("currently only 'variationOfInformation' is allowed as loss")
@@ -111,12 +114,12 @@ def _extendModels():
             _extendModelsVariableMapClass(varMapCls)
 
         # inject more functionality into model class
-        _extendModelClass(rawCls)
+        _extendModelClass(rawCls,  rawClsStr)
 
 
 _extendModels()
 del _extendModels
-del _extendModelsVariableMaps
+del _extendModelsVariableMapClass
 del _extendModelClass
 
 

@@ -240,17 +240,20 @@ namespace models{
     private:
 
         void makeBetas()const{
+            //std::cout<<"make betas\n";
             for(size_t e=0; e<betas_.shape(0); ++e){
                 ValueType val = 0;
                 for(size_t f=0; f<features_.shape(1); ++f){
                     val += features_(e,f)*(*currentWeights_)[f];
                 }
+                //std::cout<<"e "<<e<<" beta "<<val<<"\n";
+                betas_[e] = val;
             }
         }
         uint64_t nVar_;
         EDGES edges_;
         FEATURES features_;
-        vigra::MultiArray<1, ValueType> betas_;
+        mutable vigra::MultiArray<1, ValueType> betas_;
         mutable const learning::WeightVector * currentWeights_;
     };
 

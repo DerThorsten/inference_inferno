@@ -83,6 +83,12 @@ namespace learners{
             for(size_t i=0; i<options_.maxIterations_; ++i){
                 std::cout<<"Iteration "<<i<<" "<<options_.maxIterations_<<"\n";
 
+                std::cout<<"Weights : ";
+                for(size_t wi=0; wi<weightVector.size(); ++wi){
+                    std::cout<<weightVector[wi]<<" ";
+                }
+                std::cout<<"\n";
+
                 // iterate in random order
                 indices.randomShuffle();
                 // FIXME indices.randomShuffle(rng);
@@ -100,7 +106,11 @@ namespace learners{
 
                     // get perturbed weight matrix
                     weightMatrix.pertubate(weights, normalDist);
-                    ConfMapVector confMapVector(options_.nPertubations_, ConfMap(model));
+                    ConfMapVector confMapVector(options_.nPertubations_);
+                    for(auto & cmap : confMapVector){
+                        cmap.assign(model);
+                    }
+
 
                     // argmin for perturbed model
                     auto cc=0;
@@ -111,13 +121,22 @@ namespace learners{
                         // get argmin 
                         auto inference = inferenceFactory->create(model);
                         inference->infer();
-                        inference->conf(confMapVector[cc]);  
+
+
+
+                        inference->conf(confMapVector[cc]); 
+
+                        std::cout<<"MAP ";
+                        for(auto var : model.variableDescriptors()){
+                            std::cout<<confMapVector[cc][var]<<" ";
+                        } 
+                        std::cout<<"\n";
                         ++cc;
                     }
 
 
                     
-
+ 
                     // reset the weights to the current weights
                     model.updateWeights(weights);
 
@@ -126,6 +145,12 @@ namespace learners{
                     for(const auto & conf : confMapVector)
                         model.accumulateJointFeatures(gradient, conf);
                     gradient /= options_.nPertubations_;
+
+                    std::cout<<"Gradient : ";
+                    for(size_t wi=0; wi<weightVector.size(); ++wi){
+                        std::cout<<gradient[wi]<<" ";
+                    }
+                    std::cout<<"\n";
 
                     // take gradient step
                     WeightVector weightAfterStep(weights);
