@@ -33,7 +33,7 @@ namespace loss_functions{
     namespace bp = boost::python;
 
     template<class MODEL>
-    void exportVariationOfInformationT();
+    void exportVariationOfInformation();
        
 }
 }
@@ -56,7 +56,7 @@ BOOST_PYTHON_MODULE_INIT(loss_functions) {
 
     namespace lf = inferno::learning::loss_functions;
 
-    lf::exportVariationOfInformationT<inferno::models::PyGeneralDiscreteModel>();
-    lf::exportVariationOfInformationT<inferno::models::PyParametrizedMulticutModel>();
+    lf::exportVariationOfInformation<inferno::models::PyGeneralDiscreteModel>();
+    lf::exportVariationOfInformation<inferno::models::PyParametrizedMulticutModel>();
 
 }

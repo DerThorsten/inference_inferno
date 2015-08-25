@@ -5,6 +5,7 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/value_tables/discrete_value_table_base.hxx"
+#include "inferno/value_tables/potts_value_table_base.hxx"
 #include "inferno/value_tables/discrete_unary_value_table_base.hxx"
 #include "inferno/model/discrete_factor_base.hxx"
 #include "inferno/model/discrete_unary_base.hxx"
@@ -24,57 +25,47 @@ namespace inferno{
     namespace value_tables{
 
         template<class MODEL>
-        class  ParametrizedMulticutModelPottsValueTable : public DiscreteValueTableBase{
+        class  ParametrizedMulticutModelPottsValueTable :
+            public PottsValueTableBase{
         public:
             friend class inferno::models::ParametrizedMulticutModelFactor<MODEL>;
             using DiscreteValueTableBase::eval;
+
+            virtual ~ParametrizedMulticutModelPottsValueTable(){
+            }
+
             ParametrizedMulticutModelPottsValueTable(const MODEL & model, const uint64_t edge)
-            :   DiscreteValueTableBase(),
+            :   PottsValueTableBase(),
                 model_(&model),
                 edge_(edge)
             {
             }
-            ValueType eval(const LabelType *conf)const{
-                return conf[0] == conf[1] ? 0.0 : beta();
-            }
-            ValueType eval(const LabelType l1, const LabelType l2)const{
-                return l1==l2 ? 0 : beta();
-            }
-            LabelType shape(const uint32_t d) const{
+
+            virtual LabelType shape(const uint32_t d) const override{
                 return model_->nVar_;
             }
-            uint32_t  arity()const{
-                return 2;
-            }
-            bool isGeneralizedPotts() const{
-                return true;
-            }
-            bool isPotts(ValueType & beta) const{
-                beta = this->beta();
-                return true;
-            }
-
-            void facToVarMsg(const ValueType ** inMsgs, ValueType ** outMsgs)const{
-                pottsFacToVarMsg(this->shape(0), this->beta(), inMsgs, outMsgs);
+            virtual ValueType beta()const override{
+                return model_->betas_[edge_];
             }
 
 
             // learning
-            virtual uint64_t nWeights()const{
+            virtual uint64_t nWeights()const override{
                 return model_->currentWeights_->size();
             }
             //global is local here
-            virtual int64_t weightIndex(const size_t i)const{
+            virtual int64_t weightIndex(const size_t i)const override{
                 return i;
             }
-
-            virtual WeightType weightGradient(const size_t vtsWeightIndex, const DiscreteLabel * conf)const{
+            virtual WeightType weightGradient(
+                const size_t vtsWeightIndex, 
+                const DiscreteLabel * conf
+            ) const override {
                 return conf[0]==conf[1] ? 0.0 : model_->features_(edge_, vtsWeightIndex);
             }
 
-            virtual void updateWeights(const learning::Weights & weights)const{
+            virtual void updateWeights(const learning::Weights & weights) const override{
             }
-
 
         private:
             const MODEL & model()const{
@@ -83,9 +74,7 @@ namespace inferno{
             const uint64_t edgeDescriptor()const{
                 return edge_;
             }
-            ValueType beta()const{
-                return model_->betas_[edge_];
-            }
+            
             const MODEL * model_;
             const uint64_t edge_;
             

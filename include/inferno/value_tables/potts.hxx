@@ -7,6 +7,7 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/value_tables/discrete_value_table_base.hxx"
+#include "inferno/value_tables/potts_value_table_base.hxx"
 
 namespace inferno{
 
@@ -21,36 +22,20 @@ namespace value_tables{
     \ingroup value_tables
     \ingroup discrete_value_tables
 */
-class  PottsValueTable : public DiscreteValueTableBase{
+class  PottsValueTable : public PottsValueTableBase{
 public:
     using DiscreteValueTableBase::eval;
     PottsValueTable(const LabelType l,  const ValueType beta)
-    :   DiscreteValueTableBase(),
+    :   PottsValueTableBase(),
         nl_(l),
         beta_(beta){
     }
-    ValueType eval(const LabelType *conf)const{
-        return conf[0] == conf[1] ? 0.0 : beta_;
-    }
-    ValueType eval(const LabelType l1, const LabelType l2)const{
-        return l1==l2 ? 0 : beta_;
-    }
-    LabelType shape(const uint32_t d) const{
+    virtual LabelType shape(const uint32_t d) const override{
         return nl_;
     }
-    uint32_t  arity()const{
-        return 2;
-    }
-    bool isGeneralizedPotts() const{
-        return true;
-    }
-    bool isPotts(ValueType & beta) const{
-        beta = beta_;
-        return true;
-    }
 
-    void facToVarMsg(const ValueType ** inMsgs, ValueType ** outMsgs)const{
-        pottsFacToVarMsg(nl_, beta_, inMsgs, outMsgs);
+    virtual ValueType beta()const override{
+        return beta_;
     }
 private:
     LabelType nl_;

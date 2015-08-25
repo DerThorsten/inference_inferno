@@ -16,17 +16,105 @@
 
 
 namespace inferno{
+
+
 namespace learning{
 namespace loss_functions{
-
     template<class MODEL>
     class EdgeHamming;
-}
-}
-}
+}  // end namespace inferno::learning::loss_functions
+}  // end namespace inferno::learning
 
-namespace inferno{
+
+namespace value_tables{
+    template<class MODEL>
+    class  EdgeHammingLossAugmentedModelPottsValueTable :public PottsValueTableBase
+    {
+    private:
+        typedef typename MODEL::BaseModel BaseModel;
+        typedef BaseModel::FactorDescriptor BaseModelFactorDescriptor;
+        typedef BaseModel::VariableDescriptor BaseModelVariableDescriptor;
+        typedef typename LosslessModel::FactorProxy  BaseModelFactorProxy;
+    public:
+
+
+        EdgeHammingLossAugmentedModelPottsValueTable(
+            const ValueType val,                                        
+            const BaseModel & baseModel,
+            const BaseModelFactorDescriptor fac
+        )
+        :   beta_(val),
+            baseFactor_(baseModel.factor(fac)){
+
+        }
+
+        virtual ~EdgeHammingLossAugmentedModelPottsValueTable(){
+        }
+        virtual ValueType beta() const override {
+            return beta_;
+        }
+        virtual DiscreteLabel shape(const uint32_t d)const override{
+            return baseFactor_->shape(d);
+        }
+
+        BaseModelVariableDescriptor variable(const uint32_t d)const{
+            return baseFactor_->variable(d);
+        }
+    private:
+        ValueType beta_;
+        BaseModelFactorProxy baseFactor_;
+    };
+
+}  // end namespace inferno::value_tables
+
+
+
+
+
+
 namespace models{
+
+
+    template<class MODEL>
+    class EdgeHammingLossAugmentedModelFactor : 
+    public  DiscreteFactorBase<
+        EdgeHammingLossAugmentedModelFactor<MODEL>, 
+        MODEL
+    > 
+    {
+    private:
+        typedef typename MODEL::BaseModel BaseModel;
+
+        typedef BaseModel::FactorDescriptor BaseModelFactorDescriptor;
+        typedef BaseModel::VariableDescriptor BaseModelVariableDescriptor;
+        typedef typename LosslessModel::FactorProxy  BaseModelFactorProxy;
+        typedef value_tables::EdgeHammingLossAugmentedModelPottsValueTable<Model> Vt;
+
+    public:
+        EdgeHammingLossAugmentedModelFactor(
+            const ValueType val,                                        
+            const BaseModel & baseModel,
+            const BaseModelFactorDescriptor fac
+        )
+        :   vt_(val, baseModel, fac){
+        }
+
+        const value_tables::DiscreteValueTableBase * valueTable()const{
+            return &vt_;
+        }   
+        DiscreteLabel shape(const size_t d)const{
+            return vt_.shape(d);
+        }
+
+        BaseModelVariableDescriptor variable(const size_t d)const{
+            return vt_->variable(d);
+        }
+
+    private:
+        Vt vt_;
+
+    };
+
 
 
     template<class LOSSLESS_MODEL>
@@ -39,6 +127,7 @@ namespace models{
 
         typedef EdgeHammingLossAugmentedModel<LOSSLESS_MODEL> Self;
         typedef DeadCodeUnary<Self> UnaryImpl;
+        typedef EdgeHammingLossAugmentedModelFactor<Self> FactorImpl;
         //typedef 
     public:
         typedef LOSSLESS_MODEL LosslessModel;
@@ -47,7 +136,7 @@ namespace models{
         typedef typename LossFunction::FactorWeightMap LossFactorWeightMap;
 
         typedef UnaryImpl UnaryProxy;
-
+        typedef UnaryImpl FactorProxy;
 
 
 
@@ -74,6 +163,21 @@ namespace models{
             this->makeBetas();
         }
 
+        FactorProxy factor(typename Self::FactorDescriptor fac)const{
+            return FactorImpl(betas_[fac],this->baseModel(), fac);
+        }
+
+        UnaryProxy unary(typename Self::UnaryDescriptor unaru)const{
+            return UnaryImpl;
+        }
+
+        LosslessModel & baseModel() {
+            return *losslessModel_;
+        }
+        const LosslessModel & baseModel()const{
+            return *losslessModel_;
+        }
+    private:
         void makeBetas()const{
 
             const auto & m = *losslessModel_;
@@ -120,18 +224,6 @@ namespace models{
                 }
             }
         }
-
-        LosslessModel & baseModel() {
-            return *losslessModel_;
-        }
-        const LosslessModel & baseModel()const{
-            return *losslessModel_;
-        }
-        const LosslessModel & constBaseModel()const{
-            return *losslessModel_;
-        }
-    private:
-
         mutable typename LosslessModel:: template FactorMap<ValueType> betas_;
         const LossFactorWeightMap * edgeLossWeightMap_;
 
