@@ -43,14 +43,38 @@ namespace learning{
 
         }
 
+
         template<class F>
-        void pertubate(const WeightVector & source, F && functor){
-            for(auto & wVec : *this){
-                for(size_t wi=0; wi<wVec.size(); ++wi){
-                    wVec[wi] = source[wi] + functor(); 
+        void pertubate(
+            const WeightVector & source, 
+            WeightMatrix & noise,
+            F && functor
+        ){
+            for(size_t i=0; i<source.size(); ++i){
+                auto & w = (*this)[i];
+                auto & n = noise[i];
+
+                for(size_t wi=0; wi<w.size(); ++wi){
+                    n[wi] = functor();
+                    w[wi] = source[wi] + n[wi];
                 }
             }
         }
+
+        template<class WEIGHTS>
+        void weightedSum(const WEIGHTS & w, WeightVector & sum){
+            INFERNO_CHECK_OP(sum.size(), != ,0,"");
+            INFERNO_CHECK_OP(w.size(), == , this->size(), "wrong sizes");
+            for(size_t i=0; i<this->size(); ++i){
+                auto & thisW  = (*this)[i];
+                INFERNO_CHECK_OP(sum.size(), == , thisW.size(), "wrong sizes");
+
+                for(size_t wi=0; wi<thisW.size(); ++wi){
+                    sum[wi] += w[i]*thisW[wi];
+                }
+            }
+        }
+
     private:
 
     };

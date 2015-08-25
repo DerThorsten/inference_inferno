@@ -64,12 +64,12 @@ namespace learners{
 
             // get dataset
             auto & dset = dataset();
-
-            auto & weights = weightVector;
+            //auto & weights = weightVector;
 
             // multiple weight-vectors stacked as matrix
-            WeightMatrix  weightMatrix(weights,options_.nPertubations_);   
-         
+            WeightMatrix            noiseMatrix(weightVector,options_.nPertubations_);
+            WeightMatrix            weightMatrix(weightVector,options_.nPertubations_);   
+            std::vector<LossType>   losses(options_.nPertubations_);
 
             // random gen
             boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
@@ -104,8 +104,10 @@ namespace learners{
                     auto & lossFunction = dset.lossFunction(trainingInstanceIndex);
 
 
-                    // get perturbed weight matrix
-                    weightMatrix.pertubate(weights, normalDist);
+                    // pertubate (and remember noise matrix)
+                    weightMatrix.pertubate(weightVector,noiseMatrix,normalDist);
+
+                    // to remember arg mins
                     ConfMapVector confMapVector(options_.nPertubations_);
                     for(auto & cmap : confMapVector){
                         cmap.assign(model);
@@ -126,66 +128,33 @@ namespace learners{
 
                         inference->conf(confMapVector[cc]); 
 
-                        std::cout<<"MAP ";
-                        for(auto var : model.variableDescriptors()){
-                            std::cout<<confMapVector[cc][var]<<" ";
-                        } 
-                        std::cout<<"\n";
+
+                
+                        const auto l = lossFunction.eval(model, gt, confMapVector[cc]);
+                        losses[cc] = l;
                         ++cc;
                     }
 
-
-                    
+                    WeightVector gradient(weightVector.size(),0);
+                    INFERNO_CHECK_OP(gradient.size(),>,0,"");
+                    INFERNO_CHECK_OP(gradient.size(),==,weightVector.size(),"");
+                    noiseMatrix.weightedSum(losses, gradient);
+                    gradient /= options_.nPertubations_;
  
                     // reset the weights to the current weights
-                    model.updateWeights(weights);
-
-                    // accumulate gradients
-                    WeightVector gradient(weights.size(),0);
-                    for(const auto & conf : confMapVector)
-                        model.accumulateJointFeatures(gradient, conf);
-                    gradient /= options_.nPertubations_;
-
-                    std::cout<<"Gradient : ";
-                    for(size_t wi=0; wi<weightVector.size(); ++wi){
-                        std::cout<<gradient[wi]<<" ";
-                    }
-                    std::cout<<"\n";
-
-                    // take gradient step
-                    WeightVector weightAfterStep(weights);
+                    model.updateWeights(weightVector);
+                    takeGradientStep(weightVector, gradient, i);
 
 
-
-
-                    // line-seach lambda
-                    auto  evalGradientStep = [&] (const WeightType & stepSize){
-                        //weightAfterStep = stepSize*gradient;
-                        dset.updateWeights(weightAfterStep);
-                        return 0.0;
-                        //return dset.eval(inferenceFactory);
-                    };
-
-                    // do the line search
-                    typedef utilities::line_search::BinarySearch<double,double> LineSearch;
-                    typedef typename LineSearch::Options LineSearchOptions;
-                    LineSearchOptions opts;
-                    LineSearch lineSearch(opts);
-                    const auto optStepSize = lineSearch(evalGradientStep,0.0000001, 10.0);
-
-                    // apply opt step size
-                    using namespace vigra::multi_math;
-
-                    weightAfterStep = weights;
-                    weightAfterStep*=optStepSize;
-
-                    dset.updateWeights(weightAfterStep);
+                    
+                    dset.updateWeights(weightVector);
+                    
 
                     // lock
                     dset.lock(trainingInstanceIndex);
                 }
 
-
+                std::cout<<"avergeLoss "<<dataset_.avergeLoss(inferenceFactory)<<"\n";
 
 
             }
@@ -194,8 +163,19 @@ namespace learners{
 
 
 
-        void takeGradientStep(){
+        void takeGradientStep(
+            WeightVector & currentWeights,
+            WeightVector & gradient,
+            const uint64_t iteration
+        ){
+            double it(iteration+1);
+            //WeightVector newWeights = currentWeights;
 
+            const auto  effectiveStepSize = 1.0/(std::sqrt(it));
+            WeightVector g=gradient;
+            g*=effectiveStepSize;
+            currentWeights -= g;
+            currentWeights *= 1.0;
         }
 
         Dataset & dataset_;

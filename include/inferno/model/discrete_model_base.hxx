@@ -664,15 +664,15 @@ public:
             const DiscreteLabel label = conf[unary->variable()];
             const auto vt = unary->valueTable();
             for(auto wi :vt->weightIndices())
-                accumulatedFeatures[wi.global()] = vt->weightGradient(wi.local(),&label);
+                accumulatedFeatures[wi.global()] += vt->weightGradient(wi.local(),&label);
         }
 
         std::vector<DiscreteLabel> factorConf(this->maxArity());
         for(const auto factor : model().factors()){
-            factor->getFactorConf(conf, factorConf);
+            factor->getFactorConf(conf, factorConf.begin());
             const auto vt = factor->valueTable();
             for(auto wi :vt->weightIndices())
-                accumulatedFeatures[wi.global()] = vt->weightGradient(wi.local(),factorConf.data());
+                accumulatedFeatures[wi.global()] += vt->weightGradient(wi.local(),factorConf.data());
         }
 
     }

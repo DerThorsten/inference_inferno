@@ -17,10 +17,10 @@ def makeDset():
     weightVector = learning.WeightVector(nFeatures, 0.0)
     edges = numpy.require([[0,1],[1,3],[0,2],[2,3]], dtype='uint64')
     features = [
-                    [0,0,1], # cut edge
-                    [0,0,1],
-                    [0,0,1],
-                    [0,1,1]  # cut edge
+                    [ 1.0, 1.0, 1], # cut edge
+                    [-1.0,-1.0, 2],
+                    [-1.0, 1.0, 3],
+                    [ 1.0,-1.0, 4]  # cut edge
     ]
     features = numpy.require(features, dtype='float64')
 
@@ -52,7 +52,8 @@ dset, weightVector = makeDset()
 
 
 # make the learner
-learner = learners.stochasticGradient(dset, nPertubations=5)
+learner = learners.stochasticGradient(dset, nPertubations=10,
+                                      sigma=0.1)
 
 
 factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)')

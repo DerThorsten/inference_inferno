@@ -140,7 +140,7 @@ namespace loss_functions{
             LVector vConf;
             LMatrix mat;
             double accSize = 0;
-            for(auto var : model.variables()){
+            for(auto var : model.variableDescriptors()){
 
                 // get labels
                 const auto lConfGt = confGt[var];
@@ -150,40 +150,42 @@ namespace loss_functions{
                 if(!ignoreLabel_ || (lConfGt!=ignoreLabel_ && lConf!=ignoreLabel_)){
 
                     // "size" of node
-                    const auto  size = variableSizeMap_[var];
+                    const auto  size =1.0;// variableSizeMap_[var];
                     vConfGt[lConfGt] += size;
                     vConf[lConf]     += size;
-                    mat[LabelPair(lConf,lConf)] += size;
+                    mat[LabelPair(lConfGt,lConf)] += size;
                     accSize += size;
                 }
-
-                // normalize
-                vConfGt/=accSize;
-                vConf/=accSize;
-                mat/=accSize;
-
-                // entropy
-                auto computeEntropy = [&](const LVector & lvec){
-                    double h = 0.0;
-                    for(const auto & kv: lvec)
-                        h -= kv.second * std::log(kv.second);
-                };
-                double hConfGt = computeEntropy(vConf);
-                double hConf   = computeEntropy(vConf);
-
-                double I = 0.0;
-                for(const auto & kv : mat){
-                    const auto lConfGt = kv.first.first;
-                    const auto lConf   = kv.first.second;
-                    const auto valVConfGt = vConfGt[lConfGt];
-                    const auto valVConf   = vConf[lConf];
-                    const auto valMat     = kv.second;
-                    I += valMat * std::log(valMat / (valVConfGt * valVConf));
-                }
-
-                return hConfGt + hConf - 2.0 * I;
-
             }
+            
+            // normalize
+            vConfGt/=accSize;
+            vConf/=accSize;
+            mat/=accSize;
+
+            // entropy
+            auto computeEntropy = [&](const LVector & lvec){
+                double h = 0.0;
+                for(const auto & kv: lvec)
+                    h -= kv.second * std::log(kv.second);
+                return h;
+            };
+            double hConfGt = computeEntropy(vConfGt);
+            double hConf   = computeEntropy(vConf);
+
+            double I = 0.0;
+            for(const auto & kv : mat){
+                const auto lConfGt = kv.first.first;
+                const auto lConf   = kv.first.second;
+                const auto valVConfGt = vConfGt[lConfGt];
+                const auto valVConf   = vConf[lConf];
+                const auto valMat     = kv.second;
+                I += valMat * std::log(valMat / (valVConfGt * valVConf));
+            }
+
+            return hConfGt + hConf - 2.0 * I;
+
+       
         }
         void makeLossAugmentedModel(LossAugmentedModel & lossAugmentedModel)const;
 

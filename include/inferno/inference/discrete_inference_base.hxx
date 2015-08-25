@@ -19,7 +19,8 @@
 #include "inferno/inference/utilities/movemaker.hxx"
 #include "inferno/inference/inference_options.hxx"
 #include "inferno/model/factors_of_variables.hxx"
-    
+#include "inferno/learning/weights.hxx"
+
 namespace inferno{
 
 /** \namespace inferno::inference
@@ -146,8 +147,11 @@ namespace inference{
         virtual void energyChange() {
             throw NotImplementedException(this->name()+std::string("does not support \"graphChanged\" so far"));
         }
+        virtual void updateWeights(const learning::WeightVector & weights){
+            this->energyChange();
+        }
         virtual void partialEnergyChange(const Fi * changedFacBegin, const Fi * changedFacEnd ) {
-            throw NotImplementedException(this->name()+std::string("does not support \"partialEneryChange\" so far"));
+            this->energyChange();
         }
     };
 

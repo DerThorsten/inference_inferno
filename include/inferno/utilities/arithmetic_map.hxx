@@ -26,24 +26,28 @@ namespace inferno {
 
 
     template<class MAP>
-    ArithmeticMap<MAP> & operator *= (ArithmeticMap<MAP> & a, const typename MAP::value & value){
+    ArithmeticMap<MAP> & operator *= (ArithmeticMap<MAP> & a, const typename MAP::mapped_type & value){
         for(auto & kv : a)
-            kv.second *= a;
+            kv.second *= value;
+        return a;
     }
     template<class MAP>
-    ArithmeticMap<MAP> & operator /= (ArithmeticMap<MAP> & a, const typename MAP::value & value){
+    ArithmeticMap<MAP> & operator /= (ArithmeticMap<MAP> & a, const typename MAP::mapped_type & value){
         for(auto & kv : a)
-            kv.second /= a;
+            kv.second /= value;
+        return a;
     }
     template<class MAP>
-    ArithmeticMap<MAP> & operator += (ArithmeticMap<MAP> & a, const typename MAP::value & value){
+    ArithmeticMap<MAP> & operator += (ArithmeticMap<MAP> & a, const typename MAP::mapped_type & value){
         for(auto & kv : a)
-            kv.second += a;
+            kv.second += value;
+        return a;
     }
     template<class MAP>
-    ArithmeticMap<MAP> & operator -= (ArithmeticMap<MAP> & a, const typename MAP::value & value){
+    ArithmeticMap<MAP> & operator -= (ArithmeticMap<MAP> & a, const typename MAP::mapped_type & value){
         for(auto & kv : a)
-            kv.second -= a;
+            kv.second -= value;
+        return a;
     }
 
 

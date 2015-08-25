@@ -217,7 +217,7 @@ public:
     const FACTOR * operator ->()const{
         return static_cast<const FACTOR *>(this); 
     }
-
+    
     template<class GM_CONF, class ITER_FACTOR_CONF>
     void getFactorConf(
         const GM_CONF & gmConf,

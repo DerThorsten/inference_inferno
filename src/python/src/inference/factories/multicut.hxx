@@ -4,6 +4,7 @@
 #include "../exportInference.hxx"
 
 //#ifdef WITH_QPBO
+#define WITH_BOOST
 #include "inferno/inference/opengm_inference.hxx"
 #include "opengm/inference/multicut.hxx"
 //#endif

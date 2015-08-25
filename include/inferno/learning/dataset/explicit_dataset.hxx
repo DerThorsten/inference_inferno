@@ -10,6 +10,7 @@
 // inferno
 #include "inferno/inferno.hxx"
 #include "inferno/learning/weights.hxx"
+#include "inferno/inference/base_discrete_inference_factory.hxx"
 
 namespace inferno{
 namespace learning{
@@ -62,6 +63,8 @@ namespace dataset{
 
         typedef TrainingInstance<LOSS_FUNCTION> value_type;
 
+        typedef inference::BaseDiscreteInferenceFactory<typename LOSS_FUNCTION::Model> 
+            InferenceFactoryBase;
 
         void sanityCheck()const{
 
@@ -93,6 +96,33 @@ namespace dataset{
         LossType evalLoss(size_t i, CONF & conf)const{
 
         }
+
+        LossType avergeLoss(InferenceFactoryBase * inferenceFactory){
+            LossType lossSum = 0;
+            typedef typename LOSS_FUNCTION::Model M;
+            typedef typename M:: template VariableMap<DiscreteLabel> C;
+
+            for(size_t i=0; i<dataset().size(); ++i){
+
+                dataset().unlock(i);
+
+                auto & model =  dataset().model(i);
+                auto & lossFunction =  dataset().lossFunction(i);
+                const auto & groundTruth =  dataset().groundTruth(i);
+
+                auto inf = inferenceFactory->create(model);
+                inf->infer();
+
+                C argMinConf(model);
+                inf->conf(argMinConf);
+
+                lossSum += lossFunction.eval(model, groundTruth, argMinConf);
+
+                dataset().lock(i);
+            }
+            return lossSum/dataset().size();
+        }
+
 
         size_t size()const{
             return dataset().nModels();
