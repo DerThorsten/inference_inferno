@@ -21,7 +21,7 @@
 // inferno relatex
 #include "inferno/inferno.hxx"
 #include "inferno/inferno_python.hxx"
-#include "inferno/learning/loss_functions/loss_functions.hxx"
+#include "inferno/learning/loss_functions/edge_hamming.hxx"
 
 
 
@@ -33,73 +33,73 @@ namespace loss_functions{
 
 
     template<class MODEL>
-    VariationOfInformation<MODEL> * variationOfInformationFactory(
+    EdgeHamming<MODEL> * edgeHammingFactory(
         const MODEL & model,
-        const typename VariationOfInformation<MODEL>::VariableSizeMap & sizeMap,
+        const typename EdgeHamming<MODEL>::FactorWeightMap & factorWeights,
         const bool useIgnoreLabel,
         const DiscreteLabel ignoreLabel
     ){
-        VariationOfInformation<MODEL> * lossFunction;
+        EdgeHamming<MODEL> * lossFunction;
         {
             ScopedGILRelease allowThreads;
-            lossFunction = new VariationOfInformation<MODEL>(model, sizeMap, useIgnoreLabel, ignoreLabel);
+            lossFunction = new EdgeHamming<MODEL>(model, factorWeights, useIgnoreLabel, ignoreLabel);
         }
         return lossFunction;
     }
 
     template<class MODEL>
-    void variationOfInformationAssign(
-        VariationOfInformation<MODEL> & lossFunction,
+    void edgeHammingAssign(
+        EdgeHamming<MODEL> & lossFunction,
         const MODEL & model,
-        const typename VariationOfInformation<MODEL>::VariableSizeMap & sizeMap,
+        const typename EdgeHamming<MODEL>::FactorWeightMap & factorWeights,
         const bool useIgnoreLabel,
         const DiscreteLabel ignoreLabel
     ){
 
         ScopedGILRelease allowThreads;
-        lossFunction.assign(model, sizeMap, useIgnoreLabel, ignoreLabel);
+        lossFunction.assign(model, factorWeights, useIgnoreLabel, ignoreLabel);
     }
 
     template<class MODEL>
-    typename VariationOfInformation<MODEL>::VariableSizeMap & 
-    variationOfInformationGetSizeMap(
-        VariationOfInformation<MODEL> & lossFunction
+    typename EdgeHamming<MODEL>::FactorWeightMap & 
+    edgeHammingGetFactorWeightMap(
+        EdgeHamming<MODEL> & lossFunction
     ){
-        return lossFunction.variableSizeMap();
+        return lossFunction.factorWeightMap();
     }
 
 
     template<class MODEL>
-    void exportVariationOfInformation(){
+    void exportEdgeHamming(){
         typedef MODEL Model;
-        typedef VariationOfInformation<Model> LossFunction;
+        typedef EdgeHamming<Model> LossFunction;
 
         const auto modelClsName = models::ModelName<Model>::name();
-        const auto clsName = std::string("VariationOfInformation") + modelClsName;
+        const auto clsName = std::string("EdgeHamming") + modelClsName;
 
 
         // the class
         bp::class_<LossFunction,boost::noncopyable>(clsName.c_str(), bp::no_init)
             .def("assign",
-                &variationOfInformationAssign<Model>, 
+                &edgeHammingAssign<Model>, 
                 (
                     bp::arg("model"),
-                    bp::arg("sizeMap"),
+                    bp::arg("factorWeights"),
                     bp::arg("useIgnoreLabel") = false,
                     bp::arg("ignoreLabel") = -1
                 )
             )
             .def(
-                "variableSizeMap",
-                &variationOfInformationGetSizeMap<Model>,
+                "factorWeightMap",
+                &edgeHammingGetFactorWeightMap<Model>,
                 bp::return_internal_reference<>()
             )
         ;
 
         // the factory
         // the factory function
-        bp::def("_variationOfInformation",
-            &variationOfInformationFactory<MODEL>,
+        bp::def("_edgeHamming",
+            &edgeHammingFactory<MODEL>,
             RetValPol< NewObj >()
         );
     }

@@ -3,7 +3,7 @@
 
 
 // boost python related
-#include "export_variation_of_information.hxx"
+#include "export_edge_hamming.hxx"
 #include "inferno/model/general_discrete_model.hxx"
 
 namespace inferno{
@@ -11,7 +11,7 @@ namespace learning{
 namespace loss_functions{
 
     template void 
-    exportVariationOfInformation<inferno::models::PyGeneralDiscreteModel>();
+    exportEdgeHamming<inferno::models::PyGeneralDiscreteModel>();
 }
 }
 }

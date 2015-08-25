@@ -11,7 +11,7 @@ namespace learning{
 namespace loss_functions{
 
     template void 
-    exportVariationOfInformationT<inferno::models::PyParametrizedMulticutModel>();
+    exportVariationOfInformation<inferno::models::PyParametrizedMulticutModel>();
 }
 }
 }

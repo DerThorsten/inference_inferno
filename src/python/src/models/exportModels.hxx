@@ -206,6 +206,17 @@ namespace export_helper{
 
 
     template<class MODEL>
+    void exportVectorOfModels(const std::string & modelClsName){
+        const std::string clsName = modelClsName + std::string("Vector");
+        typedef std::vector<MODEL> ModelVector;
+
+        bp::class_<ModelVector,boost::noncopyable >(clsName.c_str(), bp::init<>())
+            .def(bp::init<const size_t >())
+        ;
+
+    }
+
+    template<class MODEL>
     class ExportModelAPI  : public boost::python::def_visitor<ExportModelAPI<MODEL> >
     {
     public:
@@ -224,7 +235,7 @@ namespace export_helper{
 
             // export all var maps
             exportVarMaps<MODEL>(clsName_);
-
+            exportVectorOfModels<MODEL>(clsName_);
        
 
             c
