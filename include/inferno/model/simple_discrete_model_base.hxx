@@ -98,7 +98,6 @@ public:
         }
     };
 
-
     // descriptor iterators
     FactorDescriptorIter factorDescriptorsBegin()const{
         return FactorDescriptorIter(0);

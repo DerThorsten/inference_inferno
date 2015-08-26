@@ -40,11 +40,11 @@ private:
     {
         friend class boost::iterator_core_access;
     public:
-        VariableDescriptorIter(const Self * factor, uint32_t fvi)
+        VariableDescriptorIter(const FACTOR * factor, uint32_t fvi)
         :   factor_(factor),
             fvi_(fvi),
 
-            arity_(factor->arity(0)){
+            arity_(factor->arity()){
             if(fvi_>=0 && fvi_<arity_)
                 var_ = factor_->variable(fvi_);
         }
@@ -72,7 +72,7 @@ private:
         }
 
     private:
-        const Self * factor_;
+        const FACTOR * factor_;
         int64_t fvi_;
         VariableDescriptor var_;
         const ArityType arity_;
@@ -123,10 +123,10 @@ public:
 
 
     VariableDescriptorIter variableDescriptorsBegin()const{
-        return VariableDescriptorIter(this,0);
+        return VariableDescriptorIter(factor(),0);
     }
     VariableDescriptorIter variableDescriptorsEnd()const{
-        return VariableDescriptorIter(this,this->arity());
+        return VariableDescriptorIter(factor(),this->factor()->arity());
     }
 
     VariableDescriptorIterRange variables()const{

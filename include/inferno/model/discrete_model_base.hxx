@@ -484,13 +484,12 @@ public:
         calling this function will have undefined behavior.
     */
     bool denseVariableIds()const{
-        if(model().nVariables()<=1)
-            return true;
-        else{
-            const Vi minVarId = *model().variableIdsBegin();
-            const Vi maxVarId =  model().variableIdsBegin()[nVariables()-1];
-            return (maxVarId-minVarId)+1 == model().nVariables() ;
+        if( this->model().minVarId() != 0){
+            if(this->model().maxVarId()==this->model().nVariables()){
+                return true;
+            }
         }
+        return false; 
     }
 
 
@@ -610,7 +609,7 @@ public:
 
 
     bool isSecondOrderMulticutModel()const{
-        const auto m = model();
+        const auto & m = model();
         if(!m.hasUnaries()){
             DiscreteLabel nl;
             if(m.hasSimpleLabelSpace(nl)){
@@ -629,7 +628,7 @@ public:
         return false;
     }
     bool isMulticutModel()const{
-        const auto m = model();
+        const auto & m = model();
         if(!m.hasUnaries()){
             DiscreteLabel nl;
             if(m.hasSimpleLabelSpace(nl)){

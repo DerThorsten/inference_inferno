@@ -148,6 +148,8 @@ private:
     typedef  GeneralDiscreteGraphicalModelFactor<Self> Ftype;
     typedef  GeneralDiscreteGraphicalModelUnary<Self> Utype;
 public:
+    typedef GeneralDiscreteGraphicalModelFactor<Self> FactorType;
+    typedef GeneralDiscreteGraphicalModelUnary<Self>  UnaryType;
 
     typedef const GeneralDiscreteGraphicalModelUnary<Self> * UnaryProxy;
     typedef UnaryProxy UnaryProxyRef;

@@ -127,6 +127,10 @@ namespace models{
         typedef ParametrizedMulticutModelFactor<Self> FactorImpl;
         typedef DeadCodeUnary<Self> UnaryImpl;
     public:
+
+        typedef ParametrizedMulticutModelFactor<Self> FactorType;
+        typedef DeadCodeUnary<Self>  UnaryType;
+
         typedef FactorImpl FactorProxy;
         typedef UnaryImpl UnaryProxy;
 

@@ -6,6 +6,8 @@
 #include "inferno/inferno.hxx"
 #include "inferno/inferno_python.hxx"
 #include "inferno/python/export_non_copyable_vector.hxx"
+#include "inferno/python/export_factor.hxx"
+
 
 namespace inferno{
 namespace models{
@@ -229,6 +231,7 @@ namespace export_helper{
         ;
     }
 
+    
 
     template<class MODEL>
     class ExportModelAPI  : public boost::python::def_visitor<ExportModelAPI<MODEL> >
@@ -236,6 +239,15 @@ namespace export_helper{
     public:
         typedef MODEL Model;
         typedef typename Model:: template VariableMap<inferno::DiscreteLabel> Conf;
+        typedef typename Model::FactorDescriptor FactorDescriptor;
+
+        typedef typename std::result_of<
+            decltype(&Model::factor)(Model, const FactorDescriptor )
+        >::type ReturnedFactorType;
+
+
+
+
 
         ExportModelAPI(const std::string clsName)
         : clsName_(clsName){
@@ -251,6 +263,7 @@ namespace export_helper{
             exportVarMaps<MODEL>(clsName_);
             exportVectorOfModels<MODEL>(clsName_);
             exportVectorOfConfs<MODEL>(clsName_);
+            python::exportFactor<MODEL>(clsName_);
 
             c
                 // properties
@@ -259,19 +272,71 @@ namespace export_helper{
                 .add_property("nUnaries", &Model::nUnaries)
 
                 // functions
+                .def("nLabels",&eval)
                 .def("eval",&eval)
+                .def("consTerm",&Model::constTerm)
+                .def("maxArity",&maxArity)
+                .def("hasSimpleLabelSpace",&hasSimpleLabelSpace)
+                .def("minMaxNLabels",&minMaxNLabels)
+                
+                // id's and and descriptors
+                .def("factorId",&Model::factorId)
+                .def("variableId",&Model::variableId)
+                .def("factorDescriptor",&Model::factorDescriptor)
+                .def("variableDescriptor",&Model::variableDescriptor)
 
+                .def("denseVariableIds",&Model::denseVariableIds)
+
+                .def("minVarId",&Model::minVarId)
+                .def("maxVarId",&Model::maxVarId)
+                .def("minFactorId",&Model::minFactorId)
+                .def("maxFactorId",&Model::maxFactorId)
+
+                //  (high level) - model info
+                .def("hasUnaries",&Model::hasUnaries)
+                .def("nPairwiseFactors",&Model::nPairwiseFactors)
+                .def("nPairwiseFactors",&Model::nPairwiseFactors)
+                .def("isSecondOrderMulticutModel",&Model::isSecondOrderMulticutModel)
+                .def("isMulticutModel",&Model::isMulticutModel)
             ;
         }
     private:
 
         static ValueType eval(const Model & m, const Conf & conf){
-            ValueType v=0;{
+            ValueType v=0;
+            {
                 ScopedGILRelease allowThreads;
                 v =  m.eval(conf);
             }
             return v;
         }
+        static ArityType maxArity(const Model & m){
+            ArityType a=0;
+            {
+                ScopedGILRelease allowThreads;
+                a =  m.maxArity();
+            }
+            return a;
+        }
+        static bp::tuple hasSimpleLabelSpace(const Model & m){
+            DiscreteLabel l = 0;
+            bool isSimple;
+            {
+                ScopedGILRelease allowThreads;
+                isSimple =  m.hasSimpleLabelSpace(l);
+            }
+            return bp::make_tuple(isSimple, l);
+        }
+        static bp::tuple minMaxNLabels(const Model & m){
+            DiscreteLabel lmin = 0;
+            DiscreteLabel lmax = 0;
+            {
+                ScopedGILRelease allowThreads;
+                m.minMaxNLabels(lmin, lmax);
+            }
+            return bp::make_tuple(lmin, lmax);
+        }
+
 
         std::string clsName_;
         //static void foo(MODEL& self);

@@ -146,6 +146,10 @@ namespace models{
         typedef learning::loss_functions::EdgeHamming<LosslessModel> LossFunction;
         typedef typename LossFunction::FactorWeightMap LossFactorWeightMap;
 
+
+        typedef EdgeHammingLossAugmentedModelFactor<Self> FactorType;
+        typedef DeadCodeUnary<Self>  UnaryType;
+
         typedef UnaryImpl UnaryProxy;
         typedef FactorImpl FactorProxy;
 

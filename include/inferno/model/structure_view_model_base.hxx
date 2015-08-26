@@ -181,7 +181,9 @@ public:
 
 
 
-
+    DiscreteLabel nLabels(const VariableDescriptor var)const{
+        return model().baseModel().nLabels(var);
+    }
 
     // descriptor iterators
     FactorDescriptorIter factorDescriptorsBegin()const{
@@ -261,7 +263,7 @@ public:
     }
 
 private:
-   
+    
     const MODEL & constModel()const{
         return * static_cast<const MODEL *>(this);
     }
