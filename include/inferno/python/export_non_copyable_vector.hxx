@@ -1,26 +1,50 @@
+#ifndef INFERNO_PYTHON_EXPORT_NON_COPYABLE_VECTOR_HXX
+#define INFERNO_PYTHON_EXPORT_NON_COPYABLE_VECTOR_HXX
+
+#include <boost/python/def_visitor.hpp>
+#include <boost/python/suite/indexing/indexing_suite.hpp>
+#include <boost/python/copy_non_const_reference.hpp>
+#include <boost/python/return_value_policy.hpp>
 
 namespace inferno{
 namespace python{
 
+namespace bp = boost::python;
 
 template<class VECTOR_CLASS>
 class NonCopyableVectorVisitor : 
-    boost::python::def_visitor<my_def_visitor>
+    public bp::def_visitor<NonCopyableVectorVisitor<VECTOR_CLASS> >
 {
-    friend class def_visitor_access;
+    friend class bp::def_visitor_access;
+
+    typedef VECTOR_CLASS Vector;
+    typedef typename Vector::value_type value_type;
+    typedef typename Vector::reference reference;
+    typedef typename Vector::const_reference const_reference;
 
     template <class classT>
     void visit(classT& c) const
     {
         c
-            .def("foo", &my_def_visitor::foo)
-            .def("bar", &my_def_visitor::bar)
+            .def("__getitem__", &getItem, bp::return_internal_reference<>())
+            .def("__len__", &Vector::size)
+            .def("__iter__", bp::iterator<Vector,  bp::return_internal_reference<> >())
         ;
     }
 
-    static void foo(X& self);
-    static void bar(X& self);
+    static reference getItem(Vector & vec, int64_t key){
+        if(key<0)
+            key += vec.size();
+        return vec[key];
+    }  
 };
+
+
+
+
 
 } // end namespace python
 } // end namespace inferno
+
+
+#endif /* INFERNO_PYTHON_EXPORT_NON_COPYABLE_VECTOR_HXX */

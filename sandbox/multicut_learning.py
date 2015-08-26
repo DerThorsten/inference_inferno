@@ -28,10 +28,17 @@ def makeDset():
     dset = ParaMcModel.learningDataset(lossFunction='variationOfInformation',
                                        nModels=2)
 
-    for i in range(2):
+    modelVector = ParaMcModel.modelVector(2)
+    confMapVector = ParaMcModel.confMapVector(2)
+    for i, (mm ,gtt) in enumerate(zip(modelVector,confMapVector)):
+
+        print type(mm)
+        print type(gtt)
+
         # assign model
         model = dset.model(i)
         model._assign(nVar, edges, features, weightVector)
+        mm._assign(nVar, edges, features, weightVector)
 
         # assign loss function
         lossFunction = dset.lossFunction(i)
@@ -40,6 +47,7 @@ def makeDset():
 
         # make gt
         gt = dset.groundTruth(i)
+        gtt.assign(model)
         gt.assign(model)
         gt.idMap[0] = 0
         gt.idMap[1] = 1

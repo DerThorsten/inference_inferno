@@ -80,6 +80,13 @@ def _extendModelClass(modelCls, classStr):
             else:
                 raise RuntimeError("cannot create dataset")
 
+        @classmethod
+        def modelVector(cls, size):
+            return cls.modelVectorCls(size)
+
+        @classmethod
+        def confMapVector(cls, size):
+            return cls.confMapVectorCls(size)
 
 def _extendModels():
     rawModelClasses = [
@@ -103,6 +110,11 @@ def _extendModels():
     for rawClsStr in rawModelClasses:
 
         rawCls = models.__dict__[rawClsStr]
+        modelVectorCls = models.__dict__[rawClsStr+"Vector"]
+        confMapVectorCls = models.__dict__[rawClsStr+"ConfMapVector"]
+
+        rawCls.modelVectorCls = modelVectorCls
+        rawCls.confMapVectorCls = confMapVectorCls
 
         rawCls.variableMapClsDict =  dict()
         for key in variableMapDtypeStrs.keys():

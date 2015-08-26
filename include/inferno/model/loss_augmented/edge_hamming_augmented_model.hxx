@@ -7,6 +7,7 @@
 // inferno
 #include "inferno/inferno.hxx"
 #include "inferno/value_tables/discrete_value_table_base.hxx"
+#include "inferno/value_tables/potts_value_table_base.hxx"
 #include "inferno/value_tables/discrete_unary_value_table_base.hxx"
 #include "inferno/model/discrete_factor_base.hxx"
 #include "inferno/model/discrete_unary_base.hxx"
@@ -27,14 +28,15 @@ namespace loss_functions{
 
 
 namespace value_tables{
+
     template<class MODEL>
-    class  EdgeHammingLossAugmentedModelPottsValueTable :public PottsValueTableBase
+    class  EdgeHammingLossAugmentedModelPottsValueTable : public PottsValueTableBase
     {
     private:
         typedef typename MODEL::BaseModel BaseModel;
-        typedef BaseModel::FactorDescriptor BaseModelFactorDescriptor;
-        typedef BaseModel::VariableDescriptor BaseModelVariableDescriptor;
-        typedef typename LosslessModel::FactorProxy  BaseModelFactorProxy;
+        typedef typename BaseModel::FactorDescriptor BaseModelFactorDescriptor;
+        typedef typename BaseModel::VariableDescriptor BaseModelVariableDescriptor;
+        typedef typename BaseModel::FactorProxy  BaseModelFactorProxy;
     public:
 
 
@@ -43,7 +45,8 @@ namespace value_tables{
             const BaseModel & baseModel,
             const BaseModelFactorDescriptor fac
         )
-        :   beta_(val),
+        :   PottsValueTableBase(),
+            beta_(val),
             baseFactor_(baseModel.factor(fac)){
 
         }
@@ -83,11 +86,11 @@ namespace models{
     > 
     {
     private:
+        typedef MODEL Model;
         typedef typename MODEL::BaseModel BaseModel;
-
-        typedef BaseModel::FactorDescriptor BaseModelFactorDescriptor;
-        typedef BaseModel::VariableDescriptor BaseModelVariableDescriptor;
-        typedef typename LosslessModel::FactorProxy  BaseModelFactorProxy;
+        typedef typename BaseModel::FactorDescriptor BaseModelFactorDescriptor;
+        typedef typename BaseModel::VariableDescriptor BaseModelVariableDescriptor;
+        typedef typename BaseModel::FactorProxy  BaseModelFactorProxy;
         typedef value_tables::EdgeHammingLossAugmentedModelPottsValueTable<Model> Vt;
 
     public:
@@ -140,7 +143,17 @@ namespace models{
 
 
 
+        EdgeHammingLossAugmentedModel(
+        )
+        :
+            losslessModel_(nullptr),
+            gt_(nullptr),
+            betas_(),
+            useIgnoreLabel_(false),
+            ignoreLabel_(-1)
+        {
 
+        }
 
         EdgeHammingLossAugmentedModel(
             LosslessModel & losslessModel,
@@ -167,8 +180,8 @@ namespace models{
             return FactorImpl(betas_[fac],this->baseModel(), fac);
         }
 
-        UnaryProxy unary(typename Self::UnaryDescriptor unaru)const{
-            return UnaryImpl;
+        UnaryProxy unary(typename Self::UnaryDescriptor unary)const{
+            return UnaryImpl();
         }
 
         LosslessModel & baseModel() {

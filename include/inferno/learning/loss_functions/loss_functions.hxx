@@ -76,7 +76,8 @@ namespace loss_functions{
     public:
         typedef MODEL Model;
         typedef typename Model:: template VariableMap<double> VariableSizeMap; 
-        
+        typedef NoLossAugmentedModel LossAugmentedModel;
+
         BOOST_CONCEPT_ASSERT((boost::DefaultConstructible<VariableSizeMap>));
 
 
@@ -128,7 +129,7 @@ namespace loss_functions{
         }
 
 
-        typedef MODEL LossAugmentedModel;
+
         template<class CONF_GT, class CONF>
         LossType eval(const MODEL & model, CONF_GT & confGt, CONF & conf)const{
 

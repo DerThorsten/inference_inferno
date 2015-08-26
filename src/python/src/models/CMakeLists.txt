@@ -2,6 +2,7 @@ SET(MOD_SRC
     models.cxx 
     general_discrete_model.cxx
     parametrized_multicut_model.cxx
+    edge_hamming_loss_augmented_model.cxx
     #general_discrete_tl_model.cxx
     #modified_multiwaycut_model.cxx
 )

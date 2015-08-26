@@ -5,6 +5,7 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/inferno_python.hxx"
+#include "inferno/python/export_non_copyable_vector.hxx"
 
 namespace inferno{
 namespace models{
@@ -212,9 +213,22 @@ namespace export_helper{
 
         bp::class_<ModelVector,boost::noncopyable >(clsName.c_str(), bp::init<>())
             .def(bp::init<const size_t >())
+            .def(python::NonCopyableVectorVisitor<ModelVector>())
         ;
-
     }
+
+    template<class MODEL>
+    void exportVectorOfConfs(const std::string & modelClsName){
+        const std::string clsName = modelClsName + std::string("ConfMapVector"); 
+        typedef typename MODEL:: template VariableMap<DiscreteLabel> ConfMap;
+        typedef std::vector<ConfMap> ConfVector;
+
+        bp::class_<ConfVector,boost::noncopyable >(clsName.c_str(), bp::init<>())
+            .def(bp::init<const size_t >())
+            .def(python::NonCopyableVectorVisitor<ConfVector>())
+        ;
+    }
+
 
     template<class MODEL>
     class ExportModelAPI  : public boost::python::def_visitor<ExportModelAPI<MODEL> >
@@ -236,7 +250,7 @@ namespace export_helper{
             // export all var maps
             exportVarMaps<MODEL>(clsName_);
             exportVectorOfModels<MODEL>(clsName_);
-       
+            exportVectorOfConfs<MODEL>(clsName_);
 
             c
                 .add_property("nVariables", &Model::nVariables)

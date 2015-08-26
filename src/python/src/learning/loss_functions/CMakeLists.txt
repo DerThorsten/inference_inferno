@@ -1,10 +1,8 @@
 SET(MOD_SRC 
 
     loss_functions.cxx
-
-    #edge_hamming_general_discrete_model.cxx
-    #edge_hamming_parametrized_multicut_model.cxx
-
+    edge_hamming_general_discrete_model.cxx
+    edge_hamming_parametrized_multicut_model.cxx
     variation_of_information_general_discrete_model.cxx
     variation_of_information_parametrized_multicut_model.cxx
 )

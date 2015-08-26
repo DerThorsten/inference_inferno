@@ -47,6 +47,142 @@ public:
     typedef typename BaseModel::UnaryDescriptorIter     UnaryDescriptorIter;
 
 
+     /** \brief container which can store an instance
+    of T for any variable descriptor.
+
+    \warning changing the number of the variables in
+    this model will invalidate any instance of this class.
+    */
+    template<class T>
+    class VariableMap {
+    private:
+        typedef typename BASE_MODEL:: template VariableMap<T> BaseModelMap;
+
+        typedef typename BaseModelMap::value_type        value_type;
+        typedef typename BaseModelMap::reference         reference;
+        typedef typename BaseModelMap::const_reference   const_reference;
+
+    public:
+        VariableMap()
+        :   model_(nullptr),
+            map_(){
+        }
+        VariableMap(const MODEL & m, const T & val = T())
+        :   model_(&m),
+            map_(m.baseModel(), val){
+        }
+
+        void assign(const MODEL & m, const T & val = T()){
+            model_ = &m;
+            map_.assign(m.baseModel(), val);
+        }
+
+        const MODEL & model()const{
+            return *model_;
+        }
+        template<class D>
+        reference operator[](const D & d){
+            return map_[d];
+        }
+
+        template<class D>
+        const_reference operator[](const D & d)const{
+            return map_[d];
+        }
+
+    private:
+        const MODEL * model_;
+        BaseModelMap map_;
+    };
+
+    template<class T>
+    class FactorMap {
+    private:
+        typedef typename BASE_MODEL:: template FactorMap<T> BaseModelMap;
+
+        typedef typename BaseModelMap::value_type        value_type;
+        typedef typename BaseModelMap::reference         reference;
+        typedef typename BaseModelMap::const_reference   const_reference;
+
+    public:
+        FactorMap()
+        :   model_(nullptr),
+            map_(){
+        }
+        FactorMap(const MODEL & m, const T & val = T())
+        :   model_(&m),
+            map_(m.baseModel(), val){
+        }
+
+        void assign(const MODEL & m, const T & val ){
+            model_ = &m;
+            map_.assign(m.baseModel(), val);
+        }
+
+        const MODEL & model()const{
+            return &model_;
+        }
+        template<class D>
+        reference operator[](const D & d){
+            return map_[d];
+        }
+
+        template<class D>
+        const_reference operator[](const D & d)const{
+            return map_[d];
+        }
+
+    private:
+        const MODEL * model_;
+        BaseModelMap map_;
+    };
+
+    template<class T>
+    class UnaryMap {
+    private:
+        typedef typename BASE_MODEL:: template UnaryMap<T> BaseModelMap;
+
+        typedef typename BaseModelMap::value_type        value_type;
+        typedef typename BaseModelMap::reference         reference;
+        typedef typename BaseModelMap::const_reference   const_reference;
+
+    public:
+        UnaryMap()
+        :   model_(nullptr),
+            map_(){
+        }
+        UnaryMap(const MODEL & m, const T & val = T())
+        :   model_(&m),
+            map_(m.baseModel(), val){
+        }
+
+        void assign(const MODEL & m, const T & val ){
+            model_ = &m;
+            map_.assign(m.baseModel(), val);
+        }
+
+        const MODEL & model()const{
+            return &model_;
+        }
+        template<class D>
+        reference operator[](const D & d){
+            return map_[d];
+        }
+
+        template<class D>
+        const_reference operator[](const D & d)const{
+            return map_[d];
+        }
+
+    private:
+        const MODEL * model_;
+        BaseModelMap map_;
+    };
+
+
+
+
+
     // descriptor iterators
     FactorDescriptorIter factorDescriptorsBegin()const{
         return model().baseModel().factorDescriptorsBegin();

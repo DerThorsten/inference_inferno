@@ -34,6 +34,9 @@ namespace loss_functions{
 
     template<class MODEL>
     void exportVariationOfInformation();
+
+    template<class MODEL>
+    void exportEdgeHamming();
        
 }
 }
@@ -56,7 +59,12 @@ BOOST_PYTHON_MODULE_INIT(loss_functions) {
 
     namespace lf = inferno::learning::loss_functions;
 
+    // variation of information
     lf::exportVariationOfInformation<inferno::models::PyGeneralDiscreteModel>();
     lf::exportVariationOfInformation<inferno::models::PyParametrizedMulticutModel>();
+
+    // edge / multicut - hamming 
+    lf::exportEdgeHamming<inferno::models::PyGeneralDiscreteModel>();
+    lf::exportEdgeHamming<inferno::models::PyParametrizedMulticutModel>();
 
 }

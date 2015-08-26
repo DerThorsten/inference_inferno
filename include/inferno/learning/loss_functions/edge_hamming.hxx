@@ -25,8 +25,11 @@ namespace loss_functions{
     template<class MODEL>
     class EdgeHamming{
     public:
+
         typedef MODEL Model;
         typedef typename Model:: template VariableMap<double> FactorWeightMap; 
+
+        typedef models::EdgeHammingLossAugmentedModel<Model>  LossAugmentedModel;
         
         BOOST_CONCEPT_ASSERT((boost::DefaultConstructible<FactorWeightMap>));
 
@@ -79,7 +82,6 @@ namespace loss_functions{
         }
 
 
-        typedef MODEL LossAugmentedModel;
         template<class CONF_GT, class CONF>
         LossType eval(const MODEL & model, CONF_GT & confGt, CONF & conf)const{
             LossType totalLoss = 0;
