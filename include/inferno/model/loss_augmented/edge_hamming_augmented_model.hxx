@@ -37,6 +37,8 @@ namespace value_tables{
         typedef typename BaseModel::FactorDescriptor BaseModelFactorDescriptor;
         typedef typename BaseModel::VariableDescriptor BaseModelVariableDescriptor;
         typedef typename BaseModel::FactorProxy  BaseModelFactorProxy;
+    
+        using PottsValueTableBase::eval;
     public:
 
 
@@ -86,6 +88,12 @@ namespace models{
     > 
     {
     private:
+        typedef DiscreteFactorBase<
+            EdgeHammingLossAugmentedModelFactor<MODEL>, 
+            MODEL
+        > Base;
+        //using Base::eval;
+
         typedef MODEL Model;
         typedef typename MODEL::BaseModel BaseModel;
         typedef typename BaseModel::FactorDescriptor BaseModelFactorDescriptor;
@@ -110,7 +118,7 @@ namespace models{
         }
 
         BaseModelVariableDescriptor variable(const size_t d)const{
-            return vt_->variable(d);
+            return vt_.variable(d);
         }
 
     private:
@@ -139,7 +147,7 @@ namespace models{
         typedef typename LossFunction::FactorWeightMap LossFactorWeightMap;
 
         typedef UnaryImpl UnaryProxy;
-        typedef UnaryImpl FactorProxy;
+        typedef FactorImpl FactorProxy;
 
 
 

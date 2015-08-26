@@ -253,12 +253,26 @@ namespace export_helper{
             exportVectorOfConfs<MODEL>(clsName_);
 
             c
+                // properties
                 .add_property("nVariables", &Model::nVariables)
                 .add_property("nFactors", &Model::nFactors)
                 .add_property("nUnaries", &Model::nUnaries)
+
+                // functions
+                .def("eval",&eval)
+
             ;
         }
     private:
+
+        static ValueType eval(const Model & m, const Conf & conf){
+            ValueType v=0;{
+                ScopedGILRelease allowThreads;
+                v =  m.eval(conf);
+            }
+            return v;
+        }
+
         std::string clsName_;
         //static void foo(MODEL& self);
         //static void bar(MODEL& self);

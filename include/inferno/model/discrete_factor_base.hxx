@@ -309,22 +309,21 @@ template< class FACTOR_PROXY>
 std::ostream& operator <<(std::ostream& stream, const io::FactorValueTableCout<FACTOR_PROXY> & factorCouter) {
     const FACTOR_PROXY & factor = factorCouter.factor_;
     const size_t arity = factor->arity();
-    if(arity == 0 ){
-
-    }
-    else if(arity == 1 ){
-        for(LabelType l0=0; l0<factor->shape(0); ++l0){
-            stream<<"f(x"<<factor->variable(0)<<"="<<l0<<") = ";
-            stream<<factor->eval(l0)<<"\n";
-        }
-    }
-    else if(arity == 2 ){
-        for(LabelType l1=0; l1<factor->shape(1); ++l1)
-        for(LabelType l0=0; l0<factor->shape(0); ++l0){
-            stream<<"f(x"<<factor->variable(0)<<"="<<l0<<" x"<<factor->variable(1)<<"="<<l1<<") = ";
-            stream<<factor->eval(l0, l1)<<"\n";
-        }
-    }
+    //if(arity == 0 ){
+    //}
+    //else if(arity == 1 ){
+    //    for(LabelType l0=0; l0<factor->shape(0); ++l0){
+    //        stream<<"f(x"<<factor->variable(0)<<"="<<l0<<") = ";
+    //        stream<<factor->eval(l0)<<"\n";
+    //    }
+    //}
+    //else if(arity == 2 ){
+    //    for(LabelType l1=0; l1<factor->shape(1); ++l1)
+    //    for(LabelType l0=0; l0<factor->shape(0); ++l0){
+    //        stream<<"f(x"<<factor->variable(0)<<"="<<l0<<" x"<<factor->variable(1)<<"="<<l1<<") = ";
+    //        stream<<factor->eval(l0, l1)<<"\n";
+    //    }
+    //}
 
     return stream;
 }

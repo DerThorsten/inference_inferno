@@ -28,7 +28,9 @@ public:
     ValueType eval(const DiscreteLabel l)const{
         return unary()->valueTable()->eval(l);
     }
-
+    //ValueType eval(const DiscreteLabel * l)const{
+    //    return unary()->valueTable()->eval(*l);
+    //}
 
     DiscreteLabel shape(const size_t d)const{
         return unary()->shape();

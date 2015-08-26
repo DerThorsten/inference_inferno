@@ -189,23 +189,13 @@ public:
         }
         switch(maxArity_){
             case 1 :{
-                for(size_t i=0; i<factors_.size(); ++i){
-                    const Ftype & fac = factors_[i];
-                    sum += fac.eval(conf[fac.variable(0)]);
-                }
+
                 return sum;
             }
             case 2 : {
                 for(size_t i=0; i<factors_.size(); ++i){
                     const Ftype & fac = factors_[i];
-                    switch(fac.arity()){
-                        case 1:
-                            sum+= fac.eval(conf[fac.variable(0)]);
-                            break;
-                        case 2:
-                            sum+= fac.eval(conf[fac.variable(0)],conf[fac.variable(1)]);
-                            break;
-                    }
+                    sum+= fac.eval(conf[fac.variable(0)],conf[fac.variable(1)]);
                 }
                 return sum;
             }
@@ -214,9 +204,6 @@ public:
                     const Ftype & fac = factors_[i];
                     const uint32_t arity = fac.arity();
                     switch(arity){
-                        case 1:
-                            sum+= fac.eval(conf[fac.variable(0)]);
-                            break;
                         case 2:
                             sum+= fac.eval(conf[fac.variable(0)],conf[fac.variable(1)]);
                             break;
