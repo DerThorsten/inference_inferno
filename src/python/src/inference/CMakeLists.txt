@@ -2,8 +2,10 @@ SET(MOD_SRC
     inference_options.cxx
     inference.cxx 
     visitors.cxx
+    
     general_discrete_model_inference.cxx
     parametrzied_multicut_model_inference.cxx
+    edge_hamming_loss_augmented_model_inference.cxx
 )
 SET(MOD_EXTRA_LIBS inferno )
 

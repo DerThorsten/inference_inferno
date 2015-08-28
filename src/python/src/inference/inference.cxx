@@ -35,6 +35,8 @@ namespace inference{
     void exportVisitors();
     void exportGeneralDiscreteModelInference();
     void exportParametrizedMulticutModelInference();
+    void exportEdgeHammingLossAugmentedModelInference();
+
 
     void exportInference(){
         
@@ -42,6 +44,7 @@ namespace inference{
         exportVisitors();
         exportGeneralDiscreteModelInference();
         exportParametrizedMulticutModelInference();
+        exportEdgeHammingLossAugmentedModelInference();
     }
 
 

@@ -36,11 +36,13 @@ namespace learners{
                 const uint64_t nPertubations = 100,
                 const uint64_t maxIterations = 10000,
                 const double   sigma = 1.0,
+                const double   alpha  = 1.0,
                 const int      verbose =2
             )
             :   nPertubations_(nPertubations),
                 maxIterations_(maxIterations),
                 sigma_(sigma),
+                alpha_(alpha),
                 verbose_(verbose)
             {
             }
@@ -48,6 +50,7 @@ namespace learners{
             uint64_t nPertubations_;
             uint64_t maxIterations_;
             double   sigma_;
+            double   alpha_;
             int      verbose_;
         };
 
@@ -168,11 +171,12 @@ namespace learners{
             double it(iteration+1);
             //WeightVector newWeights = currentWeights;
 
-            const auto  effectiveStepSize = 1.0/(std::sqrt(it));
+            //const auto  effectiveStepSize = 1.0/(std::sqrt(it));
+            const auto  effectiveStepSize = 1.0/(it);
             WeightVector g=gradient;
             g*=effectiveStepSize;
             currentWeights -= g;
-            currentWeights *= 1.0;
+            currentWeights *= options_.alpha_;
         }
 
         Dataset & dataset_;
