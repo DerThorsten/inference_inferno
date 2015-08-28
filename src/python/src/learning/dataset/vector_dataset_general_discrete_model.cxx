@@ -7,9 +7,12 @@
 // inferno relatex
 #include "inferno/inferno.hxx"
 #include "inferno/inferno_python.hxx"
+#include "inferno/learning/loss_functions/loss_functions.hxx"
+#include "inferno/learning/loss_functions/edge_hamming.hxx"
+#include "inferno/model/general_discrete_model.hxx"
 
 #include "export_vector_dataset.hxx"
-#include "inferno/model/general_discrete_model.hxx"
+
 
 namespace inferno{
 namespace learning{
@@ -20,6 +23,13 @@ namespace dataset{
     template void 
     exportVectorDataset<
         inferno::learning::loss_functions::VariationOfInformation<
+            inferno::models::GeneralDiscreteModel
+        >
+    >(const std::string &);
+
+    template void 
+    exportVectorDataset<
+        inferno::learning::loss_functions::EdgeHamming<
             inferno::models::GeneralDiscreteModel
         >
     >(const std::string &);

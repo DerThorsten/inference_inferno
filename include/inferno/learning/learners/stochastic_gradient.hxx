@@ -123,9 +123,6 @@ namespace learners{
                         // get argmin 
                         auto inference = inferenceFactory->create(model);
                         inference->infer();
-
-
-
                         inference->conf(confMapVector[cc]); 
 
 

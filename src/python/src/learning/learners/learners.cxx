@@ -26,7 +26,7 @@
 #include "inferno/model/parametrized_multicut_model.hxx"
 #include "inferno/learning/dataset/explicit_dataset.hxx"
 #include "inferno/learning/loss_functions/loss_functions.hxx"
-
+#include "inferno/learning/loss_functions/edge_hamming.hxx"
 
 
 
@@ -38,6 +38,9 @@ namespace learners{
 
     template<class DATASET>
     void exportStochasticGradient(const std::string & );
+
+    template<class DATASET>
+    void exportSubGradient(const std::string & );
        
 }
 }
@@ -60,26 +63,52 @@ BOOST_PYTHON_MODULE_INIT(learners) {
 
     namespace ll = inferno::learning::learners;
 
+    /////////////////////////////////////////////////////
+    // general discrete model
+    /////////////////////////////////////////////////////
     {
         using namespace inferno;
         typedef models::GeneralDiscreteModel Model;
-        typedef learning::loss_functions::VariationOfInformation<Model> LossFunction;
-        typedef learning::dataset::VectorDataset<LossFunction>  Dataset;
-        ll::exportStochasticGradient<Dataset>(
-            std::string("StochasticGradient_VariationOfInformation_GeneralDiscreteModel")
-        );
+
+        {
+            typedef learning::loss_functions::VariationOfInformation<Model> LossFunction;
+            typedef learning::dataset::VectorDataset<LossFunction>  Dataset;
+            ll::exportStochasticGradient<Dataset>(
+                std::string("StochasticGradient_VariationOfInformation_GeneralDiscreteModel")
+            );
+        }
+        {
+            typedef learning::loss_functions::EdgeHamming<Model> LossFunction;
+            typedef learning::dataset::VectorDataset<LossFunction>  Dataset;
+            ll::exportSubGradient<Dataset>(
+                std::string("SubGradient_EdgeHamming_GeneralDiscreteModel")
+            );
+        }
     }
+    /////////////////////////////////////////////////////
+    // parametrized multicut model
+    /////////////////////////////////////////////////////
     {
         using namespace inferno;
         typedef models::ParametrizedMulticutModel<
             models::detail_python::EdgeArray, 
             models::detail_python::FeatureArray
         > Model;
-        typedef learning::loss_functions::VariationOfInformation<Model> LossFunction;
-        typedef learning::dataset::VectorDataset<LossFunction>  Dataset;
-        ll::exportStochasticGradient<Dataset>(
-            std::string("StochasticGradient_VariationOfInformation_ParametrizedMulticutModel")
-        );
+
+        {
+            typedef learning::loss_functions::VariationOfInformation<Model> LossFunction;
+            typedef learning::dataset::VectorDataset<LossFunction>  Dataset;
+            ll::exportStochasticGradient<Dataset>(
+                std::string("StochasticGradient_VariationOfInformation_ParametrizedMulticutModel")
+            );
+        }
+        {
+            typedef learning::loss_functions::EdgeHamming<Model> LossFunction;
+            typedef learning::dataset::VectorDataset<LossFunction>  Dataset;
+            ll::exportSubGradient<Dataset>(
+                std::string("SubGradient_EdgeHamming_ParametrizedMulticutModel")
+            );
+        }
     }
 
 }

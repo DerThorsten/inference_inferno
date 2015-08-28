@@ -23,7 +23,7 @@
 #include "inferno/inferno_python.hxx"
 #include "inferno/learning/dataset/explicit_dataset.hxx"
 #include "inferno/learning/loss_functions/loss_functions.hxx"
-
+#include "inferno/learning/loss_functions/edge_hamming.hxx"
 
 
 
@@ -57,6 +57,7 @@ BOOST_PYTHON_MODULE_INIT(dataset) {
     // No not change 4 line above
 
 
+    // General discrete model
     inferno::learning::dataset::exportVectorDataset<
         inferno::learning::loss_functions::VariationOfInformation<
             inferno::models::PyGeneralDiscreteModel
@@ -64,9 +65,26 @@ BOOST_PYTHON_MODULE_INIT(dataset) {
     >(std::string("VariationOfInformation"));
 
     inferno::learning::dataset::exportVectorDataset<
+        inferno::learning::loss_functions::EdgeHamming<
+            inferno::models::PyGeneralDiscreteModel
+        >
+    >(std::string("EdgeHamming"));
+
+
+
+    // parametrized multicut model
+    inferno::learning::dataset::exportVectorDataset<
         inferno::learning::loss_functions::VariationOfInformation<
             inferno::models::PyParametrizedMulticutModel
         >
     >(std::string("VariationOfInformation"));
+
+    inferno::learning::dataset::exportVectorDataset<
+        inferno::learning::loss_functions::EdgeHamming<
+            inferno::models::PyParametrizedMulticutModel
+        >
+    >(std::string("EdgeHamming"));
+
+
 
 }

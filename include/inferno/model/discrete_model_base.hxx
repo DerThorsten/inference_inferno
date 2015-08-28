@@ -652,28 +652,66 @@ public:
             unary->updateWeights(weights);
     }
 
+    /** \brief accumulate joint feature vector
+        \param[out] accumulatedFeatures:
+            accumulated feature vector
+        \param[in]  conf:
+            usually the arg min solution
+        \param[in]  add:
+            if true the values are added into accumulatedFeatures,
+            otherwise the values are subtracted
+        \warning accumulatedFeatures must be correct initialized, all values are added
+    */
     template<class CONF>
     void accumulateJointFeatures(
         learning::WeightVector & accumulatedFeatures,
-        CONF & conf
+        const CONF & conf,
+        const bool add = true
     )const{
         
+        if(add){
+            for(const auto unary : model().unaries()){
+                const DiscreteLabel label = conf[unary->variable()];
+                const auto vt = unary->valueTable();
+                for(auto wi :vt->weightIndices())
+                    accumulatedFeatures[wi.global()] += vt->weightGradient(wi.local(),&label);
+            }
 
-        for(const auto unary : model().unaries()){
-            const DiscreteLabel label = conf[unary->variable()];
-            const auto vt = unary->valueTable();
-            for(auto wi :vt->weightIndices())
-                accumulatedFeatures[wi.global()] += vt->weightGradient(wi.local(),&label);
+            std::vector<DiscreteLabel> factorConf(this->maxArity());
+            for(const auto factor : model().factors()){
+                factor->getFactorConf(conf, factorConf.begin());
+                const auto vt = factor->valueTable();
+                for(auto wi :vt->weightIndices())
+                    accumulatedFeatures[wi.global()] += vt->weightGradient(wi.local(),factorConf.data());
+            }
+        }
+        else{
+            for(const auto unary : model().unaries()){
+                const DiscreteLabel label = conf[unary->variable()];
+                const auto vt = unary->valueTable();
+                for(auto wi :vt->weightIndices())
+                    accumulatedFeatures[wi.global()] -= vt->weightGradient(wi.local(),&label);
+            }
+
+            std::vector<DiscreteLabel> factorConf(this->maxArity());
+            for(const auto factor : model().factors()){
+                factor->getFactorConf(conf, factorConf.begin());
+                const auto vt = factor->valueTable();
+                for(auto wi :vt->weightIndices())
+                    accumulatedFeatures[wi.global()] -= vt->weightGradient(wi.local(),factorConf.data());
+            }
         }
 
-        std::vector<DiscreteLabel> factorConf(this->maxArity());
-        for(const auto factor : model().factors()){
-            factor->getFactorConf(conf, factorConf.begin());
-            const auto vt = factor->valueTable();
-            for(auto wi :vt->weightIndices())
-                accumulatedFeatures[wi.global()] += vt->weightGradient(wi.local(),factorConf.data());
-        }
+    }
 
+    template<class CONF_A, class CONF_B>
+    void accumulateJointFeaturesDifference(
+        learning::WeightVector & accumulatedFeatureDifference,
+        const CONF_A & confA,
+        const CONF_B & confB
+    )const{
+        this->model().accumulateJointFeatures(accumulatedFeatureDifference, confA, true);
+        this->model().accumulateJointFeatures(accumulatedFeatureDifference, confB, false);
     }
 
     template<class MAP>

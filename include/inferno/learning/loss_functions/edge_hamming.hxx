@@ -105,7 +105,12 @@ namespace loss_functions{
             }
             return totalLoss;
         }
-        void makeLossAugmentedModel(LossAugmentedModel & lossAugmentedModel)const;
+        void makeLossAugmentedModel(
+            const Model & model,
+            LossAugmentedModel & lossAugmentedModel
+        )const{
+
+        }
 
     private:
         FactorWeightMap edgeLossWeightMap_;

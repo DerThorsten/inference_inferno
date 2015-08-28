@@ -46,10 +46,10 @@ namespace inference{
         //INFERNO_EXPORT_INFERENCE(Model, modelName, MessagePassing<Model>, "MessagePassing");
         //INFERNO_EXPORT_INFERENCE(Model, modelName, Hmmwc<Model>, "Hmmwc");
 
-        #ifdef WITH_QPBO
-        INFERNO_EXPORT_INFERENCE(Model, modelName, Qpbo<Model>,            "Qpbo");
-        //INFERNO_EXPORT_INFERENCE(Model, modelName, HigherOrderQpbo<Model>, "HigherOrderQpbo");
-        #endif
+        //#ifdef WITH_QPBO
+        //INFERNO_EXPORT_INFERENCE(Model, modelName, Qpbo<Model>,            "Qpbo");
+        ////INFERNO_EXPORT_INFERENCE(Model, modelName, HigherOrderQpbo<Model>, "HigherOrderQpbo");
+        //#endif
 
         typedef OpengmInference<
             Model, opengm::Multicut<ogm::GraphicalModel,opengm::Minimizer>

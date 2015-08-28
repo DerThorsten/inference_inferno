@@ -7,9 +7,14 @@
 // inferno relatex
 #include "inferno/inferno.hxx"
 #include "inferno/inferno_python.hxx"
-
-#include "export_vector_dataset.hxx"
+#include "inferno/learning/loss_functions/loss_functions.hxx"
+#include "inferno/learning/loss_functions/edge_hamming.hxx"
 #include "inferno/model/parametrized_multicut_model.hxx"
+
+// exporter
+#include "export_vector_dataset.hxx"
+
+
 
 namespace inferno{
 namespace learning{
@@ -24,6 +29,13 @@ namespace dataset{
         >
     >(const std::string &);
 
+
+    template void 
+    exportVectorDataset<
+        inferno::learning::loss_functions::EdgeHamming<
+            inferno::models::PyParametrizedMulticutModel
+        >
+    >(const std::string &);
 }
 }
 }
