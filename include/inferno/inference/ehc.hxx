@@ -46,11 +46,14 @@ namespace inference{
             struct Options
             {
                 Options(
-                    const float stopWeight = 0.0
+                    const ValueType stopWeight = 0.0,
+                    const ValueType bias = 0.0
                 )
-                :   stopWeight_(stopWeight){
+                :   stopWeight_(stopWeight),
+                    bias_(bias){
                 }
-                float stopWeight_;
+                ValueType stopWeight_;
+                ValueType bias_;
             };
 
 
@@ -71,7 +74,7 @@ namespace inference{
 
             void setWeights(const std::vector<ValueType> & weights){
                 for(size_t i=0; i<graph_.edgeNum(); ++i){
-                    pq_.push(i, weights[i]);
+                    pq_.push(i, weights[i] + options_.bias_);
                 }
             }
 
@@ -156,14 +159,11 @@ namespace inference{
         typedef vigra::HierarchicalClustering< Cop > HC;
         typedef typename HC::Parameter HcOptions;
     public:
+
         struct Options{
-            Options(      
-            )
-            {
+            Options(){
             }
         };
-
-
 
         Ehc(const Model & model, const Options & options = Options() )
         :   BaseInf(),
@@ -185,18 +185,29 @@ namespace inference{
             delete mgraph_;
         }
 
+
+        /// \brief update if graph has changed
+        ///
+        /// Updating the solver after a structural
+        /// change of the graph is 
         virtual void graphChange() override{
             delete clusterOp_;
             delete mgraph_;
 
             mgraph_ = nullptr;
             clusterOp_ = nullptr;
+            graph_.clear();
 
             conf_.assign(model_);
             this->weights_.resize(model_.nFactors());
             std::fill(weights_.begin(), weights_.end(), 0);
             this->setupVigraGraphs();
         }
+
+        /// \brief update if energy has changed
+        /// 
+        /// Updating the solver after an energy / weight change
+        /// is cheap for this solver
         virtual void energyChange() override{
             INFERNO_CHECK(mgraph_!=nullptr,"internal error");
             INFERNO_CHECK(clusterOp_!=nullptr,"internal error");
@@ -256,6 +267,9 @@ namespace inference{
             stopInference_ = true;
         }
     private:
+
+        // this function is also called within
+        // the hc cluster operator
         void confFromHc(HC & hc, Conf & conf){
             for(const auto var : model_.variableDescriptors()){
                 conf[var] = hc.reprNodeId(model_.variableId(var));
@@ -267,6 +281,9 @@ namespace inference{
 
             INFERNO_CHECK(model_.isSecondOrderMulticutModel(),
                 "model must be second order multicut model");
+
+            graph_.reserveMaxNodeId(model_.maxVarId());
+            graph_.reserveEdges(model_.nFactors());
 
             for(const auto var : model_.variableDescriptors()){
                 graph_.addNode(model_.variableId(var));

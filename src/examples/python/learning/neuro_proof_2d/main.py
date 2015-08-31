@@ -167,6 +167,41 @@ if __name__ == "__main__":
     neuroproofRoot = "/home/tbeier/src/neuroproof_examples/"
 
 
+
+    def learnMc(weightVector, mVec, viVec, gtVec, hammingVecList = None):
+        
+        ParaMcModel = inferno.models.ParametrizedMulticutModel
+        LossAugmentedModel = ParaMcModel.lossAugmentedModelClass('edgeHamming')
+
+        getMcFactory = inferno.inference.multicutFactory
+        getEhcFactory = inferno.inference.ehcFactory
+
+        mcFactory = getMcFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=1)
+        mcLossFactory = getMcFactory(LossAugmentedModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=8)
+
+        ehcFactory = getEhcFactory(ParaMcModel)
+        ehcLossFactory = getEhcFactory(LossAugmentedModel)
+
+
+        getVecDest = inferno.learning.dataset.vectorDataset
+        getSubGrad = inferno.learning.learners.subGradient
+
+        
+        if hammingVecList is not None:
+            for hammingVec in hammingVecList:
+                dset = getVecDest(mVec, hammingVec, gtVec)
+                learner = getSubGrad(dset, maxIterations=10,
+                                     n=0.05, c=1.0, m=0.2, 
+                                     nThreads=1)
+                # do the sub-gradient learning
+                learner.learn(mcLossFactory, weightVector, mcFactory)
+
+        
+
+
+
+
+
     if False:
         raws, osegs, gts = extract2d(neuroproofRoot)
         f = h5py.File(workingDir+"dataset.h5",'w')

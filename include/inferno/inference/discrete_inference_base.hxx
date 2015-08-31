@@ -38,9 +38,16 @@ namespace inference{
     template<class MODEL>
     class DiscreteInferenceBase{
     public:
+        typedef MODEL Model;
+        typedef typename Model::VariableDescriptor   VariableDescriptor;
+        typedef typename Model::FactorDescriptor     FactorDescriptor;
+        typedef typename Model::UnaryDescriptor      UnaryDescriptor;
+        typedef DiscreteInferenceBase<MODEL> Self;
+        typedef typename MODEL:: template VariableMap<DiscreteLabel> Conf;
 
         class Visitor{
         public:
+
             typedef DiscreteInferenceBase<MODEL> BaseInf;
             typedef typename MODEL:: template VariableMap<DiscreteLabel> Conf;
 
@@ -48,8 +55,6 @@ namespace inference{
             typedef inferno::delegate1<void , BaseInf * > VisitCallBack;
             typedef inferno::delegate3<void , BaseInf * , const std::string &, const ValueType> LoggingCallBack;          
             typedef inferno::delegate1<void , BaseInf * > EndCallBack;
-
-
 
             void begin(BaseInf * inf){
                 if(bool(beginCallBack))
@@ -75,12 +80,6 @@ namespace inference{
         };
 
 
-
-        typedef MODEL Model;
-        typedef DiscreteInferenceBase<MODEL> Self;
-        typedef typename MODEL:: template VariableMap<DiscreteLabel> Conf;
-
-
         // MUST HAVE INTERACE
         //
         virtual std::string name()const = 0;
@@ -88,6 +87,10 @@ namespace inference{
         virtual void infer( Visitor  * visitor  = NULL) = 0 ;
         // get result
         virtual void conf(Conf & conf ) = 0;
+
+        /** \brief get the label
+            \deprecated will be changed soon to descriptors
+        */
         virtual DiscreteLabel label(const Vi vi ) = 0;
         // get model
         virtual const Model & model() const=0;
@@ -119,14 +122,25 @@ namespace inference{
             return -1.0*std::numeric_limits<ValueType>::infinity();
         }
 
-        /// check if a certain variable is partial optimal partial optimality
+        /// 
+        /** \brief check if a certain variable is partial optimal 
+            \deprecated will be changed soon to descriptors
+        */
         virtual bool isPartialOptimal(const Vi vi){
             return false;
         }
 
-        /// some solvers can guarantee that some labels
-        /// can be excluded in the (unknown) global optimal solutions
-        virtual void excludedLabels(const Vi vi, VectorSet<DiscreteLabel> & excludedLabes){
+        /** \brief 
+
+            \deprecated will be changed soon to descriptors
+
+            some solvers can guarantee that some labels
+            can be excluded in the (unknown) global optimal solutions
+        */
+        virtual void excludedLabels(
+            const Vi vi, 
+            VectorSet<DiscreteLabel> & excludedLabes
+        ){
             excludedLabes.clear();
             if(this->isPartialOptimal(vi)){
                 const auto optLabel = this->label(vi);
@@ -140,17 +154,44 @@ namespace inference{
             }
         }
 
-        // model has changed
+        /** \brief inform a solver that the graph has been changed
+        
+            throws a NotImplementedException exception
+        */
         virtual void graphChange() {
-            throw NotImplementedException(this->name()+std::string("does not support \"graphChange\" so far"));
+            throw NotImplementedException(this->name() +
+                std::string("does not support \"graphChange\" so far"));
         }
+
+        /** \brief inform a solver that the energy has been changed
+        
+            throws a NotImplementedException exception
+        */
         virtual void energyChange() {
-            throw NotImplementedException(this->name()+std::string("does not support \"graphChanged\" so far"));
+            throw NotImplementedException(this->name() +
+                std::string("does not support \"energyChange\" so far"));
         }
+
+        /** \brief inform a solver that the weights have been updated
+        
+            default implementation calls 
+            DiscreteInferenceBase::energyChange
+        */
         virtual void updateWeights(const learning::WeightVector & weights){
             this->energyChange();
         }
-        virtual void partialEnergyChange(const Fi * changedFacBegin, const Fi * changedFacEnd ) {
+
+        /** \brief inform a solver that the energy has partially changed
+        
+            default implementation calls 
+            DiscreteInferenceBase::energyChange
+        */
+        virtual void partialEnergyChange(
+            const FactorDescriptor * changedFactorsBegin, 
+            const FactorDescriptor * changedFactorsEnd,
+            const UnaryDescriptor *  changedUnariesBegin,
+            const UnaryDescriptor *  changedUnariesEnd 
+        ) {
             this->energyChange();
         }
     };
