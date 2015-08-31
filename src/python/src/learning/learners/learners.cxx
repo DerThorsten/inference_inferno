@@ -41,6 +41,9 @@ namespace learners{
 
     template<class DATASET>
     void exportSubGradient(const std::string & );
+
+    template<class DATASET>
+    void exportIgo(const std::string & );
        
 }
 }
@@ -76,6 +79,10 @@ BOOST_PYTHON_MODULE_INIT(learners) {
             ll::exportStochasticGradient<Dataset>(
                 std::string("StochasticGradient_VariationOfInformation_GeneralDiscreteModel")
             );
+            ll::exportIgo<Dataset>(
+                std::string("Igo_VariationOfInformation_GeneralDiscreteModel")
+            );
+
         }
         {
             typedef learning::loss_functions::EdgeHamming<Model> LossFunction;
@@ -99,6 +106,9 @@ BOOST_PYTHON_MODULE_INIT(learners) {
             typedef learning::loss_functions::VariationOfInformation<Model> LossFunction;
             typedef learning::dataset::VectorDataset<LossFunction>  Dataset;
             ll::exportStochasticGradient<Dataset>(
+                std::string("StochasticGradient_VariationOfInformation_ParametrizedMulticutModel")
+            );
+            ll::exportIgo<Dataset>(
                 std::string("StochasticGradient_VariationOfInformation_ParametrizedMulticutModel")
             );
         }

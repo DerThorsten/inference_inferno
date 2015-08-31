@@ -23,6 +23,8 @@
 #include "factories/qpbo.hxx"
 #endif
 #include "factories/multicut.hxx"
+#include "factories/ehc.hxx"
+
 //#include "inferno/inference/hmmwc.hxx"
 
 namespace inferno{
@@ -54,7 +56,10 @@ namespace inference{
         typedef OpengmInference<
             Model, opengm::Multicut<ogm::GraphicalModel,opengm::Minimizer>
         > Multicut;
-        INFERNO_EXPORT_INFERENCE(Model, modelName, Multicut,            "Multicut");
+        INFERNO_EXPORT_INFERENCE(Model, modelName, Multicut, "Multicut");
+
+        typedef Ehc<Model> EhcType;
+        INFERNO_EXPORT_INFERENCE(Model, modelName, EhcType,  "Ehc");
     }
     
 

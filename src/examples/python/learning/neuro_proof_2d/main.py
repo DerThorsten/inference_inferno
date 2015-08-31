@@ -197,7 +197,7 @@ if __name__ == "__main__":
             
             
             # make the learner
-            learner = inferno.learning.learners.subGradient(dset, maxIterations=30,n=0.05, c=1.0, m=0.2, nThreads=1)
+            learner = inferno.learning.learners.subGradient(dset, maxIterations=10,n=0.05, c=1.0, m=0.2, nThreads=1)
 
             # do the learning
             with vigra.Timer("learn"):
@@ -206,50 +206,71 @@ if __name__ == "__main__":
 
             print "total loss ", dset.averageLoss(factory,0)*len(dset)
 
+
+
         if True:
 
             dset = inferno.learning.dataset.vectorDataset(mVec, vis, gts)
 
             factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=1)
-            
+            ehcFactory = inferno.inference.ehcFactory(ParaMcModel)
 
             
             # make the learner
             seed = long(time.clock()*1000000.0)
             print "seed", seed,time.clock()
 
-            nper = 1
-            print "np ",nper
-            sg = inferno.learning.learners.stochasticGradient
-            learner = sg(dset, maxIterations=30, nPertubations=nper, sigma=1.0, seed=42,
-                               n=1000.0)
+
+
+
+          
+
+
+
+            with vigra.Timer("approx"):
+                nper = 10
+                sg = inferno.learning.learners.stochasticGradient
+                learner = sg(dset, maxIterations=100, nPertubations=nper, sigma=1.0, seed=42,
+                                   n=10.0)
+                learner.learn(ehcFactory, weightVector)
+
+            #sys.exit(1)
+
+            if True:
+                nper = 20
+                print "np ",nper
+                sg = inferno.learning.learners.stochasticGradient
+                learner = sg(dset, maxIterations=200, nPertubations=nper, sigma=1.0, seed=43,
+                                   n=10.0)
+                learner.learn(ehcFactory, weightVector)
+
+
+                nper = 30
+                print "np ",nper
+                sg = inferno.learning.learners.stochasticGradient
+                learner = sg(dset, maxIterations=200, nPertubations=nper, sigma=1.0, seed=44,
+                                   n=10.0)
+                learner.learn(ehcFactory, weightVector)
+
+                nper = 40
+                print "np ",nper
+                sg = inferno.learning.learners.stochasticGradient
+                learner = sg(dset, maxIterations=200, nPertubations=nper, sigma=1.0, seed=45,
+                                   n=10.5)
+                learner.learn(ehcFactory, weightVector)
+
+
+            print "total bevore igo ", dset.averageLoss(factory,0)*len(dset)
+
+            igo = inferno.learning.learners.igo
+            learner = igo(dset, nPertubations=300,nElites=20, beta=0.8,
+                                      maxIterations=30,
+                                      sigma=3.0)
             learner.learn(factory, weightVector)
+            print "after igo loss ", dset.averageLoss(factory,0)*len(dset)
 
 
-            nper = 2
-            print "np ",nper
-            sg = inferno.learning.learners.stochasticGradient
-            learner = sg(dset, maxIterations=30, nPertubations=nper, sigma=1.0, seed=43,
-                               n=1000.0)
-            learner.learn(factory, weightVector)
 
-
-            nper = 3
-            print "np ",nper
-            sg = inferno.learning.learners.stochasticGradient
-            learner = sg(dset, maxIterations=30, nPertubations=nper, sigma=1.0, seed=44,
-                               n=1000.0)
-            learner.learn(factory, weightVector)
-
-            nper = 4
-            print "np ",nper
-            sg = inferno.learning.learners.stochasticGradient
-            learner = sg(dset, maxIterations=30, nPertubations=nper, sigma=1.0, seed=45,
-                               n=1000.0)
-            learner.learn(factory, weightVector)
-
-
-            print "total loss ", dset.averageLoss(factory,0)*len(dset)
 
 
 

@@ -1,11 +1,16 @@
 #ifndef INFERNO_LEARNING_WEIGHTS_HXX
 #define INFERNO_LEARNING_WEIGHTS_HXX
 
+// boost
+#include <boost/random.hpp>
+#include <boost/random/normal_distribution.hpp>
+
 // vigra
 #include <vigra/multi_array.hxx>
 
 // inferno
 #include "inferno/inferno.hxx"
+
 
 namespace inferno{
 namespace learning{
@@ -63,6 +68,31 @@ namespace learning{
                 }
             }
         }
+
+        template<class MEANS, class VARS, class RND_GEN>
+        void gaussianWeights(
+            const MEANS & means,
+            const VARS & vars,
+            RND_GEN & randGen
+        ){
+            // nWeights 
+            auto nPertubation = this->size();
+            auto nWeights = this->operator[](0).size();
+
+            INFERNO_CHECK_OP(means.size(), == ,nWeights,"");
+            INFERNO_CHECK_OP(vars.size(),  == ,nWeights,"");
+
+            for(size_t w=0; w<nWeights; ++w){
+
+                boost::normal_distribution<> nd(means[w], vars[w]);
+                boost::variate_generator<boost::mt19937&, boost::normal_distribution<> > normalDist(randGen, nd);
+
+                for(size_t n=0; n<nPertubation; ++n){
+                    this->operator[](n)[w] = normalDist();
+                }
+            }
+        }
+
 
         template<class WEIGHTS>
         void weightedSum(const WEIGHTS & w, WeightVector & sum){

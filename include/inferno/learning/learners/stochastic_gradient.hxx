@@ -76,6 +76,7 @@ namespace learners{
             //auto & weights = weightVector;
 
             bestLoss_  = dataset_.averageLoss(inferenceFactory);
+            WeightVector bestWeight = weightVector;
 
             // multiple weight-vectors stacked as matrix
             WeightMatrix            noiseMatrix(weightVector,options_.nPertubations_);
@@ -163,7 +164,7 @@ namespace learners{
                     // reset the weights to the current weights
                     model.updateWeights(weightVector);
 
-                    takeGradientStep(inferenceFactory, weightVector, gradient, i);
+                    takeGradientStep(inferenceFactory, weightVector, gradient,bestWeight, i);
 
 
                     
@@ -173,11 +174,10 @@ namespace learners{
                     // lock
                     dset.lock(trainingInstanceIndex);
                 }
-
-                //std::cout<<"avergeLoss "<<dataset_.averageLoss(inferenceFactory)<<"\n";
-
-
-            }
+            }                
+            weightVector = bestWeight;
+            dset.updateWeights(weightVector);
+            std::cout<<"end with "<<dataset_.averageLoss(inferenceFactory)<<"\n";
         }
     private:
 
@@ -187,6 +187,7 @@ namespace learners{
             InferenceFactoryBase * inferenceFactory,
             WeightVector & currentWeights,
             WeightVector & gradient,
+            WeightVector & bestWeight,
             const uint64_t iteration
         ){
             double it(iteration+1);
@@ -235,6 +236,7 @@ namespace learners{
                     bestLoss_ = ll;
                     currentLoss = bestLoss_;
                     takeStep(ss, false, false);
+                    bestWeight = currentWeights;
                     improvment = true;
                     bestVal = ll;
                     bestIndex = i;

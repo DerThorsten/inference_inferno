@@ -118,21 +118,21 @@ def makeDs(raws, gts, oversegs, h5file, makeProducts=True,):
 
                     fl = [
                         d[:,None],
-                        #s[:,None],
-                        #p[:,None],
-                        #de[:,None],
+                        s[:,None],
+                        p[:,None],
+                        de[:,None],
                         ade[:,None],
                         edgeFeatures[:,None],
-                        #maxAduv[:,None],
-                        #minAduv[:,None],
-                        #dmima[:,None]
+                        maxAduv[:,None],
+                        minAduv[:,None],
+                        dmima[:,None]
                     ]
                     ef = numpy.concatenate(fl,axis=1)
                     allEdgeFeatures.append(ef)
 
         edgeFeatures = numpy.concatenate(allEdgeFeatures,axis=1)
-        #edgeFeatures = addNonLinearity(edgeFeatures)
-        edgeFeatures = edgeFeatures
+        edgeFeatures = addNonLinearity(edgeFeatures)
+        #edgeFeatures = edgeFeatures
         print edgeFeatures.shape
 
         group_i['raw_edge_features'] = edgeFeatures

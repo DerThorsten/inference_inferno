@@ -32,5 +32,8 @@ hmmwc = partial(infFactoryAndCreate,solverName='hmmwc')
 multicutFactory = partial(infFactory,solverName='multicut')
 multicut = partial(infFactoryAndCreate,solverName='multicut')
 
+ehcFactory = partial(infFactory,solverName='ehc')
+ehc = partial(infFactoryAndCreate,solverName='ehc')
+
 del infFactory
 del infFactoryAndCreate
