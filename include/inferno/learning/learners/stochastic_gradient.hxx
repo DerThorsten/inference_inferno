@@ -84,13 +84,13 @@ namespace learners{
 
 
             for(size_t i=0; i<options_.maxIterations_; ++i){
-                std::cout<<"Iteration "<<i<<" "<<options_.maxIterations_<<"\n";
+                //std::cout<<"Iteration "<<i<<" "<<options_.maxIterations_<<"\n";
 
-                std::cout<<"Weights : ";
-                for(size_t wi=0; wi<weightVector.size(); ++wi){
-                    std::cout<<weightVector[wi]<<" ";
-                }
-                std::cout<<"\n";
+                //std::cout<<"Weights : ";
+                //for(size_t wi=0; wi<weightVector.size(); ++wi){
+                //    std::cout<<weightVector[wi]<<" ";
+                //}
+                //std::cout<<"\n";
 
                 // iterate in random order
                 indices.randomShuffle();
@@ -98,25 +98,29 @@ namespace learners{
 
                 for(const auto trainingInstanceIndex : indices){
 
+                    //std::cout<<"model "<<trainingInstanceIndex<<"\n";
+
                     // unlock model
                     dset.unlock(trainingInstanceIndex);
 
+                    //std::cout<<"fetch "<<trainingInstanceIndex<<"\n";
                     // get model, gt, and loss-function
                     auto & model = dset.model(trainingInstanceIndex);
                     const auto & gt = dset.groundTruth(trainingInstanceIndex);
                     auto & lossFunction = dset.lossFunction(trainingInstanceIndex);
 
-
+                    //std::cout<<"pertube \n";
                     // pertubate (and remember noise matrix)
                     weightMatrix.pertubate(weightVector,noiseMatrix,normalDist);
 
                     // to remember arg mins
+                    //std::cout<<"conf assign \n";
                     ConfMapVector confMapVector(options_.nPertubations_);
                     for(auto & cmap : confMapVector){
                         cmap.assign(model);
                     }
 
-
+                    // std::cout<<"solve loop \n";
                     // argmin for perturbed model
                     auto cc=0;
                     for(const auto & perturbedWeightVector : weightMatrix){
@@ -136,8 +140,6 @@ namespace learners{
                     }
 
                     WeightVector gradient(weightVector.size(),0);
-                    INFERNO_CHECK_OP(gradient.size(),>,0,"");
-                    INFERNO_CHECK_OP(gradient.size(),==,weightVector.size(),"");
                     noiseMatrix.weightedSum(losses, gradient);
                     gradient /= options_.nPertubations_;
  
@@ -154,7 +156,7 @@ namespace learners{
                     dset.lock(trainingInstanceIndex);
                 }
 
-                std::cout<<"avergeLoss "<<dataset_.avergeLoss(inferenceFactory)<<"\n";
+                std::cout<<"avergeLoss "<<dataset_.averageLoss(inferenceFactory)<<"\n";
 
 
             }

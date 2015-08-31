@@ -81,6 +81,38 @@ COMMENT "Copying *.py files to temporary module directory")
 
 endforeach()
 
+
+#--------------------------------------------------------------
+# Python Unit test
+#--------------------------------------------------------------
+FIND_PACKAGE(PythonInterp)
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import nose"  RESULT_VARIABLE PYTHON_NOSETESTS_NOT_FOUND)
+# find numpy
+find_package(NUMPY)
+#add python unit test
+
+IF(NOT PYTHON_NOSETESTS_NOT_FOUND)
+  MESSAGE(STATUS "Searching for Python nosetests: ok")
+  add_custom_target( test-python-wrapper nosetests 
+  #add_custom_target( test-python-wrapper ALL nosetests 
+    --all-modules           
+    --traverse-namespace         
+    --cover-tests          
+    --with-doctest         
+    /home/tbeier/src/inferno/src/test/test_python 
+    -v WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/src/test/test_python" 
+    --where "${CMAKE_SOURCE_DIR}/src/test/test_python" 
+  )
+  add_dependencies(test-python-wrapper inferno-python )
+  #add_dependencies(test-python-wrapper _inference )
+  #add_dependencies(test-python-wrapper _hdf5 )
+ELSE()
+  MESSAGE(STATUS "Could NOT find Python nosetests ('import nose' failed)")
+ENDIF()
+
+
+
+
 #ADD_CUSTOM_COMMAND(
 #    TARGET ${TARGET_NAME}
 #    POST_BUILD

@@ -31,6 +31,7 @@ typedef typename FeatureArray::difference_type FeatureArrayShape;
 
 BOOST_AUTO_TEST_CASE(TestMulticutLearning_1)
 {
+    /*
     using namespace inferno;
 
 
@@ -103,7 +104,7 @@ BOOST_AUTO_TEST_CASE(TestMulticutLearning_1)
     Learner learner(dataset); 
 
     learner.learn(factory, weights);
-
+    */
 }
 
 

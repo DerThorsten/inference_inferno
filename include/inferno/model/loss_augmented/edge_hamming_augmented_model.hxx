@@ -158,9 +158,10 @@ namespace models{
         EdgeHammingLossAugmentedModel(
         )
         :
+            betas_(),
+            edgeLossWeightMap_(nullptr),
             losslessModel_(nullptr),
             gt_(nullptr),
-            betas_(),
             useIgnoreLabel_(false),
             ignoreLabel_(-1)
         {
@@ -169,14 +170,22 @@ namespace models{
 
         EdgeHammingLossAugmentedModel(
             LosslessModel & losslessModel,
+            const LossFactorWeightMap & edgeLossWeightMap,
             const GtMap & gt,
+            const double rescale,
+            const double underseg,
+            const double overseg,
             const bool useIgnoreLabel,
             const DiscreteLabel ignoreLabel
         )
         :
+            betas_(losslessModel_,0),
+            edgeLossWeightMap_(&edgeLossWeightMap),
             losslessModel_(&losslessModel),
             gt_(gt),
-            betas_(losslessModel_,0),
+            rescale_(rescale),
+            underseg_(underseg),
+            overseg_(overseg),
             useIgnoreLabel_(useIgnoreLabel),
             ignoreLabel_(ignoreLabel)
         {
@@ -186,6 +195,28 @@ namespace models{
                 "Only second order multicut models are allowed");
 
             this->makeBetas();
+        }
+
+        void assign(
+            LosslessModel & losslessModel,
+            const LossFactorWeightMap & edgeLossWeightMap,
+            const GtMap & gt,
+            const double rescale,
+            const double underseg,
+            const double overseg,
+            const bool useIgnoreLabel,
+            const DiscreteLabel ignoreLabel
+        ){
+            losslessModel_ = &losslessModel;
+            edgeLossWeightMap_ = &edgeLossWeightMap;
+            gt_ = &gt;
+            rescale_ = rescale;
+            underseg_ = underseg;
+            overseg_ = overseg;
+            useIgnoreLabel_ = useIgnoreLabel;
+            ignoreLabel_ = ignoreLabel;
+            betas_.assign(*losslessModel_);
+            this->makeBetas(); 
         }
 
         FactorProxy factor(typename Self::FactorDescriptor fac)const{
@@ -205,42 +236,42 @@ namespace models{
     private:
         void makeBetas()const{
 
-            const auto & m = *losslessModel_;
-            const auto & gt = gt_;
 
-            for(auto fac : m.factorDescriptor()){   
-                const auto factor = m[fac];
+            const auto & m =  *losslessModel_;
+            const auto & gt = *gt_;
+
+            for(auto fac : m.factorDescriptors()){  
+                const auto factor = m.factor(fac);
                 ValueType beta;
-                if(factor->isPotts(beta)){
-
+                if(factor->isPotts(beta)){ 
                     const auto u = factor->variable(0);
                     const auto v = factor->variable(1);
                     const auto lu = gt[u];
                     const auto lv = gt[v];
-
                     if(useIgnoreLabel_ && (u==ignoreLabel_ || v==ignoreLabel_)){
                         betas_[fac] = beta;
                     }
                     else{
-                        const auto lossWeight = edgeLossWeightMap_[fac];
+                        const auto lossWeight = (*edgeLossWeightMap_)[fac]*rescale_;
+
                         if(lu == lv){
                             // nodes SHOULD be merged
                             // CONF   BETA    LOSS
                             // (a,a) = 0   -    0
-                            // (a,b) = beta -  lossWeight
-                            betas_[fac] = beta - lossWeight;
+                            // (a,b) = beta -  lossWeight*overseg
+                            betas_[fac] = beta - lossWeight*overseg_;
                         }
                         else{ //=> (lu != lv)
                             // nodes SHOULD NOT(!) be merged
                             // CONF   BETA    LOSS
-                            // (a,a) = 0   -   lossWeight
+                            // (a,a) = 0   -   lossWeight*underseg
                             // (a,b) = beta -  0
                             //
                             // => add 'lossWeight' to both confs
                             // 
                             // (a,a) = 0   -   0
-                            // (a,b) = beta +  lossWeight
-                            betas_[fac] = beta + lossWeight;
+                            // (a,b) = beta +  lossWeight*underseg
+                            betas_[fac] = beta + lossWeight*underseg_;
                         }
                     }
                 }
@@ -254,6 +285,9 @@ namespace models{
 
         LosslessModel * losslessModel_;
         const GtMap   * gt_;
+        double rescale_;
+        double underseg_;
+        double overseg_;
         bool useIgnoreLabel_;
         DiscreteLabel ignoreLabel_;
     };

@@ -6,9 +6,11 @@
 
 // boost
 #include <boost/concept_check.hpp>
+#include <boost/iterator/counting_iterator.hpp>
 
 // inferno
 #include "inferno/inferno.hxx"
+#include "inferno/utilities/parallel/pool.hxx"
 #include "inferno/learning/weights.hxx"
 #include "inferno/inference/base_discrete_inference_factory.hxx"
 
@@ -25,7 +27,7 @@ namespace dataset{
         typedef typename Model:: template VariableMap<DiscreteLabel> GroundTruth;
         TrainingInstance(){
         }
-        TrainingInstance(Model & m, LossFunction & l, GroundTruth & g)
+        TrainingInstance(Model & m, LossFunction & l, const GroundTruth & g)
         :   model_(&m),
             lossFunction_(&l),
             gt_(&g){
@@ -40,14 +42,14 @@ namespace dataset{
             return *lossFunction_;
         }
 
-        GroundTruth & groundTruth() {
+        const GroundTruth & groundTruth() {
             return *gt_;
         }
 
     private:
         Model * model_;
         LossFunction * lossFunction_;
-        GroundTruth * gt_;
+        const GroundTruth * gt_;
     };
     
 
@@ -97,13 +99,23 @@ namespace dataset{
 
         }
 
-        LossType avergeLoss(InferenceFactoryBase * inferenceFactory){
+        LossType averageLoss(InferenceFactoryBase * inferenceFactory){
             LossType lossSum = 0;
             typedef typename LOSS_FUNCTION::Model M;
             typedef typename M:: template VariableMap<DiscreteLabel> C;
 
-            for(size_t i=0; i<dataset().size(); ++i){
 
+            std::vector<LossType> mLoss(dataset().size());
+
+            boost::counting_iterator<size_t> begin(0);
+            boost::counting_iterator<size_t> end(dataset().size());
+
+
+
+           
+
+
+            auto getLoss = [&,this] (size_t id, size_t i){
                 dataset().unlock(i);
 
                 auto & model =  dataset().model(i);
@@ -116,11 +128,14 @@ namespace dataset{
                 C argMinConf(model);
                 inf->conf(argMinConf);
 
-                lossSum += lossFunction.eval(model, groundTruth, argMinConf);
+                mLoss[i] = lossFunction.eval(model, groundTruth, argMinConf);
 
                 dataset().lock(i);
-            }
-            return lossSum/dataset().size();
+            };
+
+            utilities::parallel_foreach(8, dataset().size(),begin,end,getLoss);
+            
+            return std::accumulate(mLoss.begin(), mLoss.end(),0.0);
         }
 
 
@@ -142,8 +157,8 @@ namespace dataset{
 
 
     template<class LOSS_FUNCTION>
-    class VectorDataset : public DatasetBase< VectorDataset<LOSS_FUNCTION>,
-                                              LOSS_FUNCTION> 
+    class VectorDataset : 
+        public DatasetBase< VectorDataset<LOSS_FUNCTION>,LOSS_FUNCTION> 
     {
     public:
         typedef LOSS_FUNCTION LossFunction;
@@ -158,10 +173,14 @@ namespace dataset{
 
 
 
-        VectorDataset(const size_t nModels = 0)
-        :   models_(nModels),
-            lossFunctions_(nModels),
-            gts_(nModels)
+        VectorDataset(
+            std::vector<Model>         & models,
+            std::vector<LossFunction>  & lossFunctions,
+            const std::vector<GroundTruth>   & gts
+        )
+        :   models_(models),
+            lossFunctions_(lossFunctions),
+            gts_(gts)
         {
 
         }
@@ -181,13 +200,13 @@ namespace dataset{
         LossFunction & lossFunction(size_t i){
             return lossFunctions_[i];
         }
-        GroundTruth & groundTruth(size_t i){
+        const GroundTruth & groundTruth(size_t i){
             return gts_[i];
         }
 
-        std::vector<Model>         models_;
-        std::vector<LossFunction>  lossFunctions_;
-        std::vector<GroundTruth>   gts_;
+        std::vector<Model>         & models_;
+        std::vector<LossFunction>  & lossFunctions_;
+        const std::vector<GroundTruth>   & gts_;
     };
 
 

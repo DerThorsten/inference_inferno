@@ -50,10 +50,13 @@ namespace learning{
             WeightMatrix & noise,
             F && functor
         ){
-            for(size_t i=0; i<source.size(); ++i){
+            INFERNO_CHECK_OP(this->size(),==, noise.size(),"");
+
+            for(size_t i=0; i<noise.size(); ++i){
                 auto & w = (*this)[i];
                 auto & n = noise[i];
-
+                INFERNO_CHECK_OP(source.size(),==, n.size(),"");
+                INFERNO_CHECK_OP(w.size(),== ,n.size(),"");
                 for(size_t wi=0; wi<w.size(); ++wi){
                     n[wi] = functor();
                     w[wi] = source[wi] + n[wi];

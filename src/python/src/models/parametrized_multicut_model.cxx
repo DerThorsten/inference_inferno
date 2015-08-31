@@ -14,7 +14,6 @@
 // vigra numpy array converters
 #include <vigra/numpy_array.hxx>
 #include <vigra/numpy_array_converters.hxx>
-#include <boost/python/exception_translator.hpp>
 
 
 // export helper

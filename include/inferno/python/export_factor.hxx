@@ -24,54 +24,12 @@ class FactorVisitor :
     friend class bp::def_visitor_access;
 
     typedef FACTOR_CLASS FactorType;
+    typedef const FactorType * FacArgType;
 
     template <class classT>
     void visit(classT& c) const
     {
         c
-
-        ;
-    }
-
- 
-};
-
-
-
-template<class MODEL>
-struct ExportFactor_Ptr{
-
-    static void exportFactor(const std::string & clsName){
-        typedef MODEL Model;
-        typedef typename Model::FactorType FactorType;
-        bp::class_<FactorType,FactorType *,boost::noncopyable>(clsName.c_str(),bp::no_init)
-            .def(FactorVisitor<FactorType>())
-        ;
-    }
-};
-
-template<class MODEL>
-struct ExportFactor_Ref{
-    
-    static void exportFactor(const std::string & clsName){
-        typedef MODEL Model;
-        typedef typename Model::FactorType FactorType;
-        bp::class_<FactorType,boost::noncopyable>(clsName.c_str(),bp::no_init)
-            .def(FactorVisitor<FactorType>())
-        ;
-    }
-};
-
-template<class MODEL>
-struct ExportFactor_TmpObj{
-    typedef MODEL Model;
-    typedef typename Model::FactorType FactorType;
-
-    typedef const FactorType * FacArgType;
-    static void exportFactor(const std::string & clsName){
-        bp::class_<FactorType,boost::noncopyable>(clsName.c_str(),bp::no_init)
-            .def(FactorVisitor<FactorType>())
-            
             // properties
             .add_property("size", &FactorType::size)
             .add_property("arity", &FactorType::arity)
@@ -133,11 +91,43 @@ struct ExportFactor_TmpObj{
     ){
         return factor->eval(l0, l1, l2, l3, l4);
     }
+
 };
 
 
 
+template<class MODEL>
+struct ExportFactor_Ptr{
+    typedef MODEL Model;
+    typedef typename Model::FactorType FactorType;
+    static void exportFactor(const std::string & clsName){
+        bp::class_<FactorType,FactorType *,boost::noncopyable>(clsName.c_str(),bp::no_init)
+            .def(FactorVisitor<FactorType>())
+        ;
+    }
+};
 
+template<class MODEL>
+struct ExportFactor_Ref{
+    typedef MODEL Model;
+    typedef typename Model::FactorType FactorType;
+    static void exportFactor(const std::string & clsName){
+        bp::class_<FactorType,boost::noncopyable>(clsName.c_str(),bp::no_init)
+            .def(FactorVisitor<FactorType>())
+        ;
+    }
+};
+
+template<class MODEL>
+struct ExportFactor_TmpObj{
+    typedef MODEL Model;
+    typedef typename Model::FactorType FactorType;
+    static void exportFactor(const std::string & clsName){
+        bp::class_<FactorType,boost::noncopyable>(clsName.c_str(),bp::no_init)
+            .def(FactorVisitor<FactorType>())
+        ;
+    }
+};
 
 
 
@@ -145,7 +135,6 @@ template<class MODEL>
 void exportFactor(const std::string & modelClsName){
     const auto clsName = modelClsName + std::string("Factor");
     
-
     typedef MODEL Model;
     typedef typename Model::FactorDescriptor FactorDescriptor;
     typedef typename Model::FactorType FactorType;

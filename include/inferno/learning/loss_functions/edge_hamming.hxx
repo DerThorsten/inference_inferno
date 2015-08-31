@@ -27,7 +27,8 @@ namespace loss_functions{
     public:
 
         typedef MODEL Model;
-        typedef typename Model:: template VariableMap<double> FactorWeightMap; 
+        typedef typename Model:: template VariableMap<DiscreteLabel> ConfMap;
+        typedef typename Model:: template FactorMap<double> FactorWeightMap; 
 
         typedef models::EdgeHammingLossAugmentedModel<Model>  LossAugmentedModel;
         
@@ -42,9 +43,15 @@ namespace loss_functions{
 
         EdgeHamming(const Model & model,
                     const FactorWeightMap & varSizeMap,
+                    const double rescale,
+                    const double underseg,
+                    const double overseg,
                     const bool useIgnoreLabel=false,
                     const DiscreteLabel ignoreLabel=DiscreteLabel())
         :   edgeLossWeightMap_(model),
+            rescale_(rescale),
+            underseg_(underseg),
+            overseg_(overseg),
             useIgnoreLabel_(useIgnoreLabel),
             ignoreLabel_(ignoreLabel){
             std::copy(varSizeMap.begin(), varSizeMap.end(),edgeLossWeightMap_.begin());
@@ -52,12 +59,17 @@ namespace loss_functions{
 
         void assign(const Model & model,
                     const FactorWeightMap & varSizeMap,
+                    const double rescale,
+                    const double underseg,
+                    const double overseg,
                     const bool useIgnoreLabel=false,
                     const DiscreteLabel ignoreLabel=DiscreteLabel())
         {
             edgeLossWeightMap_.assign(model);
             std::copy(varSizeMap.begin(), varSizeMap.end(),edgeLossWeightMap_.begin());
-            //edgeLossWeightMap_ = &FactorWeightMap;
+            rescale_ = rescale;
+            underseg_ = underseg;
+            overseg_ = overseg;
             useIgnoreLabel_ = useIgnoreLabel;
             ignoreLabel_ = ignoreLabel;
         }
@@ -89,8 +101,8 @@ namespace loss_functions{
 
                 const auto factor = model.factor(fac);
                 const auto weight = edgeLossWeightMap_[fac];
-                const auto u = factor.variable(0);
-                const auto v = factor.variable(1);
+                const auto u = factor->variable(0);
+                const auto v = factor->variable(1);
 
                 const auto luGt = confGt[u];
                 const auto lvGt = confGt[v];
@@ -98,22 +110,33 @@ namespace loss_functions{
                 const auto lv   = conf[v];
 
                 if(!useIgnoreLabel_ || (luGt!=ignoreLabel_ && lvGt!=ignoreLabel_)){
-                    if( (luGt==lvGt) != (lu==lv) ){
-                        totalLoss += weight;
+                    if( (luGt==lvGt) && (lu!=lv) ){
+                        totalLoss += weight*overseg_;
+                    }
+                    else if( (luGt!=lvGt) && (lu==lv) ){
+                        totalLoss += weight*underseg_;
                     }
                 }
             }
-            return totalLoss;
+            return totalLoss*rescale_;
         }
         void makeLossAugmentedModel(
-            const Model & model,
+            Model & model,
+            const ConfMap & gt,
             LossAugmentedModel & lossAugmentedModel
         )const{
-
+            lossAugmentedModel.assign(model, edgeLossWeightMap_, 
+                                      gt,rescale_,underseg_,
+                                      overseg_,
+                                      useIgnoreLabel_, 
+                                      ignoreLabel_);
         }
 
     private:
         FactorWeightMap edgeLossWeightMap_;
+        double rescale_;
+        double underseg_;
+        double overseg_;
         bool useIgnoreLabel_;
         DiscreteLabel ignoreLabel_;
 

@@ -16,40 +16,38 @@ def injectorClass(clsToExtend):
                 tmp = type.__init__(self, name, bases, dict)
     return InjectorClass
 
-def _extendModelsVariableMapClass(varMapCls):
-        ##inject some methods in the point foo
-        class moreVarMap(injectorClass(varMapCls), varMapCls):
 
-            class IdMap(object):
-                def __init__(self, variableMap):
-                    self.variableMap = variableMap
-                def __repr__(self):
-                    vm = self.variableMap
-                    return repr(vm.asIdIndexableArray(vm.model()))
-                def __str__(self):
-                    vm = self.variableMap
-                    return str(vm.asIdIndexableArray(vm.model()))
-                def __getitem__(self, key):
-                    vm = self.variableMap
-                    return vm.readAtId(vm.model(), long(key))
-                def __setitem__(self, key, value):
-                    vm = self.variableMap
-                    return vm.writeAtId(vm.model(), long(key), value)
+def _extendMapCls(modelCls, mapCls):
+
+    class moreNumpyVariableMap(injectorClass(mapCls), mapCls):
+
+        def astype(self, dtype):
+
+            retArray =  self.graph().variableMap(dtype=dtype)
+            retView = retArray.view()
+            view = self.view()
+            retView[:] = view[:]
+            return retView
+
+        def __array__(self):
+            return self.view()
+
+        def __repr__(self):
+            return repr(self.view())
+
+        def __str__(self):
+            return str(self.view())
+
+        @property
+        def ndim(self):
+            return self.view().ndim
+
+        @property
+        def shape(self):
+            return self.view().shape
+
+
         
-                def model(self):
-                    return self.variableMap.model()
-
-            def __repr__(self):
-                return "i am a var map"
-
-            @property              
-            def idMap(self):
-                return moreVarMap.IdMap(self)
-
-            @property              
-            def descMap(self):
-                return moreVarMap.IdMap(self)
-
 def _extendModelClass(modelCls, classStr):
     ##inject some methods in the point foo
     class moreModel(injectorClass(modelCls), modelCls):
@@ -57,12 +55,32 @@ def _extendModelClass(modelCls, classStr):
             return 'hi i am a gm'
 
 
-        def variableMap(self,dtype, initValue=None):
-            varMapCls = self.__class__.variableMapClsDict[dtype]
+
+
+        def factorMap(self, dtype, initValue=None):
+            ownName = self.__class__.__name__
+            mapname = ownName + "FactorMap_" + str(numpy.dtype(dtype))
+            mapCls = models.__dict__[mapname]
             if initValue is None:
-                return varMapCls(self)
+                return mapCls(self)
             else:
-                return varMapCls(self, initValue)
+                return mapCls(self, initValue)
+        def unaryMap(self, dtype, initValue=None):
+            ownName = self.__class__.__name__
+            mapname = ownName + "UnaryMap" + str(numpy.dtype(dtype))
+            mapCls = models.__dict__[mapname]
+            if initValue is None:
+                return mapCls(self)
+            else:
+                return mapCls(self, initValue)
+        def variableMap(self, dtype, initValue=None):
+            ownName = self.__class__.__name__
+            mapname = ownName + "VariableMap_" + str(numpy.dtype(dtype))
+            mapCls = models.__dict__[mapname]
+            if initValue is None:
+                return mapCls(self)
+            else:
+                return mapCls(self, initValue)
 
         def confMap(self):
             return self.variableMap(dtype='int64')
@@ -88,22 +106,42 @@ def _extendModelClass(modelCls, classStr):
         def confMapVector(cls, size):
             return cls.confMapVectorCls(size)
 
+        @classmethod
+        def lossFunctionVector(cls, lossName, size):
+            ownName = cls.__name__
+            lossClsName = None
+            allowedLossNames = ['variationOfInformation','edgeHamming']
+            if lossName == allowedLossNames[0]:
+                lossClsName = 'VariationOfInformation'
+            elif lossName == allowedLossNames[1]:
+                lossClsName = 'EdgeHamming'
+            else:
+                raise RuntimeError('lossName must be in %s'%str(allowedLossNames))
+                
+            lossVecClsName = lossClsName + ownName + "Vector"
+            lossVecCls = learning.loss_functions.__dict__[lossVecClsName]
+
+            return lossVecCls(size) 
+
+        @classmethod
+        def lossAugmentedModelClass(cls, lossName):
+            ownName = cls.__name__
+            lossClsName = None
+            allowedLossNames = ['edgeHamming']
+            if lossName == allowedLossNames[0]:
+                lossClsName = 'EdgeHamming'
+            else:
+                raise RuntimeError('lossName must be in %s'%str(allowedLossNames))
+            
+            lossAugmentedModelClsName = lossClsName + "LossAugmented" + ownName
+            return  models.__dict__[lossAugmentedModelClsName]
+
+
 def _extendModels():
     rawModelClasses = [
         "GeneralDiscreteModel", 
         "ParametrizedMulticutModel",
     ]
-
-    variableMapDtypeStrs = {
-        'bool':'Bool',
-        'uint32':'UInt32',
-        'uint64':'UInt64',
-        'int64':'Int64',
-        'int32':'Int32',
-        'float64':'Float64',
-        'float32':'Float32'
-    }
-
 
 
 
@@ -115,23 +153,12 @@ def _extendModels():
 
         rawCls.modelVectorCls = modelVectorCls
         rawCls.confMapVectorCls = confMapVectorCls
-
-        rawCls.variableMapClsDict =  dict()
-        for key in variableMapDtypeStrs.keys():
-            cppDtypeName = variableMapDtypeStrs[key]
-            varMapCls =  models.__dict__[rawClsStr+"VariableMap"+cppDtypeName]
-            rawCls.variableMapClsDict[key] = varMapCls
-
-            # inject more functionality into varMap classe
-            _extendModelsVariableMapClass(varMapCls)
-
         # inject more functionality into model class
         _extendModelClass(rawCls,  rawClsStr)
 
 
 _extendModels()
 del _extendModels
-del _extendModelsVariableMapClass
 del _extendModelClass
 
 

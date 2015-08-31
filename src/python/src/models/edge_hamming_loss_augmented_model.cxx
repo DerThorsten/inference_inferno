@@ -40,7 +40,7 @@ namespace models{
 
     
     template<class BASE_MODEL>
-    void exportEdgeHammingLossAugmentedModel(){
+    void exportEdgeHammingLossAugmentedModelT(){
 
         // the class
         typedef BASE_MODEL BaseModel;
@@ -54,11 +54,11 @@ namespace models{
         ;
     }
 
-    template void 
-    exportEdgeHammingLossAugmentedModel<inferno::models::PyGeneralDiscreteModel>();
+    void exportEdgeHammingLossAugmentedModel(){
+        exportEdgeHammingLossAugmentedModelT<inferno::models::PyGeneralDiscreteModel>();
+        exportEdgeHammingLossAugmentedModelT<inferno::models::PyParametrizedMulticutModel>();
+    }
 
-    template void 
-    exportEdgeHammingLossAugmentedModel<inferno::models::PyParametrizedMulticutModel>();
 } // end namespace inferno::models  
 } // end namespace inferno
 

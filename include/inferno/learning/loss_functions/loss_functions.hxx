@@ -42,7 +42,7 @@ namespace loss_functions{
     class UnstructuredLoss{
     public:
         typedef MODEL Model;
-        typedef typename Model:: template NodeMap<DiscreteLabel> ConfMap;
+        typedef typename Model:: template VariableMap<DiscreteLabel> ConfMap;
         typedef VARIABLE_MULTIPLIER VariableMultiplier; 
         typedef LABEL_CONFUSION_COST LabelConfusionCost;
 
@@ -77,6 +77,7 @@ namespace loss_functions{
         typedef MODEL Model;
         typedef typename Model:: template VariableMap<double> VariableSizeMap; 
         typedef NoLossAugmentedModel LossAugmentedModel;
+        typedef typename Model:: template VariableMap<DiscreteLabel> ConfMap;
 
         BOOST_CONCEPT_ASSERT((boost::DefaultConstructible<VariableSizeMap>));
 

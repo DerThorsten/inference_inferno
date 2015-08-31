@@ -24,6 +24,8 @@
 #include "inferno/learning/loss_functions/edge_hamming.hxx"
 
 
+// inferno python
+#include "inferno/python/export_non_copyable_vector.hxx"
 
 namespace inferno{
 namespace learning{
@@ -36,13 +38,15 @@ namespace loss_functions{
     EdgeHamming<MODEL> * edgeHammingFactory(
         const MODEL & model,
         const typename EdgeHamming<MODEL>::FactorWeightMap & factorWeights,
+        const double rescale,
         const bool useIgnoreLabel,
         const DiscreteLabel ignoreLabel
     ){
         EdgeHamming<MODEL> * lossFunction;
         {
             ScopedGILRelease allowThreads;
-            lossFunction = new EdgeHamming<MODEL>(model, factorWeights, useIgnoreLabel, ignoreLabel);
+            lossFunction = new EdgeHamming<MODEL>(model, factorWeights, rescale, 
+                                                  useIgnoreLabel, ignoreLabel);
         }
         return lossFunction;
     }
@@ -52,12 +56,17 @@ namespace loss_functions{
         EdgeHamming<MODEL> & lossFunction,
         const MODEL & model,
         const typename EdgeHamming<MODEL>::FactorWeightMap & factorWeights,
+        const double rescale,
+        const double underseg,
+        const double overseg,
         const bool useIgnoreLabel,
         const DiscreteLabel ignoreLabel
     ){
 
         ScopedGILRelease allowThreads;
-        lossFunction.assign(model, factorWeights, useIgnoreLabel, ignoreLabel);
+        lossFunction.assign(model, factorWeights,rescale,
+                            underseg,overseg,
+                            useIgnoreLabel, ignoreLabel);
     }
 
     template<class MODEL>
@@ -85,6 +94,9 @@ namespace loss_functions{
                 (
                     bp::arg("model"),
                     bp::arg("factorWeights"),
+                    bp::arg("rescale") = 1.0,
+                    bp::arg("underseg") = 1.0,
+                    bp::arg("overseg") = 1.0,
                     bp::arg("useIgnoreLabel") = false,
                     bp::arg("ignoreLabel") = -1
                 )
@@ -95,6 +107,17 @@ namespace loss_functions{
                 bp::return_internal_reference<>()
             )
         ;
+
+
+        // the class vector
+        const std::string vectorClsName = clsName + std::string("Vector");
+        typedef std::vector<LossFunction> LossFunctionVector;
+
+        bp::class_<LossFunctionVector,boost::noncopyable >(vectorClsName.c_str(), bp::init<>())
+            .def(bp::init<const size_t >())
+            .def(python::NonCopyableVectorVisitor<LossFunctionVector>())
+        ;
+
 
         // the factory
         // the factory function

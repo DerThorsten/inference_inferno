@@ -114,13 +114,13 @@ public:
             map_(m.baseModel(), val){
         }
 
-        void assign(const MODEL & m, const T & val ){
+        void assign(const MODEL & m, const T & val = T()){
             model_ = &m;
             map_.assign(m.baseModel(), val);
         }
 
         const MODEL & model()const{
-            return &model_;
+            return *model_;
         }
         template<class D>
         reference operator[](const D & d){
@@ -156,13 +156,13 @@ public:
             map_(m.baseModel(), val){
         }
 
-        void assign(const MODEL & m, const T & val ){
+        void assign(const MODEL & m, const T & val = T()){
             model_ = &m;
             map_.assign(m.baseModel(), val);
         }
 
         const MODEL & model()const{
-            return &model_;
+            return *model_;
         }
         template<class D>
         reference operator[](const D & d){

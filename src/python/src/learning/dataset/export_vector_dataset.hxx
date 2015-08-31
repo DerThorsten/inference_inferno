@@ -32,6 +32,17 @@ namespace dataset{
     namespace bp = boost::python;
 
     template<class LOSS_FUNCTION>
+    VectorDataset<LOSS_FUNCTION> * vectorDatasetFactory(
+        std::vector< typename LOSS_FUNCTION::Model>     & models,
+        std::vector< LOSS_FUNCTION>                     & lossFunctions,
+        const std::vector< typename LOSS_FUNCTION::ConfMap>   & gts
+
+    ){
+        return new VectorDataset<LOSS_FUNCTION>(models, lossFunctions, gts);
+    }
+
+
+    template<class LOSS_FUNCTION>
     void exportVectorDataset(const std::string & lossFunctionClsName){
 
         
@@ -45,14 +56,30 @@ namespace dataset{
         typedef VectorDataset<LossFunction> Dataset;
 
         // the class
-        bp::class_<Dataset,boost::noncopyable>(clsName.c_str(), bp::init<>())
-            .def(bp::init<const size_t>())
+        bp::class_<Dataset,boost::noncopyable>(clsName.c_str(), bp::no_init)
             .def("model",       &Dataset::model,        bp::return_internal_reference<>())
             .def("lossFunction",&Dataset::lossFunction, bp::return_internal_reference<>())
             .def("groundTruth", &Dataset::groundTruth,  bp::return_internal_reference<>())
+            // todo unlock gil
+            .def("averageLoss", &Dataset::averageLoss)
             .def("__len__",&Dataset::size)
         ;
-        
+
+        // CustWardPost<0,1,NewObj>
+        // the factory
+        // the factory function
+        bp::def("vectorDataset",
+            &vectorDatasetFactory<LossFunction>,
+            RetValPol< 
+                CustWardPost<0,1,
+                    CustWardPost<0,2,
+                        CustWardPost<0,3,
+                            NewObj
+                        >
+                    >
+                > 
+            >()
+        );
     }
 
 }

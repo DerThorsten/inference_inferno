@@ -13,8 +13,9 @@
 #ifndef INFERNO_INFERNO_HXX
 #define INFERNO_INFERNO_HXX
 
+#include <boost/iterator/counting_iterator.hpp>
 
-
+#include "inferno/utilities/utilities.hxx"
 #include "inferno/utilities/marray_wrap.hxx"
 
 #include <cstdint>
@@ -205,7 +206,12 @@ namespace inferno{
 const static int USUAL_MAX_FACTOR_ORDER = 10;
 
 
-
+template<class T>
+inline utilities::ConstIteratorRange<  boost::counting_iterator<T> >
+range(const T size){
+    typedef  boost::counting_iterator<T>  Iter;
+    return utilities::ConstIteratorRange<  Iter >( Iter(0),Iter(size)); 
+}
 
 
 template<class T>

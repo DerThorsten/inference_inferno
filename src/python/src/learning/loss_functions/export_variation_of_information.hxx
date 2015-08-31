@@ -24,6 +24,9 @@
 #include "inferno/learning/loss_functions/loss_functions.hxx"
 
 
+// inferno python
+#include "inferno/python/export_non_copyable_vector.hxx"
+
 
 namespace inferno{
 namespace learning{
@@ -95,6 +98,16 @@ namespace loss_functions{
                 bp::return_internal_reference<>()
             )
         ;
+
+        // the class vector
+        const std::string vectorClsName = clsName + std::string("Vector");
+        typedef std::vector<LossFunction> LossFunctionVector;
+
+        bp::class_<LossFunctionVector,boost::noncopyable >(vectorClsName.c_str(), bp::init<>())
+            .def(bp::init<const size_t >())
+            .def(python::NonCopyableVectorVisitor<LossFunctionVector>())
+        ;
+
 
         // the factory
         // the factory function

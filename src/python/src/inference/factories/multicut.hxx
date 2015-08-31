@@ -45,16 +45,19 @@ namespace inference{
             const Options defaultOptions;
             bp::def(lowerFirst(clsName).c_str(), &pyFactoryFactory,
                 (
-                    bp::arg("workFlow") = defaultOptions.workFlow_
+                    bp::arg("workFlow") = defaultOptions.workFlow_,
+                    bp::arg("numThreads") = defaultOptions.numThreads_
                 )
             );
         }
 
         static std::shared_ptr<BaseInfFactory>  pyFactoryFactory(
-            const std::string & workFlow
+            const std::string & workFlow,                                                
+            int numThreads
         ){      
             Options opt;
             opt.workFlow_ = workFlow;
+            opt.numThreads_ = numThreads;
             return  std::make_shared<InfFactory>(opt);
         }
     };

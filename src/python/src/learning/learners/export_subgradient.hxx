@@ -38,6 +38,7 @@ namespace learners{
         const uint64_t              maxIterations,
         const double                c,
         const double                n,
+        const double                m,
         const int                   verbose 
     ){
         LEARNER * learner;
@@ -47,6 +48,7 @@ namespace learners{
                 maxIterations,
                 c,
                 n,
+                m,
                 verbose
             );
             learner = new LEARNER(dataset, options);
@@ -67,6 +69,20 @@ namespace learners{
         }
     }
 
+    template<class LEARNER>
+    void subGradientLearn2(
+        LEARNER & learner,
+        typename LEARNER::LossAugmentedInferenceFactoryBase * lossInfFactory,
+        WeightVector & weightVector,
+        typename LEARNER::InferenceFactoryBase * inferenceFactory
+    ){
+        
+        {
+            ScopedGILRelease allowThreads;
+            learner.learn(lossInfFactory, weightVector, inferenceFactory);
+        }
+    }
+
 
     template<class DATASET>
     void exportSubGradient(const std::string & className){
@@ -81,8 +97,16 @@ namespace learners{
             .def("learn",
                 &subGradientLearn<Learner>,
                 (
-                    bp::arg("inferenceFactory"),
+                    bp::arg("lossAugmentedInferenceFactory"),
                     bp::arg("weightVector")
+                )
+            )
+            .def("learn",
+                &subGradientLearn2<Learner>,
+                (
+                    bp::arg("lossAugmentedInferenceFactory"),
+                    bp::arg("weightVector"),
+                    bp::arg("inferenceFactory")
                 )
             )
         ;
@@ -96,6 +120,7 @@ namespace learners{
                 bp::arg("maxIterations") = uint64_t(defaultOptions.maxIterations_) ,
                 bp::arg("c") = double(defaultOptions.c_) ,
                 bp::arg("n") = double(defaultOptions.n_) ,
+                bp::arg("m") = double(defaultOptions.m_) ,
                 bp::arg("verbose")= int(defaultOptions.verbose_)
             ),
             RetValPol< CustWardPost<0,1,NewObj> >()

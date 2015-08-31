@@ -14,6 +14,10 @@
 
 // vigra
 #include <vigra/multi_array.hxx>
+    
+// vigra numpy array converters
+#include <vigra/numpy_array.hxx>
+#include <vigra/numpy_array_converters.hxx>
 
 
 // boost python related
