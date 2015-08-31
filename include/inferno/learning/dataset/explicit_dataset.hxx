@@ -99,22 +99,36 @@ namespace dataset{
 
         }
 
-        LossType averageLoss(InferenceFactoryBase * inferenceFactory){
+        LossType averageLoss(InferenceFactoryBase * inferenceFactory, size_t numThreads=0){
             LossType lossSum = 0;
             typedef typename LOSS_FUNCTION::Model M;
             typedef typename M:: template VariableMap<DiscreteLabel> C;
 
 
-            std::vector<LossType> mLoss(dataset().size());
 
+            for(size_t i=0; i<dataset().size(); ++i){
+                dataset().unlock(i);
+
+                auto & model =  dataset().model(i);
+                auto & lossFunction =  dataset().lossFunction(i);
+                const auto & groundTruth =  dataset().groundTruth(i);
+
+                auto inf = inferenceFactory->create(model);
+                inf->infer();
+
+                C argMinConf(model);
+                inf->conf(argMinConf);
+
+                lossSum += lossFunction.eval(model, groundTruth, argMinConf);
+
+                dataset().lock(i);
+            }
+            return lossSum/dataset().size();
+
+            /*
+            std::vector<LossType> mLoss(dataset().size());
             boost::counting_iterator<size_t> begin(0);
             boost::counting_iterator<size_t> end(dataset().size());
-
-
-
-           
-
-
             auto getLoss = [&,this] (size_t id, size_t i){
                 dataset().unlock(i);
 
@@ -132,10 +146,12 @@ namespace dataset{
 
                 dataset().lock(i);
             };
-
-            utilities::parallel_foreach(8, dataset().size(),begin,end,getLoss);
+            //std::cout<<" nThreads "<<numThreads<<"\n";
+            utilities::parallel_foreach( numThreads == 0 ? std::thread::hardware_concurrency() : numThreads,
+                                         dataset().size(),begin,end,getLoss);
             
             return std::accumulate(mLoss.begin(), mLoss.end(),0.0);
+            */
         }
 
 

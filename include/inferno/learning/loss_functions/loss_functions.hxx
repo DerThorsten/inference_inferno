@@ -152,7 +152,7 @@ namespace loss_functions{
                 if(!ignoreLabel_ || (lConfGt!=ignoreLabel_ && lConf!=ignoreLabel_)){
 
                     // "size" of node
-                    const auto  size =1.0;// variableSizeMap_[var];
+                    const auto  size = variableSizeMap_[var];
                     vConfGt[lConfGt] += size;
                     vConf[lConf]     += size;
                     mat[LabelPair(lConfGt,lConf)] += size;

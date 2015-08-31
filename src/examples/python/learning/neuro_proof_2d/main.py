@@ -6,7 +6,7 @@ import vigra
 
 import make_ds
 import inferno
-
+import time
 
 
 
@@ -69,10 +69,10 @@ def computeFeatureNormalization(h5file, trainSamples):
         nFeat = rawFeat.shape[1]
         qs= [0.0001*100.0, 0.9999*100.0]
         
-        psarray = numpy.percentile(rawFeat,q=qs,axis=0,interpolation='nearest')
-        assert psarray.shape[0] == 2
-        minVals = psarray[0,:]
-        maxVals = psarray[1,:]
+        psarray = numpy.percentile(rawFeat,q=qs,axis=0)#,interpolation='nearest')
+        #assert psarray.shape[0] == 2
+        minVals = psarray[0]#,:]
+        maxVals = psarray[1]#,:]
         assert minVals.shape[0] == nFeat
         assert maxVals.shape[0] == nFeat
 
@@ -150,10 +150,11 @@ def makeInfernoDset(h5file, samples):
 
         # assign edge hamming
         edgeLossWeight = model.factorMap('float64', 1.0)
-        hamming.assign(model, edgeLossWeight, rescale=1.0/edges.shape[0],underseg=2.0,overseg=1.0)
+        hamming.assign(model, edgeLossWeight, rescale=1.0/edges.shape[0],underseg=1.0,overseg=1.0)
 
         # assign vi
         sizeMap = model.variableMap('float64', 1.0)
+        sizeMap.view()[:] = nodeSizes[:]
         vi.assign(model, sizeMap)
 
     return mVec, hammings, vis, gts, weightVector
@@ -179,8 +180,8 @@ if __name__ == "__main__":
 
     if True:
         f = h5py.File(workingDir+"dataset.h5",'r')
-        trainingSamples = list(range(1))
-        testSamples = list(range(2,50))
+        trainingSamples = list(range(3))
+        testSamples = list(range(3,50))
 
         mVec, hammings, vis, gts, weightVector = makeInfernoDset(h5file=f, samples=trainingSamples)
 
@@ -196,13 +197,14 @@ if __name__ == "__main__":
             
             
             # make the learner
-            learner = inferno.learning.learners.subGradient(dset, maxIterations=100,n=0.05, c=10.0, m=0.2)
+            learner = inferno.learning.learners.subGradient(dset, maxIterations=30,n=0.05, c=1.0, m=0.2, nThreads=1)
 
             # do the learning
-            learner.learn(lossFactory, weightVector, factory)
+            with vigra.Timer("learn"):
+                learner.learn(lossFactory, weightVector, factory)
 
 
-            print "total loss ", dset.averageLoss(factory)*len(dset)
+            print "total loss ", dset.averageLoss(factory,0)*len(dset)
 
         if True:
 
@@ -213,13 +215,41 @@ if __name__ == "__main__":
 
             
             # make the learner
-            learner = inferno.learning.learners.stochasticGradient(dset, maxIterations=10, nPertubations=1000, sigma=10)
+            seed = long(time.clock()*1000000.0)
+            print "seed", seed,time.clock()
 
-            # do the learning
+            nper = 1
+            print "np ",nper
+            sg = inferno.learning.learners.stochasticGradient
+            learner = sg(dset, maxIterations=30, nPertubations=nper, sigma=1.0, seed=42,
+                               n=1000.0)
             learner.learn(factory, weightVector)
 
 
-            print "total loss ", dset.averageLoss(factory)*len(dset)
+            nper = 2
+            print "np ",nper
+            sg = inferno.learning.learners.stochasticGradient
+            learner = sg(dset, maxIterations=30, nPertubations=nper, sigma=1.0, seed=43,
+                               n=1000.0)
+            learner.learn(factory, weightVector)
+
+
+            nper = 3
+            print "np ",nper
+            sg = inferno.learning.learners.stochasticGradient
+            learner = sg(dset, maxIterations=30, nPertubations=nper, sigma=1.0, seed=44,
+                               n=1000.0)
+            learner.learn(factory, weightVector)
+
+            nper = 4
+            print "np ",nper
+            sg = inferno.learning.learners.stochasticGradient
+            learner = sg(dset, maxIterations=30, nPertubations=nper, sigma=1.0, seed=45,
+                               n=1000.0)
+            learner.learn(factory, weightVector)
+
+
+            print "total loss ", dset.averageLoss(factory,0)*len(dset)
 
 
 

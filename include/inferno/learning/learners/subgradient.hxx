@@ -38,13 +38,15 @@ namespace learners{
                 const double   c = 1.0,
                 const double   n = 1.0,
                 const double   m = 0.5,
-                const int      verbose = 2
+                const int      verbose = 2,
+                const int      nThreads = 0
             )
             :   maxIterations_(maxIterations),
                 c_(c),
                 n_(n),
                 m_(m),
-                verbose_(verbose)
+                verbose_(verbose),
+                nThreads_(nThreads)
             {
             }
             uint64_t maxIterations_;
@@ -52,6 +54,7 @@ namespace learners{
             double   n_;
             double   m_;
             int      verbose_;
+            int      nThreads_;
         };
 
         SubGradient(Dataset & dset, const Options & options = Options())
@@ -172,57 +175,33 @@ namespace learners{
             const double stepSize = options_.n_/iter;
             //const double stepSize = currentN_;
 
-            auto takeStep = [&,this] (double stepSize, bool undo=true, bool eval=true){
-                WeightVector grad = gradient;
-                WeightVector oGrad = oldGradient;
-                WeightVector wBuffer = currentWeights;
 
-                if(iter>0){
-                    oGrad*= options_.m_;
-                    grad *= stepSize;
-                    grad += oGrad;
-                }
-                else{
-                    grad *= stepSize;
 
-                }
-                if(undo == false){
-                    oldGradient = grad;
-                }
-                currentWeights -= grad;
+            WeightVector oGrad = oldGradient;
+            WeightVector wBuffer = currentWeights;
 
-                dataset_.updateWeights(currentWeights);
-                LossType loss;
-                if(eval){
-                    loss = dataset_.averageLoss(inferenceFactory)*dataset_.size();
-                }
-                if(undo){
-                    for(size_t i=0; i<currentWeights.size(); ++i)
-                    currentWeights[i] = wBuffer[i];
-                }
-                return loss;
-            };
-
-            const double facs[6] = {
-                1.5, 1.75, 2.0, 4.00, 8.0,1.0
-            };
-            double lossVals[6];
-            for(size_t i=0; i<6; ++i){
-                lossVals[i] = takeStep(stepSize*facs[i],true,true);
-            };
-
-            ValueType mVal = infVal();
-            int bestIndex = 0;
-            for(size_t i=0; i<6; ++i){
-                if(lossVals[i]<=mVal){
-                    mVal = lossVals[i];
-                    bestIndex = i;
-                }
+            if(iter>0){
+                oldGradient *= options_.m_;
+                gradient *= stepSize;
+                gradient += oldGradient;
             }
+            else{
+                gradient *= stepSize;
+            }
+            currentWeights -= gradient;
+            dataset_.updateWeights(currentWeights);
+
+
+
+
             //currentN_*=facs[bestIndex];
                 
-            const double loss = takeStep(stepSize*facs[bestIndex],false,false);
-            std::cout<<"iter "<<iteration<<" loss "<<lossVals[bestIndex]<<" fac "<<facs[bestIndex]<<"\n";
+            if( iteration%10 == 0 ){
+                std::cout<<"iteration "<<iteration<<" av loss"<<dataset_.averageLoss(inferenceFactory)<<"\n";
+            }
+            else{
+                std::cout<<"iteration "<<iteration<<" \n";
+            }
         }
 
         Dataset & dataset_;

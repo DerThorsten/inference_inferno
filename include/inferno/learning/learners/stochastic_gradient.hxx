@@ -37,13 +37,17 @@ namespace learners{
                 const uint64_t maxIterations = 10000,
                 const double   sigma = 1.0,
                 const double   alpha  = 1.0,
-                const int      verbose =2
+                const int      verbose =2,
+                const int      seed = 0,
+                const double   n = 1.0
             )
             :   nPertubations_(nPertubations),
                 maxIterations_(maxIterations),
                 sigma_(sigma),
                 alpha_(alpha),
-                verbose_(verbose)
+                verbose_(verbose),
+                seed_(seed),
+                n_(n)
             {
             }
 
@@ -52,6 +56,8 @@ namespace learners{
             double   sigma_;
             double   alpha_;
             int      verbose_;
+            int seed_;
+            double n_;
         };
 
         StochasticGradient(Dataset & dset, const Options & options = Options())
@@ -69,15 +75,22 @@ namespace learners{
             auto & dset = dataset();
             //auto & weights = weightVector;
 
+            bestLoss_  = dataset_.averageLoss(inferenceFactory);
+
             // multiple weight-vectors stacked as matrix
             WeightMatrix            noiseMatrix(weightVector,options_.nPertubations_);
             WeightMatrix            weightMatrix(weightVector,options_.nPertubations_);   
             std::vector<LossType>   losses(options_.nPertubations_);
 
             // random gen
-            boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
+            boost::mt19937 rng(options_.seed_); // I don't seed it on purpouse (it's not relevant)
             boost::normal_distribution<> nd(0.0, options_.sigma_);
             boost::variate_generator<boost::mt19937&, boost::normal_distribution<> > normalDist(rng, nd);
+
+            for(int ii=0; ii<10; ++ii){
+                std::cout<<normalDist()<<"  ";
+            }
+            std::cout<<" \n";
 
             // indices
             utilities::IndexVector< > indices(dset.size());
@@ -142,10 +155,15 @@ namespace learners{
                     WeightVector gradient(weightVector.size(),0);
                     noiseMatrix.weightedSum(losses, gradient);
                     gradient /= options_.nPertubations_;
- 
+    
+                    //for(size_t gg=0; gg<10; ++gg){
+                    //    std::cout<<gradient[gg]<<"   ";
+                    //}
+                    //std::cout<<"\n";
                     // reset the weights to the current weights
                     model.updateWeights(weightVector);
-                    takeGradientStep(weightVector, gradient, i);
+
+                    takeGradientStep(inferenceFactory, weightVector, gradient, i);
 
 
                     
@@ -156,7 +174,7 @@ namespace learners{
                     dset.lock(trainingInstanceIndex);
                 }
 
-                std::cout<<"avergeLoss "<<dataset_.averageLoss(inferenceFactory)<<"\n";
+                //std::cout<<"avergeLoss "<<dataset_.averageLoss(inferenceFactory)<<"\n";
 
 
             }
@@ -166,6 +184,7 @@ namespace learners{
 
 
         void takeGradientStep(
+            InferenceFactoryBase * inferenceFactory,
             WeightVector & currentWeights,
             WeightVector & gradient,
             const uint64_t iteration
@@ -173,16 +192,72 @@ namespace learners{
             double it(iteration+1);
             //WeightVector newWeights = currentWeights;
 
-            //const auto  effectiveStepSize = 1.0/(std::sqrt(it));
-            const auto  effectiveStepSize = 1.0/(it);
-            WeightVector g=gradient;
-            g*=effectiveStepSize;
-            currentWeights -= g;
-            currentWeights *= options_.alpha_;
+      
+            const auto  effectiveStepSize = options_.n_/(it);
+
+            auto takeStep = [&,this] (const double stepSize, bool undo = true, bool eval = true){
+
+                WeightVector buffer = currentWeights;
+                WeightVector g=gradient;
+                g*=stepSize;
+                currentWeights -= g;
+                currentWeights *= options_.alpha_;
+                dataset_.updateWeights(currentWeights);
+                LossType loss = 0;
+                if(eval)
+                    loss = dataset_.averageLoss(inferenceFactory);
+                if(undo)
+                    currentWeights = buffer;
+                return loss;
+            };
+
+            //std::cout<<"take step"<<takeStep(effectiveStepSize,false,true)<<"\n";
+
+
+            std::vector<double> fracs({1.0, 0.1, 0.01,0.003, 2.0});
+            std::vector<double> lossVal(fracs.size());
+
+            
+            bool improvment = false;
+
+            int bestIndex = 0;
+            double bestVal = infVal();
+
+            double currentLoss;
+
+            for(size_t i=0; i<fracs.size(); ++i){
+                const double ss = effectiveStepSize*fracs[i];
+                const double ll = takeStep(ss);
+                lossVal[i] = ll;
+
+                if(ll<bestLoss_){
+                    //std::cout<<"improved via frac  "<<fracs[i]<<"     loss "<<ll<<"\n";
+                    bestLoss_ = ll;
+                    currentLoss = bestLoss_;
+                    takeStep(ss, false, false);
+                    improvment = true;
+                    bestVal = ll;
+                    bestIndex = i;
+                    break;
+                }
+                if(ll<bestVal){
+                    bestVal = ll;
+                    bestIndex = i;
+                }
+            }
+            if(!improvment){
+                currentLoss  = lossVal[bestIndex];
+                //std::cout<<"best via frac  "<<fracs[bestIndex]<<" loss "<<lossVal[bestIndex]<<"\n";
+                const double ss = effectiveStepSize*fracs[bestIndex];
+                takeStep(ss, false, false);
+            }
+            std::cout<<"iter "<<iteration<<" current average loss "<<currentLoss<<" frac "<<fracs[bestIndex]<<"\n";
         }
 
         Dataset & dataset_;
         Options options_;
+
+        LossType bestLoss_;
     };
 
 } // end namespace inferno::learning::learners

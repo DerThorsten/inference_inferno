@@ -39,7 +39,8 @@ namespace learners{
         const double                c,
         const double                n,
         const double                m,
-        const int                   verbose 
+        const int                   verbose,
+        const int                   nThreads
     ){
         LEARNER * learner;
         {
@@ -49,7 +50,8 @@ namespace learners{
                 c,
                 n,
                 m,
-                verbose
+                verbose,
+                nThreads
             );
             learner = new LEARNER(dataset, options);
         }
@@ -121,7 +123,8 @@ namespace learners{
                 bp::arg("c") = double(defaultOptions.c_) ,
                 bp::arg("n") = double(defaultOptions.n_) ,
                 bp::arg("m") = double(defaultOptions.m_) ,
-                bp::arg("verbose")= int(defaultOptions.verbose_)
+                bp::arg("verbose")= int(defaultOptions.verbose_),
+                bp::arg("nThreads") =int(defaultOptions.nThreads_)
             ),
             RetValPol< CustWardPost<0,1,NewObj> >()
         );

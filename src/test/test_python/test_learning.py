@@ -111,7 +111,7 @@ class TestMulticutLearning(unittest.TestCase):
             learner.learn(factory, weightVector)
 
             #factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)')
-            self.assertEqual(dset.averageLoss(factory),0)
+            self.assertEqual(dset.averageLoss(factory,0),0)
 
         def test_3x3_edge_hamming_subgradient(self):
 
@@ -208,4 +208,4 @@ class TestMulticutLearning(unittest.TestCase):
 
             # do the learning
             learner.learn(lossFactory, weightVector, factory)
-            self.assertEqual(dset.averageLoss(factory),0)
+            self.assertEqual(dset.averageLoss(factory,0),0)

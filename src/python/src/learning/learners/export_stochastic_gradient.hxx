@@ -39,7 +39,9 @@ namespace learners{
         const uint64_t              maxIterations,
         const double                sigma,
         const double                alpha,
-        const int                   verbose
+        const int                   verbose,
+        const int                   seed,
+        const double                n
     ){
         LEARNER * learner;
         {
@@ -49,7 +51,9 @@ namespace learners{
                 maxIterations,
                 sigma,
                 alpha,
-                verbose
+                verbose,
+                seed,
+                n
             );
             learner = new LEARNER(dataset, options);
         }
@@ -102,7 +106,9 @@ namespace learners{
                 bp::arg("maxIterations") = uint64_t(defaultOptions.maxIterations_) ,
                 bp::arg("sigma") = double(defaultOptions.sigma_) ,
                 bp::arg("alpha") = double(defaultOptions.alpha_) ,
-                bp::arg("verbose")= int(defaultOptions.verbose_)
+                bp::arg("verbose")= int(defaultOptions.verbose_) ,
+                bp::arg("seed")= int(defaultOptions.seed_),
+                bp::arg("n")= int(defaultOptions.n_)
             ),
             RetValPol< CustWardPost<0,1,NewObj> >()
         );
