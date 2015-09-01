@@ -63,6 +63,7 @@ namespace dataset{
             // todo unlock gil
             .def("averageLoss", &Dataset::averageLoss)
             .def("__len__",&Dataset::size)
+            .def("updateWeights",&Dataset::updateWeights)
         ;
 
         // CustWardPost<0,1,NewObj>

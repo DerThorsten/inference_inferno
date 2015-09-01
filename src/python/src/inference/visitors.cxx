@@ -53,6 +53,7 @@ namespace inference{
             // export visitor factory
             bp::def("verboseVisitor", & verboseVisitorFactory<MODEL>,
                     (
+                        bp::arg("model"),
                         bp::arg("printNth") = 1,
                         bp::arg("singleLine") = true
                     ),

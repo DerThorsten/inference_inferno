@@ -40,10 +40,10 @@ def extract2d(neuroproofRoot, stride = 5, maxSamples = 50):
 
         pRawFile = pRaw + "iso.%d.png"%ii
         raw = vigra.impex.readImage(pRawFile).squeeze()
-        raw = raw.T
+        #raw = raw.T
         raws.append(raw)
-        gts.append(vigra.analysis.labelImage(gtStack[i,:,:])-1)
-        sp2d = vigra.analysis.labelImage(spStack[i,:,:])-1
+        gts.append(vigra.analysis.labelImage(gtStack[i,:,:].T)-1)
+        sp2d = vigra.analysis.labelImage(spStack[i,:,:].T)-1
         print sp2d.shape
         osegs.append(sp2d)
 
@@ -97,6 +97,87 @@ def computeFeatureNormalization(h5file, trainSamples):
     gNorm['maxVals'] = maxVals
 
 
+def trainRF(h5file, trainSamples, outFolder):
+
+    minVals = h5file['normalization']['minVals'][:]
+    maxVals = h5file['normalization']['maxVals'][:]
+
+    allMinVals = []
+    allMaxVals = []
+
+    gts = []
+    feats =[]
+    for i in trainSamples:
+
+        group_i = h5file['item_%d'%i]
+        rawFeat  = group_i['raw_edge_features'][:]
+        gt       = group_i['projected_gt'][:]
+        uv       = group_i['uv'][:]
+
+        edgeGt = numpy.zeros(uv.shape[0],dtype='uint32')
+        lu = gt[uv[:,0]]
+        lv = gt[uv[:,1]]
+        edgeGt[lu!=lv] = 1
+
+        gts.append(edgeGt)
+        feats.append(rawFeat)
+
+    gt = numpy.concatenate(gts)[:,None]
+    feats = numpy.concatenate(feats,axis=0)
+
+    print "gt   ",gt.shape,gt.dtype
+    print "feats",feats.shape, feats.dtype
+
+
+    rf = vigra.learning.RandomForest(treeCount=100, sample_classes_individually=True)
+    oob = rf.learnRF(feats,gt)
+
+    rf.writeHDF5(workingDir+"rf.h5",'rf')
+
+    print "oob",oob
+
+def predictRF(h5file, outFolder):
+
+    minVals = h5file['normalization']['minVals'][:]
+    maxVals = h5file['normalization']['maxVals'][:]
+    nItems = long(numpy.array(h5file['meta']['nItems']))
+    allMinVals = []
+    allMaxVals = []
+
+    gts = []
+    feats =[]
+
+    rf = vigra.learning.RandomForest(outFolder+'rf.h5','rf')
+    for i in range(nItems):
+        print i
+        group_i = h5file['item_%d'%i]
+        rawFeat  = group_i['raw_edge_features'][:]
+        probs = rf.predictProbabilities(rawFeat)[:,1]
+        probs = probs[:,None]
+
+        eprobs = (probs + 0.001)/1.001
+       
+
+        # normalize 
+        feat = normalizeRawFeat(rawFeat, minVals, maxVals).astype('float64')
+        featP = feat.copy()
+        featP *= eprobs
+
+        allFeats = [
+            feat,
+            featP,
+            probs,
+            (probs)**2.0,
+            ((probs + 1)/2.0)**2.0
+        ]
+
+        #for f in allFeats:
+        #    print f.shape
+
+        allFeats = numpy.concatenate(allFeats,axis=1)
+        group_i['sssmart_edge_features'] = allFeats
+
+
 def normalizeRawFeat(rawFeat, minF, maxF):
     t = maxF-minF
     nFeat = rawFeat.copy()
@@ -106,16 +187,20 @@ def normalizeRawFeat(rawFeat, minF, maxF):
     nFeat[nFeat>1.0] = 1.0
     return nFeat
 
-def makeInfernoDset(h5file, samples):
+def makeInfernoDset(h5file, samples, weightVector = None):
 
     minVals = h5file['normalization']['minVals'][:]
     maxVals = h5file['normalization']['maxVals'][:]
-    nFeatures = len(maxVals)
+
+    nFeatures = h5file['item_0']['sssmart_edge_features'].shape[1]
+
+    #nFeatures = len(maxVals)
     nSamples = len(samples)
 
     ParaMcModel = inferno.models.ParametrizedMulticutModel
 
-    weightVector = inferno.learning.WeightVector(nFeatures, 0.0)
+    if weightVector is None:
+        weightVector = inferno.learning.WeightVector(nFeatures, 0.0)
 
     mVec = ParaMcModel.modelVector(nSamples)
     hammings = ParaMcModel.lossFunctionVector('edgeHamming',nSamples)
@@ -128,13 +213,13 @@ def makeInfernoDset(h5file, samples):
         group_i = h5file['item_%d'%si]
 
         # load data
-        rawFeat  = group_i['raw_edge_features'][:]
+        feat  = group_i['sssmart_edge_features'][:].astype('float64')
         projectedGt = group_i['projected_gt'][:]
         edges = group_i['uv'][:].astype('uint64')
         nVar = long(numpy.array(group_i['nNodes']))
         nodeSizes  = group_i['nodeSizes'][:]
         # normalize 
-        feat = normalizeRawFeat(rawFeat, minVals, maxVals).astype('float64')
+        #feat = normalizeRawFeat(rawFeat, minVals, maxVals).astype('float64')
 
         model = mVec[i]
         hamming = hammings[i]
@@ -168,35 +253,8 @@ if __name__ == "__main__":
 
 
 
-    def learnMc(weightVector, mVec, viVec, gtVec, hammingVecList = None):
-        
-        ParaMcModel = inferno.models.ParametrizedMulticutModel
-        LossAugmentedModel = ParaMcModel.lossAugmentedModelClass('edgeHamming')
+   
 
-        getMcFactory = inferno.inference.multicutFactory
-        getEhcFactory = inferno.inference.ehcFactory
-
-        mcFactory = getMcFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=1)
-        mcLossFactory = getMcFactory(LossAugmentedModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=8)
-
-        ehcFactory = getEhcFactory(ParaMcModel)
-        ehcLossFactory = getEhcFactory(LossAugmentedModel)
-
-
-        getVecDest = inferno.learning.dataset.vectorDataset
-        getSubGrad = inferno.learning.learners.subGradient
-
-        
-        if hammingVecList is not None:
-            for hammingVec in hammingVecList:
-                dset = getVecDest(mVec, hammingVec, gtVec)
-                learner = getSubGrad(dset, maxIterations=10,
-                                     n=0.05, c=1.0, m=0.2, 
-                                     nThreads=1)
-                # do the sub-gradient learning
-                learner.learn(mcLossFactory, weightVector, mcFactory)
-
-        
 
 
 
@@ -212,11 +270,21 @@ if __name__ == "__main__":
         computeFeatureNormalization(f, list(range(30)) )
         f.close()
 
+    if False:
+        f = h5py.File(workingDir+"dataset.h5",'r+')
+        trainRF(f, list(range(30)),workingDir)
+        f.close()
+
+    if False:
+        f = h5py.File(workingDir+"dataset.h5",'r+')
+        predictRF(f,workingDir)
+        f.close()
+
 
     if True:
         f = h5py.File(workingDir+"dataset.h5",'r')
-        trainingSamples = list(range(3))
-        testSamples = list(range(3,50))
+        trainingSamples = list(range(30))
+        testSamples = list(range(30,50))
 
         mVec, hammings, vis, gts, weightVector = makeInfernoDset(h5file=f, samples=trainingSamples)
 
@@ -232,7 +300,7 @@ if __name__ == "__main__":
             
             
             # make the learner
-            learner = inferno.learning.learners.subGradient(dset, maxIterations=10,n=0.05, c=1.0, m=0.2, nThreads=1)
+            learner = inferno.learning.learners.subGradient(dset, maxIterations=40,n=0.05, c=0.1, m=0.2, nThreads=1)
 
             # do the learning
             with vigra.Timer("learn"):
@@ -248,7 +316,7 @@ if __name__ == "__main__":
             dset = inferno.learning.dataset.vectorDataset(mVec, vis, gts)
 
             factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=1)
-            ehcFactory = inferno.inference.ehcFactory(ParaMcModel)
+            ehcFactory = factory#inferno.inference.ehcFactory(ParaMcModel)
 
             
             # make the learner
@@ -263,16 +331,16 @@ if __name__ == "__main__":
 
 
             with vigra.Timer("approx"):
-                nper = 10
+                nper = 1
                 sg = inferno.learning.learners.stochasticGradient
-                learner = sg(dset, maxIterations=100, nPertubations=nper, sigma=1.0, seed=42,
+                learner = sg(dset, maxIterations=2, nPertubations=nper, sigma=1.0, seed=42,
                                    n=10.0)
                 learner.learn(ehcFactory, weightVector)
 
             #sys.exit(1)
 
-            if True:
-                nper = 20
+            if False:
+                nper = 3
                 print "np ",nper
                 sg = inferno.learning.learners.stochasticGradient
                 learner = sg(dset, maxIterations=200, nPertubations=nper, sigma=1.0, seed=43,
@@ -280,14 +348,14 @@ if __name__ == "__main__":
                 learner.learn(ehcFactory, weightVector)
 
 
-                nper = 30
+                nper = 4
                 print "np ",nper
                 sg = inferno.learning.learners.stochasticGradient
                 learner = sg(dset, maxIterations=200, nPertubations=nper, sigma=1.0, seed=44,
                                    n=10.0)
                 learner.learn(ehcFactory, weightVector)
 
-                nper = 40
+                nper = 5
                 print "np ",nper
                 sg = inferno.learning.learners.stochasticGradient
                 learner = sg(dset, maxIterations=200, nPertubations=nper, sigma=1.0, seed=45,
@@ -295,18 +363,40 @@ if __name__ == "__main__":
                 learner.learn(ehcFactory, weightVector)
 
 
-            print "total bevore igo ", dset.averageLoss(factory,0)*len(dset)
-
-            igo = inferno.learning.learners.igo
-            learner = igo(dset, nPertubations=300,nElites=20, beta=0.8,
-                                      maxIterations=30,
-                                      sigma=3.0)
-            learner.learn(factory, weightVector)
-            print "after igo loss ", dset.averageLoss(factory,0)*len(dset)
 
 
+        mVec, hammings, vis, gts, weightVector = makeInfernoDset(h5file=f, samples=testSamples, weightVector=weightVector)
+        dset = inferno.learning.dataset.vectorDataset(mVec, hammings, gts)
+        dset.updateWeights(weightVector)
+
+        factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=1)
+
+
+        for testSampleIndex in testSamples:
+
+            print "testSamples",testSampleIndex
+            group_i = f['item_%d'%testSampleIndex]
 
 
 
 
-        #factory.create()
+           
+            model = dset.model(0)
+            
+            solver = factory.create(model)
+            verboseVisitor = inferno.inference.verboseVisitor(model)
+            solver.infer(verboseVisitor.visitor())
+            conf = solver.conf()
+
+            arg = conf.view().astype('uint32')
+
+
+            raw = group_i['pixel_raw'][:]
+            gt = group_i['pixel_gt'][:]
+            overseg = group_i['pixel_overseg'][:]
+
+            gg = vigra.graphs.gridGraph(raw.shape[0:2])
+            rag = vigra.graphs.regionAdjacencyGraph(graph=gg, labels=overseg)
+            print arg.min(), arg.max()
+            rag.show(raw, arg + 10)
+            vigra.show()

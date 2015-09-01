@@ -1,7 +1,7 @@
 import vigra
 from vigra import graphs
 import numpy
-
+import pylab
 from functools import partial
 
 
@@ -14,9 +14,18 @@ from functools import partial
 
 
 def addNonLinearity(edgeFeatures):
+    pow3 = edgeFeatures**3
     squares = edgeFeatures**2
     logOfSquares = numpy.log(squares+1.0)
-    edgeFeatures = numpy.concatenate([edgeFeatures,squares,logOfSquares],axis=1)
+    edgeFeatures = numpy.concatenate(
+        [
+            edgeFeatures,
+            squares,
+            logOfSquares,
+            #pow3
+        ]
+        ,
+        axis=1)
     return edgeFeatures
 
 def makeDs(raws, gts, oversegs, h5file, makeProducts=True,):
@@ -63,18 +72,19 @@ def makeDs(raws, gts, oversegs, h5file, makeProducts=True,):
         gausGradMag = vigra.filters.gaussianGradientMagnitude
         
         filters = [
-            #[ partial(log,scale=s) for s in (1.0,2.0,3.0,4.0) ],
-            [ partial(stEv,innerScale=s, outerScale=s*1.5) for s in (1.0,2.0,3.0) ],
-            [ partial(stEv,innerScale=s, outerScale=s*2.5) for s in (1.0,2.0,3.0) ],
-            [ partial(hessianEv,scale=s) for s in (1.0,2.0,4.0) ],
-            [ partial(gaussSmooth,sigma=s) for s in (1.0,4.0) ],
-            [ partial(gausGradMag,sigma=s) for s in (1.0,2.0,4.0) ]
+            [ (partial(log,scale=s),'log%f'%s) for s in (1.0,2.0,3.0,4.0) ],
+            [ (partial(stEv,innerScale=s, outerScale=s*1.5),'stEv %f 1.5'%s) for s in (1.0,2.0,3.0) ],
+            [ (partial(stEv,innerScale=s, outerScale=s*2.5),'stEv %f 2.5'%s) for s in (1.0,2.0,3.0) ],
+            [ (partial(hessianEv,scale=s),'hessianEv %f'%s) for s in (1.0,2.0,4.0) ],
+            [ (partial(gaussSmooth,sigma=s),'gaussSmooth %f'%s) for s in (1.0,4.0) ],
+            [ (partial(gausGradMag,sigma=s),'gausGradMag %f'%s) for s in (1.0,2.0,4.0) ]
         ]
 
         filters = [item for sublist in filters for item in sublist]
         
         allEdgeFeatures = []
-        for i,f in enumerate(filters):
+        for i,fAndName in enumerate(filters):
+            f,fName = fAndName
             print i,len(filters)
             res = f(raw).squeeze()
             if res.ndim == 2:
@@ -99,8 +109,17 @@ def makeDs(raws, gts, oversegs, h5file, makeProducts=True,):
                     uF = nodeFeatures[uv[:,0]]
                     vF = nodeFeatures[uv[:,1]]
 
+                    #resCS[0:40,0:100] = 0 
+
+
                     ggEdgeMap = graphs.implicitMeanEdgeMap(gg, resCS)
                     edgeFeatures = rag.accumulateEdgeFeatures(ggEdgeMap)
+
+                    #ggEdgeMap = graphs.edgeFeaturesFromImage(gg, resCS)
+                    #edgeFeatures = rag.accumulateEdgeFeatures(ggEdgeMap,'mean')
+
+                    assert len(edgeFeatures) == rag.edgeNum
+                    assert uv.shape[0] == rag.edgeNum
 
                     d = numpy.abs(uF-vF)
                     s = uF+vF
@@ -115,6 +134,19 @@ def makeDs(raws, gts, oversegs, h5file, makeProducts=True,):
                     maxAduv = numpy.max(tmp,axis=1)
                     minAduv = numpy.min(tmp,axis=1)
                     dmima = maxAduv - minAduv
+
+
+                    if False:
+                        fImg = rag.showEdgeFeature(raw, edgeFeatures, returnImg=True,cmap='hot')
+                        fig = pylab.figure()
+                        fig.add_subplot(1,3, 0)
+                        pylab.imshow(raw,cmap='gray')
+                        fig.add_subplot(1, 3, 1)
+                        pylab.imshow(fImg)#,cmap=cm.Greys_r)
+                        fig.add_subplot(1, 3, 2)
+                        pylab.imshow(resCS,cmap='gray')
+                        pylab.title(fName)
+                        pylab.show()
 
                     fl = [
                         d[:,None],
@@ -136,6 +168,7 @@ def makeDs(raws, gts, oversegs, h5file, makeProducts=True,):
         print edgeFeatures.shape
 
         group_i['raw_edge_features'] = edgeFeatures
+        print "totalFeatures ",edgeFeatures.shape
 
 #raws=[raw]
 #gts=[gt]
