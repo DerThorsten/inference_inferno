@@ -41,7 +41,8 @@ namespace learners{
         const double                alpha,
         const int                   verbose,
         const int                   seed,
-        const double                n
+        const double                n,
+        const double                c
     ){
         LEARNER * learner;
         {
@@ -53,7 +54,8 @@ namespace learners{
                 alpha,
                 verbose,
                 seed,
-                n
+                n,
+                c
             );
             learner = new LEARNER(dataset, options);
         }
@@ -108,7 +110,8 @@ namespace learners{
                 bp::arg("alpha") = double(defaultOptions.alpha_) ,
                 bp::arg("verbose")= int(defaultOptions.verbose_) ,
                 bp::arg("seed")= int(defaultOptions.seed_),
-                bp::arg("n")= int(defaultOptions.n_)
+                bp::arg("n")= int(defaultOptions.n_),
+                bp::arg("c")= int(defaultOptions.c_)
             ),
             RetValPol< CustWardPost<0,1,NewObj> >()
         );

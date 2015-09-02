@@ -192,7 +192,7 @@ def makeInfernoDset(h5file, samples, weightVector = None):
     minVals = h5file['normalization']['minVals'][:]
     maxVals = h5file['normalization']['maxVals'][:]
 
-    nFeatures = h5file['item_0']['sssmart_edge_features'].shape[1]
+    nFeatures = h5file['item_0']['sssmart_edge_features'].shape[1] + 1
 
     #nFeatures = len(maxVals)
     nSamples = len(samples)
@@ -214,6 +214,12 @@ def makeInfernoDset(h5file, samples, weightVector = None):
 
         # load data
         feat  = group_i['sssmart_edge_features'][:].astype('float64')
+
+        ones = numpy.ones(feat.shape[0],dtype='float64')[:,None]
+
+        feat = numpy.concatenate([feat,ones],axis=1)
+
+
         projectedGt = group_i['projected_gt'][:]
         edges = group_i['uv'][:].astype('uint64')
         nVar = long(numpy.array(group_i['nNodes']))
@@ -283,16 +289,22 @@ if __name__ == "__main__":
 
     if True:
         f = h5py.File(workingDir+"dataset.h5",'r')
-        trainingSamples = list(range(30))
-        testSamples = list(range(30,50))
+        t = 10
+        trainingSamples = list(range(t))
+        testSamples = list(range(t,50))
 
         mVec, hammings, vis, gts, weightVector = makeInfernoDset(h5file=f, samples=trainingSamples)
-
-        # hamming dset
         ParaMcModel = inferno.models.ParametrizedMulticutModel
+
+        nWeights = len(weightVector)
+        fixedWeightIndex = nWeights -1
+        weightVector[fixedWeightIndex] = 1.0
+
+
 
         if True:
             dset = inferno.learning.dataset.vectorDataset(mVec, hammings, gts)
+            dset.weightConstraints().addBound(fixedWeightIndex, lowerBound=1.0, upperBound=1.0)
             LossAugmentedModel = ParaMcModel.lossAugmentedModelClass('edgeHamming')
 
             factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=1)
@@ -300,21 +312,25 @@ if __name__ == "__main__":
             
             
             # make the learner
-            learner = inferno.learning.learners.subGradient(dset, maxIterations=40,n=0.05, c=0.1, m=0.2, nThreads=1)
+            learner = inferno.learning.learners.subGradient(dset, maxIterations=10,n=0.05, c=0.01, m=0.2, nThreads=1)
 
             # do the learning
-            with vigra.Timer("learn"):
-                learner.learn(lossFactory, weightVector, factory)
 
+            learner.learn(lossFactory, weightVector, factory)
 
-            print "total loss ", dset.averageLoss(factory,0)*len(dset)
+            print "the last weight",weightVector[fixedWeightIndex]
+            s = 0.0
+            for wi in range(nWeights):
+                s += weightVector[wi]**2
+            print "sum ",s/nWeights
+
 
 
 
         if True:
 
             dset = inferno.learning.dataset.vectorDataset(mVec, vis, gts)
-
+            dset.weightConstraints().addBound(fixedWeightIndex, lowerBound=1.0, upperBound=1.0)
             factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=1)
             ehcFactory = factory#inferno.inference.ehcFactory(ParaMcModel)
 
@@ -324,79 +340,55 @@ if __name__ == "__main__":
             print "seed", seed,time.clock()
 
 
+            nper = 1
+            sg = inferno.learning.learners.stochasticGradient
+            learner = sg(dset, maxIterations=2, nPertubations=nper, sigma=1.0, seed=42,
+                               n=10.0, alpha=1, c=0.001)
+            learner.learn(ehcFactory, weightVector)
+
+     
+            print "the last weight",weightVector[fixedWeightIndex]
+            s = 0.0
+            for wi in range(nWeights):
+                s += weightVector[wi]**2
+            print "sum ",s/nWeights
+
+        if True:
+
+            # make the test
+            mVec, hammings, vis, gts, weightVector = makeInfernoDset(h5file=f, samples=testSamples, weightVector=weightVector)
+            dset = inferno.learning.dataset.vectorDataset(mVec, hammings, gts)
+            dset.updateWeights(weightVector)
+
+            factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=1)
 
 
-          
 
+            for i,testSampleIndex in enumerate(testSamples):
 
-
-            with vigra.Timer("approx"):
-                nper = 1
-                sg = inferno.learning.learners.stochasticGradient
-                learner = sg(dset, maxIterations=2, nPertubations=nper, sigma=1.0, seed=42,
-                                   n=10.0)
-                learner.learn(ehcFactory, weightVector)
-
-            #sys.exit(1)
-
-            if False:
-                nper = 3
-                print "np ",nper
-                sg = inferno.learning.learners.stochasticGradient
-                learner = sg(dset, maxIterations=200, nPertubations=nper, sigma=1.0, seed=43,
-                                   n=10.0)
-                learner.learn(ehcFactory, weightVector)
-
-
-                nper = 4
-                print "np ",nper
-                sg = inferno.learning.learners.stochasticGradient
-                learner = sg(dset, maxIterations=200, nPertubations=nper, sigma=1.0, seed=44,
-                                   n=10.0)
-                learner.learn(ehcFactory, weightVector)
-
-                nper = 5
-                print "np ",nper
-                sg = inferno.learning.learners.stochasticGradient
-                learner = sg(dset, maxIterations=200, nPertubations=nper, sigma=1.0, seed=45,
-                                   n=10.5)
-                learner.learn(ehcFactory, weightVector)
+                print "testSamples",testSampleIndex
+                group_i = f['item_%d'%testSampleIndex]
 
 
 
 
-        mVec, hammings, vis, gts, weightVector = makeInfernoDset(h5file=f, samples=testSamples, weightVector=weightVector)
-        dset = inferno.learning.dataset.vectorDataset(mVec, hammings, gts)
-        dset.updateWeights(weightVector)
+               
+                model = dset.model(i)
+                
+                solver = factory.create(model)
+                verboseVisitor = inferno.inference.verboseVisitor(model)
+                solver.infer(verboseVisitor.visitor())
+                conf = solver.conf()
 
-        factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=1)
-
-
-        for testSampleIndex in testSamples:
-
-            print "testSamples",testSampleIndex
-            group_i = f['item_%d'%testSampleIndex]
+                arg = conf.view().astype('uint32')
 
 
+                raw = group_i['pixel_raw'][:]
+                gt = group_i['pixel_gt'][:]
+                overseg = group_i['pixel_overseg'][:]
 
-
-           
-            model = dset.model(0)
-            
-            solver = factory.create(model)
-            verboseVisitor = inferno.inference.verboseVisitor(model)
-            solver.infer(verboseVisitor.visitor())
-            conf = solver.conf()
-
-            arg = conf.view().astype('uint32')
-
-
-            raw = group_i['pixel_raw'][:]
-            gt = group_i['pixel_gt'][:]
-            overseg = group_i['pixel_overseg'][:]
-
-            gg = vigra.graphs.gridGraph(raw.shape[0:2])
-            rag = vigra.graphs.regionAdjacencyGraph(graph=gg, labels=overseg)
-            print arg.min(), arg.max()
-            rag.show(raw, arg + 10)
-            vigra.show()
+                gg = vigra.graphs.gridGraph(raw.shape[0:2])
+                rag = vigra.graphs.regionAdjacencyGraph(graph=gg, labels=overseg)
+                print arg.min(), arg.max()
+                rag.show(raw, arg + 10)
+                vigra.show()

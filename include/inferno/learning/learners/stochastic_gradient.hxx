@@ -39,7 +39,8 @@ namespace learners{
                 const double   alpha  = 1.0,
                 const int      verbose =2,
                 const int      seed = 0,
-                const double   n = 1.0
+                const double   n = 1.0,
+                const double   c = 1.0
             )
             :   nPertubations_(nPertubations),
                 maxIterations_(maxIterations),
@@ -47,7 +48,8 @@ namespace learners{
                 alpha_(alpha),
                 verbose_(verbose),
                 seed_(seed),
-                n_(n)
+                n_(n),
+                c_(c)
             {
             }
 
@@ -58,6 +60,7 @@ namespace learners{
             int      verbose_;
             int seed_;
             double n_;
+            double c_;
         };
 
         StochasticGradient(Dataset & dset, const Options & options = Options())
@@ -97,16 +100,10 @@ namespace learners{
             utilities::IndexVector< > indices(dset.size());
 
 
+            const auto & weightConstraints =  dset.weightConstraints();
+
             for(size_t i=0; i<options_.maxIterations_; ++i){
-                //std::cout<<"Iteration "<<i<<" "<<options_.maxIterations_<<"\n";
-
-                //std::cout<<"Weights : ";
-                //for(size_t wi=0; wi<weightVector.size(); ++wi){
-                //    std::cout<<weightVector[wi]<<" ";
-                //}
-                //std::cout<<"\n";
-
-                // iterate in random order
+                
                 indices.randomShuffle();
                 // FIXME indices.randomShuffle(rng);
 
@@ -125,7 +122,8 @@ namespace learners{
 
                     //std::cout<<"pertube \n";
                     // pertubate (and remember noise matrix)
-                    weightMatrix.pertubate(weightVector,noiseMatrix,normalDist);
+
+                    weightMatrix.pertubate(weightVector,noiseMatrix,weightConstraints, normalDist);
 
                     // to remember arg mins
                     //std::cout<<"conf assign \n";
@@ -155,7 +153,8 @@ namespace learners{
 
                     WeightVector gradient(weightVector.size(),0);
                     noiseMatrix.weightedSum(losses, gradient);
-                    gradient /= options_.nPertubations_;
+                    gradient *= options_.c_/double(options_.nPertubations_);
+
     
                     //for(size_t gg=0; gg<10; ++gg){
                     //    std::cout<<gradient[gg]<<"   ";
@@ -203,6 +202,22 @@ namespace learners{
                 g*=stepSize;
                 currentWeights -= g;
                 currentWeights *= options_.alpha_;
+
+                
+                // fix bounded weights
+                const auto & wConstraints = dataset_.weightConstraints();
+                for(const auto kv : wConstraints.weightBounds()){
+                    const auto wi = kv.first;
+                    const auto lowerBound = kv.second.first;
+                    const auto upperBound = kv.second.second;
+                    if(currentWeights[wi] < lowerBound){
+                       currentWeights[wi] = lowerBound; 
+                    }
+                    if(currentWeights[wi] > upperBound){
+                       currentWeights[wi] = upperBound; 
+                    }
+                }
+                
                 dataset_.updateWeights(currentWeights);
                 LossType loss = 0;
                 if(eval)

@@ -18,7 +18,7 @@ namespace learning{
         typedef utilities::LinearConstraint<uint64_t, ValueType, ValueType> Constraint;
         typedef std::pair<WeightType, WeightType> LowerUpperPair;
         typedef std::pair<uint64_t, double >      WeightIdCoeffPair;
-
+        typedef std::map<uint64_t ,LowerUpperPair > WeightBoundsType;
         WeightConstraints(const uint64_t nWeights = 0)
         :   nWeights_(nWeights),
             constraints_(),
@@ -31,6 +31,10 @@ namespace learning{
         ){
             const auto val = LowerUpperPair(lowerBound, upperBound);
             weightBounds_.insert(std::make_pair(weightId, val));
+        }
+
+        const WeightBoundsType & weightBounds()const{
+            return weightBounds_;
         }
 
         template<class WEIGHT_ID_ITER, class COEFF_ITER>

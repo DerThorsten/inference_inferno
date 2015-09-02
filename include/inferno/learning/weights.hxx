@@ -33,7 +33,6 @@ namespace learning{
 
         }
 
-
         WeightType getNorm(size_t normType)const{
             ValueType l = 0;
             if(normType == 1){
@@ -72,10 +71,11 @@ namespace learning{
         }
 
 
-        template<class F>
+        template<class F, class WEIGHT_CONSTRAINTS>
         void pertubate(
             const WeightVector & source, 
             WeightMatrix & noise,
+            const WEIGHT_CONSTRAINTS & weightConstraints,
             F && functor
         ){
             INFERNO_CHECK_OP(this->size(),==, noise.size(),"");
@@ -87,8 +87,23 @@ namespace learning{
                 INFERNO_CHECK_OP(w.size(),== ,n.size(),"");
                 for(size_t wi=0; wi<w.size(); ++wi){
                     n[wi] = functor();
-                    w[wi] = source[wi] + n[wi];
                 }
+
+                // fix bounded weights
+                for(const auto kv : weightConstraints.weightBounds()){
+                    const auto wi = kv.first;
+                    const auto lowerBound = kv.second.first;
+                    const auto upperBound = kv.second.second;
+                    if(w[wi] < lowerBound){
+                       w[wi] = lowerBound; 
+                       n[wi] = w[wi] - source[wi];
+                    }
+                    if(w[wi] > upperBound){
+                       w[wi] = upperBound; 
+                       n[wi] = w[wi] - source[wi];
+                    }
+                }
+
             }
         }
 

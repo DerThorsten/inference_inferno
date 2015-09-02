@@ -65,6 +65,10 @@ namespace dataset{
             .def("averageLoss", &Dataset::averageLoss)
             .def("__len__",&Dataset::size)
             .def("updateWeights",&Dataset::updateWeights)
+            .def("weightConstraints",&Dataset::weightConstraints,
+                bp::return_internal_reference<>()
+                
+            )
         ;
 
         // CustWardPost<0,1,NewObj>

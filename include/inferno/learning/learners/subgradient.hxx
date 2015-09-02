@@ -189,6 +189,21 @@ namespace learners{
                 gradient *= stepSize;
             }
             currentWeights -= gradient;
+
+            // fix bounded weights
+            const auto & wConstraints = dataset_.weightConstraints();
+            for(const auto kv : wConstraints.weightBounds()){
+                const auto wi = kv.first;
+                const auto lowerBound = kv.second.first;
+                const auto upperBound = kv.second.second;
+                if(currentWeights[wi] < lowerBound){
+                   currentWeights[wi] = lowerBound; 
+                }
+                if(currentWeights[wi] > upperBound){
+                   currentWeights[wi] = upperBound; 
+                }
+            }
+
             dataset_.updateWeights(currentWeights);
 
 

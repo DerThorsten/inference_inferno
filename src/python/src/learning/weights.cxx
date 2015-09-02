@@ -31,10 +31,25 @@ namespace learning{
 
     namespace bp = boost::python;
 
+    uint64_t wSize(const WeightVector & wv){
+        return wv.size();
+    }
+
+    WeightType getWeight(const WeightVector & wv, const uint64_t id){
+        return wv[id];
+    }
+
+    void setWeight(WeightVector & wv, const uint64_t id, const WeightType val){
+        wv[id] = val;
+    }
+
     void exportWeights(){
         bp::class_<WeightVector>("WeightVector",
                                  bp::init<const size_t, const WeightType>()
         )
+        .def("__len__",&wSize)
+        .def("__getitem__",&getWeight)
+        .def("__setitem__",&setWeight)
         ;
     }
 }
