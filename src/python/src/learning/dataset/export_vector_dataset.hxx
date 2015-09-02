@@ -35,10 +35,11 @@ namespace dataset{
     VectorDataset<LOSS_FUNCTION> * vectorDatasetFactory(
         std::vector< typename LOSS_FUNCTION::Model>     & models,
         std::vector< LOSS_FUNCTION>                     & lossFunctions,
-        const std::vector< typename LOSS_FUNCTION::ConfMap>   & gts
+        const std::vector< typename LOSS_FUNCTION::ConfMap>   & gts,
+        const Regularizer reg
 
     ){
-        return new VectorDataset<LOSS_FUNCTION>(models, lossFunctions, gts);
+        return new VectorDataset<LOSS_FUNCTION>(models, lossFunctions, gts,reg);
     }
 
 
@@ -71,6 +72,12 @@ namespace dataset{
         // the factory function
         bp::def("vectorDataset",
             &vectorDatasetFactory<LossFunction>,
+            (
+                bp::arg("models"),
+                bp::arg("lossFunctions"),
+                bp::arg("groundTruth"),
+                bp::arg("regularizer") = Regularizer()
+            ),
             RetValPol< 
                 CustWardPost<0,1,
                     CustWardPost<0,2,

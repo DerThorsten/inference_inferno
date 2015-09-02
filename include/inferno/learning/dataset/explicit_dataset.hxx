@@ -10,8 +10,10 @@
 
 // inferno
 #include "inferno/inferno.hxx"
+#include "inferno/learning/learning.hxx"
 #include "inferno/utilities/parallel/pool.hxx"
 #include "inferno/learning/weights.hxx"
+#include "inferno/learning/weight_constraints.hxx"
 #include "inferno/inference/base_discrete_inference_factory.hxx"
 
 namespace inferno{
@@ -159,6 +161,31 @@ namespace dataset{
             return dataset().nModels();
         }
 
+        void addBound(
+            const uint64_t weightId, 
+            const WeightType lowerBound, 
+            const WeightType upperBound
+        ){
+            dataset().weightConstraints().addBound(
+                weightId, lowerBound, upperBound
+            );
+        }
+
+        template<class WEIGHT_ID_ITER, class COEFF_ITER>
+        void addConstraint(
+            WEIGHT_ID_ITER weightIdsBegin,
+            WEIGHT_ID_ITER weightIdsEnd,
+            COEFF_ITER coeffsBegin,
+            const WeightType lowerBound,
+            const WeightType upperBound
+        ){
+            dataset().weightConstraints().addConstraint(
+                weightIdsBegin, weightIdsEnd,
+                coeffsBegin, 
+                lowerBound, upperBound
+            );
+        }
+
 
     private:
         const DATASET & dataset()const{
@@ -192,11 +219,13 @@ namespace dataset{
         VectorDataset(
             std::vector<Model>         & models,
             std::vector<LossFunction>  & lossFunctions,
-            const std::vector<GroundTruth>   & gts
+            const std::vector<GroundTruth>   & gts,
+            const Regularizer & regularizer = Regularizer()
         )
         :   models_(models),
             lossFunctions_(lossFunctions),
-            gts_(gts)
+            gts_(gts),
+            regularizer_(regularizer)
         {
 
         }
@@ -220,9 +249,19 @@ namespace dataset{
             return gts_[i];
         }
 
+        const Regularizer & regularizer()const{
+            return regularizer_;
+        }
+
+        WeightConstraints & weightConstraints(){
+            return weightConstraints_;
+        }
+
         std::vector<Model>         & models_;
         std::vector<LossFunction>  & lossFunctions_;
         const std::vector<GroundTruth>   & gts_;
+        Regularizer regularizer_;
+        WeightConstraints weightConstraints_;
     };
 
 

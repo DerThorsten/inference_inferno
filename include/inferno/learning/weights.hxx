@@ -1,6 +1,9 @@
 #ifndef INFERNO_LEARNING_WEIGHTS_HXX
 #define INFERNO_LEARNING_WEIGHTS_HXX
 
+// std
+#include <map>
+
 // boost
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
@@ -30,6 +33,26 @@ namespace learning{
 
         }
 
+
+        WeightType getNorm(size_t normType)const{
+            ValueType l = 0;
+            if(normType == 1){
+                for(const auto w : (*this) ){
+                    l += std::abs(w);
+                }
+            }
+            else if(normType == 2){
+                for(const auto w : (*this) ){
+                    l += w*w;
+                }
+            }
+            else{
+                for(const auto w : (*this) ){
+                    l += std::pow(std::abs(w), normType);
+                }
+            }
+            return l;
+        }
     private:
 
     };
@@ -113,6 +136,6 @@ namespace learning{
     };
 
 } // end namespace inferno::learning
-} // end namespace inferno
+} // end namespace inferno 
 
 #endif /*INFERNO_LEARNING_WEIGHTS_HXX*/

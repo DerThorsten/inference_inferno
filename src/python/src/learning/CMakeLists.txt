@@ -1,6 +1,8 @@
 SET(MOD_SRC 
     learning.cxx 
     weights.cxx
+    regularizer.cxx
+    weight_constraints.cxx
 )
 
 SET(MOD_EXTRA_LIBS "" )
