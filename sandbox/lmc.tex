@@ -1,0 +1,112 @@
+\documentclass{article}
+
+\usepackage{bbm}
+\usepackage{amsmath}
+\setlength\parindent{0pt}
+
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+\begin{document}
+
+
+\section{Pixel Prediction}
+
+Use either auto-context or CNN predict
+semantic classes and edge probability map
+
+
+\section{Boundary/Face Prediction}
+
+Use pixel prediction results and a
+handful of filter results to accumulate
+features for each face.
+
+The filters will / should be simple blockwise callable filters as:
+\begin{itemize}
+\item hessian of gaussian eigenvalues
+\item structure tensor eigenvalues
+\item$ \ldots$
+\end{itemize}
+
+Use a default random forest to predict boundary
+probability map.
+
+
+
+
+
+
+\section{Features for Structured Learning}
+First step is a simple (quantile based)
+normalization of the raw features 
+which have been used for the unstructured learning.
+The result should be features in -1,1 or 0,1.
+
+The random forest face probabilities should also be used
+as a feature. No normalization is needed here.
+
+To make the features more powerful, we try
+to emulate the kernel trick by approximating an
+rbf kernel or a polynomial kernel
+\begin{itemize}
+\item Nystroem Approximation of kernel
+\end{itemize}
+
+
+\section{Structured Learning}
+
+Let $G$ be a graph $G = (V,E)$.
+For each variable  we have a node label $y_i \in |V|$.
+Therefore, each variable has as many labels as there are variables
+such that we can encode any partitioning.
+The multicut objective as a graph labeling problem is given by:
+\begin{align*}
+    y_{map} &=   
+        \textbf{argmin}_{y} 
+                \sum_{ uv \in E} 
+                    \beta_{uv} \cdot \big[ y_u \neq y_v \big]
+\end{align*}
+
+A negative $\beta_{uv}$ is a prior/desire that node $u$ and $v$ should be
+in different clusters, a positive $\beta_{uv}$ is a prior/desire to
+put $u$ and $v$ in the same cluster.
+
+To learn this objective we replace with $\beta_{uv}$
+with $w^Tx_{uv}$ where $w$ is the structured learning weight 
+vector, and $x_{uv}$ the feature vector for the edge $uv$.
+With  $\beta_{uv} = w^Tx_{uv}$ we get:
+\begin{align*}
+    y_{map} &=   
+        \textbf{argmin}_{y} 
+                \sum_{ uv \in E} 
+                    w^Tx_{uv} \cdot \big[ y_u \neq y_v \big] \\
+    y_{map} & =   
+        \textbf{argmin}_{y} 
+                \sum_{ uv \in E} 
+                    w^Tx_{uv} \cdot \big[ y_u \neq y_v \big]
+\end{align*}
+Let us define $\textbf{Y}(w)$ as the MAP labeling for a given weight:
+\begin{align*}
+    \textbf{Y}(w) & =   
+        \textbf{argmin}_{y} 
+                \sum_{ uv \in E} 
+                    w^Tx_{uv} \cdot \big[ y_u \neq y_v \big]
+\end{align*}
+
+
+
+Let $DS$ be the dataset.
+We will use $i$ to index a certain training example.
+\begin{align*}
+    w_{opt} = 
+        argmin_{w} 
+        \hspace{0.2cm} \norm{w}^2 + 
+        C \cdot 
+        \sum_{i \in |DS|}  
+        \Delta(y^i_{gt},\textbf{Y}^i(w))
+\end{align*}
+
+\subsection{Weight Initialization}
+
+
+\end{document}

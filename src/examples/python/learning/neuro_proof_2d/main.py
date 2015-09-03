@@ -334,7 +334,7 @@ if __name__ == "__main__":
 
 
 
-        if False:
+        if True:
             rType = inferno.learning.L2
             regularizer = inferno.learning.Regularizer(rType, c=0.1, )
             dset = inferno.learning.dataset.vectorDataset(mVec, vis, gts,regularizer=regularizer)
@@ -350,7 +350,7 @@ if __name__ == "__main__":
 
             nper = 1
             sg = inferno.learning.learners.stochasticGradient
-            learner = sg(dset, maxIterations=4, nPertubations=nper, sigma=1.0, seed=42,
+            learner = sg(dset, maxIterations=10, nPertubations=nper, sigma=1.0, seed=42,
                                n=10.0)
             learner.learn(ehcFactory, weightVector)
 

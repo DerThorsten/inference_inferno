@@ -17,60 +17,8 @@
 namespace inferno{
 namespace learning{
 
-/** \namespace loss_functions
 
-    - (node-weighted) unstructured 
-        - hamming,
-        - L1,
-        - L2 
-        - arbitrary label confusion costs
-    - partition 
-        - weighted edge hamming
-    - structured
-        - variation of information
-        - rand index
-*/
 namespace loss_functions{
-
-
-    struct NoLossAugmentedModel{
-
-    };
-
-
-    template<class MODEL, class VARIABLE_MULTIPLIER, class LABEL_CONFUSION_COST>
-    class UnstructuredLoss{
-    public:
-        typedef MODEL Model;
-        typedef typename Model:: template VariableMap<DiscreteLabel> ConfMap;
-        typedef VARIABLE_MULTIPLIER VariableMultiplier; 
-        typedef LABEL_CONFUSION_COST LabelConfusionCost;
-
-        typedef MODEL LossAugmentedModel;
-        template<class CONF_GT, class CONF>
-        LossType eval(const MODEL & model, CONF_GT & confGt, CONF & conf)const{
-            LossType totalLoss = 0.0;
-            for(const auto var : model.variables()){
-                const auto lConfGt = confGt[var];
-                const auto lConf   = conf[var];
-                if(lConfGt != lConf){
-                    const auto l =  * labelConfusionMultiplier_(lConfGt,lConf);
-                    const auto varMult =  variableMultiplier_[var];
-                    totalLoss += l*varMult;
-                }
-            }
-            return totalLoss;
-        }
-        void makeLossAugmentedModel(LossAugmentedModel & lossAugmentedModel)const;
-
-    private:
-        VariableMultiplier variableMultiplier_;
-        LabelConfusionCost labelConfusionMultiplier_;
-
-    };
-
-
-
 
 
     template<class MODEL>
@@ -300,84 +248,7 @@ namespace loss_functions{
 
 
 
-    /*
-
-    template<
-        class LABEL_ITER_A, 
-        class LABEL_ITER_B,
-        class SIZE_ITER,
-        class IGNORE_LABEL
-    >
-    double
-    variationOfInformation
-    (
-        LABEL_ITER_A beginLabelsA,
-        LABEL_ITER_A endLabelsA,
-        LABEL_ITER_B beginLabelsB,
-        SIZE_ITER_A beginSizes,
-        const bool useIgnoreLabel = false
-        const IGNORE_LABEL ignoreLabel = IGNORE_LABEL()
-
-    )
-    {
-        typedef typename std::iterator_traits<LABEL_ITER_A>::value_type LabelA;
-        typedef typename std::iterator_traits<LABEL_ITER_B>::value_type LabelB;
-        typedef std::LabelPair<LabelA, LabelB> LabelPair;
-        typedef std::unordered_map<LabelPair, double> PMatrix;
-        typedef std::unordered_map<LabelA, double> PVectorA;
-        typedef std::unordered_map<LabelB, double> PVectorB;
-
-        // count
-        double N = 0.0;
-        PMatrix pjk;
-        PVectorA pj;
-        PVectorB pk;
-
-        for(; beginLabelsA != endLabelsA; ++beginLabelsA, ++beginLabelsB, ++beginSizes) {
-            if(!useIgnoreLabel || (*beginLabelsA != ignoreLabel && *beginLabelsB !=ignoreLabel)) {
-                const auto size = *beginSizes;
-                pj[*beginLabelsA]+=size;
-                pk[*beginLabelsB]+=size;
-                ++pjk[LabelPair(*beginLabelsA, *beginLabelsB)]+=size;
-                N+=size;
-            }
-        }
-        
-
-
-        // normalize
-        for(auto it = pj.begin(); it != pj.end(); ++it) {
-            it->second /= N;
-        }
-        for(auto it = pk.begin(); it != pk.end(); ++it) {
-            it->second /= N;
-        }
-        for(auto it = pjk.begin(); it != pjk.end(); ++it) {
-            it->second /= N;
-        }
-
-        // compute information
-        double H0 = 0.0;
-        for(auto it = pj.begin(); it != pj.end(); ++it) {
-            H0 -= it->second * std::log(it->second);
-        }
-        double H1 = 0.0;
-        for(auto it = pk.begin(); it != pk.end(); ++it) {
-            H1 -= it->second * std::log(it->second);
-        }
-        double I = 0.0;
-        for(auto it = pjk.begin(); it != pjk.end(); ++it) {
-            const LabelA j = it->first.first;
-            const LabelB k = it->first.second;
-            const double pjk_here = it->second;
-            const double pj_here = pj[j];
-            const double pk_here = pk[k];
-            I += pjk_here * std::log( pjk_here / (pj_here * pk_here) );
-        }
-
-        return H0 + H1 - 2.0 * I;
-    }
-    */
+    
 
 
 } // end namespace inferno::learning::loss_functions

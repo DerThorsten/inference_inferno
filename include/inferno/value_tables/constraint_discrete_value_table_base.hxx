@@ -30,10 +30,9 @@ class ConstraintDiscreteValueTableBase : public DiscreteValueTableBase
 public:
     using DiscreteValueTableBase::eval;
     
-    ConstraintDiscreteValueTableBase():DiscreteValueTableBase(){
-
+    ConstraintDiscreteValueTableBase()
+    :   DiscreteValueTableBase(){
     }
-
     virtual ~ConstraintDiscreteValueTableBase(){
     }
 
@@ -45,7 +44,70 @@ public:
     virtual ValueType eval(const DiscreteLabel * conf)const{
         return isFeasible(conf) ? 0.0 : infVal();
     }
+
+    virtual ValueType evalSoft(const DiscreteLabel * conf, const ValueType softInf)const{
+        return isFeasible(conf) ? 0.0 : softInf;
+    }
 };
+
+
+
+
+class DiscreteValueTableIndicatorVariable{
+public:
+    typedef typename MODEL::VariableDescriptor VariableDescriptor;
+private:
+    std::vector<ArityType>      valueTableVars_;
+    std::Vector<DiscreteLabel>  valueTableLabels_;
+};
+
+
+using DiscreteValueTableIndicatorVariableConstraint = utilities::LinearConstraint<
+    DiscreteValueTableIndicatorVariable<MODEL>, double, double  
+>;
+
+
+/// \brief Constraint suitable for (I)-LP Solvers
+class LinearConstraintDiscreteValueTableBase : public ConstraintDiscreteValueTableBase
+{
+public:
+    typedef DiscreteValueTableIndicatorVariableConstraint IndicatorVariableConstraint;
+    typedef std::vector<IndicatorVarConstraint>  IndicatorVariableConstraintVector;
+
+    LinearConstraintDiscreteValueTableBase()
+    :   ConstraintDiscreteValueTableBase(){
+    }
+    virtual ~ConstraintDiscreteValueTableBase(){
+    }
+
+    
+    virtual = violatedConstraints(
+        const DiscreteLabel * conf,
+        IndicatorVariableConstraintVector & violatedConstraints
+    ) const = 0
+
+    // with default impl
+    virtual bool isFeasible(const DiscreteLabel * conf) const override{
+        IndicatorVariableConstraintVector vc;
+        this->violatedConstraints(conf, vc);
+        return vc.empty();
+    }
+private:
+
+
+};
+
+
+
+
+
+
+
+
+
+
+
+
 
 } // end namespace value_tables
 } // end namespace inferno
