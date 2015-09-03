@@ -28,23 +28,32 @@ namespace learning{
             c_(_c){
         }
 
-        ValueType evalRegularizer(const WeightVector & weightVector)const{  
+        template<class WEIGHT_CONSTRAINTS>
+        ValueType evalRegularizer(
+            const WeightVector & weightVector,
+            const WEIGHT_CONSTRAINTS & weightConstraints
+        )const{  
             if(regularizer_ == RegularizerType::L1){
-                return weightVector.getNorm(1);
+                return weightVector.getNorm(1,weightConstraints);
             }
             else if(regularizer_ == RegularizerType::L2){
-                return weightVector.getNorm(2);
+                return weightVector.getNorm(2,weightConstraints);
             }
             else if(regularizer_ == RegularizerType::ConstL1){
-                return std::abs(1.0 - weightVector.getNorm(1));
+                return std::abs(1.0 - weightVector.getNorm(1,weightConstraints) );
             }
             else if(regularizer_ == RegularizerType::ConstL2){
-                const auto d = 1.0 - weightVector.getNorm(2);
+                const auto d = 1.0 - weightVector.getNorm(2, weightConstraints);
                 return d * d;
             } 
         }
-        ValueType eval(const WeightVector & weightVector, const LossType loss)const{   
-            return c_ * loss + this->evalRegularizer(weightVector);
+        template<class WEIGHT_CONSTRAINTS>
+        ValueType eval(
+            const WeightVector & weightVector, 
+            const WEIGHT_CONSTRAINTS & weightConstraints,
+            const LossType loss
+        )const{   
+            return c_ * loss + this->evalRegularizer(weightVector,weightConstraints);
         } 
         RegularizerType regularizer()const{
             return regularizer_;
@@ -55,16 +64,16 @@ namespace learning{
 
         std::string prettyRegularizerString()const{
             if(regularizer_ == RegularizerType::L1){
-                return std::string("‖ω‖¹");
+                return std::move(std::string("‖ω‖¹"));
             }
             else if(regularizer_ == RegularizerType::L2){
-                return std::string("‖ω‖²");
+                return std::move(std::string("‖ω‖²"));
             }
             else if(regularizer_ == RegularizerType::ConstL1){
-                return std::string("|1-‖ω‖¹|");
+                return std::move(std::string("|1-‖ω‖¹|"));
             }
             else if(regularizer_ == RegularizerType::ConstL2){
-                return std::string("|1-‖ω‖²|²");
+                return std::move(std::string("|1-‖ω‖²|²"));
             }
         }
 
@@ -73,6 +82,12 @@ namespace learning{
         }
         std::string prettyLossSumString()const{
             return std::move(std::string("C ⋅ Σ Δ(y',y)ₘ"));
+        }
+
+        std::string prettyObjectiveString()const{
+            auto s = prettyRegularizerString() + std::string(" + ") +
+                prettyLossSumString();
+            return std::move(s);
         }
 
    private:

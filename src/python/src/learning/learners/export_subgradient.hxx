@@ -41,7 +41,9 @@ namespace learners{
         const double                m,
         const int                   verbose,
         const int                   nThreads,
-        const int                   averagingOrder
+        const int                   averagingOrder,
+        const int                   showLossEvery,
+        const int                   showRegularizerEvery
     ){
         LEARNER * learner;
         {
@@ -53,7 +55,9 @@ namespace learners{
                 m,
                 verbose,
                 nThreads,
-                averagingOrder
+                averagingOrder,
+                showLossEvery,
+                showRegularizerEvery
             );
             learner = new LEARNER(dataset, options);
         }
@@ -127,7 +131,9 @@ namespace learners{
                 bp::arg("m") = double(defaultOptions.m_) ,
                 bp::arg("verbose")= int(defaultOptions.verbose_),
                 bp::arg("nThreads") =int(defaultOptions.nThreads_),
-                bp::arg("averagingOrder") =int(defaultOptions.averagingOrder_)
+                bp::arg("averagingOrder") =int(defaultOptions.averagingOrder_),
+                bp::arg("showLossEvery") =int(defaultOptions.showLossEvery_),
+                bp::arg("showRegularizerEvery") =int(defaultOptions.showRegularizerEvery_)
             ),
             RetValPol< CustWardPost<0,1,NewObj> >()
         );

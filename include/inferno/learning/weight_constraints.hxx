@@ -49,6 +49,21 @@ namespace learning{
                                       coeffsBegin, lowerBound, 
                                       upperBound);
         }
+
+        bool isFixed(const uint64_t weightId)const{
+            auto iter =  weightBounds_.find(weightId);
+            if(iter != weightBounds_.end()){
+                const auto lb = iter->second.first;
+                const auto ub = iter->second.second;
+
+                if(lb + std::numeric_limits<ValueType>::epsilon() >= 
+                   ub - std::numeric_limits<ValueType>::epsilon()){
+                    return true;
+                }
+            }
+            return false;
+        }
+
     private:
                
         uint64_t nWeights_;

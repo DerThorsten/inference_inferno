@@ -291,7 +291,7 @@ if __name__ == "__main__":
         f = h5py.File(workingDir+"dataset.h5",'r')
         t = 10
         trainingSamples = list(range(t))
-        testSamples = list(range(t,50))
+        testSamples = list(range(15,25))
 
         mVec, hammings, vis, gts, weightVector = makeInfernoDset(h5file=f, samples=trainingSamples)
         ParaMcModel = inferno.models.ParametrizedMulticutModel
@@ -304,7 +304,7 @@ if __name__ == "__main__":
 
         if True:
             rType = inferno.learning.L2
-            regularizer = inferno.learning.Regularizer(rType, c=0.01)
+            regularizer = inferno.learning.Regularizer(rType, c=0.001)
             dset = inferno.learning.dataset.vectorDataset(mVec, hammings, gts, regularizer=regularizer)
             dset.weightConstraints().addBound(fixedWeightIndex, lowerBound=1.0, upperBound=1.0)
             LossAugmentedModel = ParaMcModel.lossAugmentedModelClass('edgeHamming')
@@ -314,10 +314,12 @@ if __name__ == "__main__":
             
             
             # make the learner
-            learner = inferno.learning.learners.subGradient(dset,eps=1.0e-8, maxIterations=101,
-                                                            n=1.0, m=0.2, nThreads=1,
-                                                            averagingOrder=-1
-                                                            )
+            sg = inferno.learning.learners.subGradient
+            learner = sg(dset,  eps=1.0e-8, maxIterations=20,
+                                n=5.0, m=0.2, nThreads=1,
+                                averagingOrder=-1,
+                                showLossEvery=1,
+                                showRegularizerEvery=1)
 
             # do the learning
 
@@ -334,7 +336,7 @@ if __name__ == "__main__":
 
         if False:
             rType = inferno.learning.L2
-            regularizer = inferno.learning.Regularizer(rType, c=1.0, )
+            regularizer = inferno.learning.Regularizer(rType, c=0.1, )
             dset = inferno.learning.dataset.vectorDataset(mVec, vis, gts,regularizer=regularizer)
             dset.weightConstraints().addBound(fixedWeightIndex, lowerBound=1.0, upperBound=1.0)
             factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=1)
@@ -348,7 +350,7 @@ if __name__ == "__main__":
 
             nper = 1
             sg = inferno.learning.learners.stochasticGradient
-            learner = sg(dset, maxIterations=2, nPertubations=nper, sigma=1.0, seed=42,
+            learner = sg(dset, maxIterations=4, nPertubations=nper, sigma=1.0, seed=42,
                                n=10.0)
             learner.learn(ehcFactory, weightVector)
 
@@ -359,23 +361,23 @@ if __name__ == "__main__":
                 s += weightVector[wi]**2
             print "sum ",s,numpy.sqrt(s)
 
-        if False:
+        if True:
 
             # make the test
 
             mVec, hammings, vis, gts, weightVector = makeInfernoDset(h5file=f, samples=testSamples, weightVector=weightVector)
             rType = inferno.learning.L2
             regularizer = inferno.learning.Regularizer(rType, c=1.0)
-            dset = inferno.learning.dataset.vectorDataset(mVec, hammings, gts, regularizer=regularizer)
+            dset = inferno.learning.dataset.vectorDataset(mVec, vis, gts, regularizer=regularizer)
             dset.updateWeights(weightVector)
 
             factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=1)
 
-
+            print "average test loss", dset.averageLoss(factory,0)
 
             for i,testSampleIndex in enumerate(testSamples):
 
-                print "testSamples",testSampleIndex
+                #print "testSamples",testSampleIndex
                 group_i = f['item_%d'%testSampleIndex]
 
 
@@ -395,9 +397,35 @@ if __name__ == "__main__":
                 raw = group_i['pixel_raw'][:]
                 gt = group_i['pixel_gt'][:]
                 overseg = group_i['pixel_overseg'][:]
+                pgt = group_i['projected_gt'][:]
 
                 gg = vigra.graphs.gridGraph(raw.shape[0:2])
                 rag = vigra.graphs.regionAdjacencyGraph(graph=gg, labels=overseg)
                 print arg.min(), arg.max()
-                rag.show(raw, arg + 10)
-                vigra.show()
+
+
+         
+                import pylab
+                import matplotlib.cm as cm
+
+                
+
+                resImg  = rag.show(raw, arg + 10,returnImg = True,edgeColor=(1,0,0),alpha=0.5)
+                gtImg  = rag.show(raw, pgt + 10,returnImg = True,edgeColor=(1,0,0),alpha=0.5)
+
+                fig = pylab.figure()
+
+
+                ff = fig.add_subplot(1, 3, 0)
+                ff.set_title('raw')
+                pylab.imshow(raw,cmap=cm.Greys_r)
+
+                ff = fig.add_subplot(1, 3, 1)
+                ff.set_title('result')
+                pylab.imshow(resImg,cmap=cm.Greys_r)
+
+                ff=fig.add_subplot(1, 3, 2)
+                ff.set_title('gt')
+                pylab.imshow(gtImg,cmap=cm.Greys_r)
+
+                pylab.show()

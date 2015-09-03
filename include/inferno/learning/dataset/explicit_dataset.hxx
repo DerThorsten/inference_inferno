@@ -157,6 +157,11 @@ namespace dataset{
             return this->averageLoss(inferenceFactory)*dataset().size();
         }
 
+        ValueType evalRegularizer(const WeightVector & weightVector){
+            return dataset().regularizer().evalRegularizer(weightVector, dataset().weightConstraints());
+        }
+
+
 
         /** \brief get the total objective value
          
@@ -178,7 +183,8 @@ namespace dataset{
             if(updateWeights){
                 dataset().updateWeights(weights);
             }
-            return dataset().regularizer().eval(weights, dataset().totalLoss(inferenceFactory) );            
+            return dataset().regularizer().eval(weights, dataset().weightConstraints(),
+                                                         dataset().totalLoss(inferenceFactory) );            
         }
 
         size_t size()const{

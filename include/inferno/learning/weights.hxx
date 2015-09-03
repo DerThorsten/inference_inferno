@@ -33,21 +33,37 @@ namespace learning{
 
         }
 
-        WeightType getNorm(size_t normType)const{
+        template<class WEIGHT_CONSTRAINTS>
+        WeightType getNorm(
+            size_t normType,
+            const WEIGHT_CONSTRAINTS & wConstraints
+        )const{
             ValueType l = 0;
             if(normType == 1){
+                uint64_t wi = 0;
                 for(const auto w : (*this) ){
-                    l += std::abs(w);
+                    if(!wConstraints.isFixed(wi)){
+                        l += std::abs(w);
+                    }
+                    ++wi;
                 }
             }
             else if(normType == 2){
+                uint64_t wi = 0;
                 for(const auto w : (*this) ){
-                    l += w*w;
+                    if(!wConstraints.isFixed(wi)){
+                        l += w*w;
+                    }
+                    ++wi;
                 }
             }
             else{
+                uint64_t wi = 0;
                 for(const auto w : (*this) ){
-                    l += std::pow(std::abs(w), normType);
+                    if(!wConstraints.isFixed(wi)){
+                        l += std::pow(std::abs(w), normType);
+                    }
+                    ++wi;
                 }
             }
             return std::sqrt(l);

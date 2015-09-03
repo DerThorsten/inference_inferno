@@ -82,7 +82,9 @@ namespace learners{
                 const double   m = 0.5,
                 const int      verbose = 2,
                 const int      nThreads = 0,
-                const int      averagingOrder = -1
+                const int      averagingOrder = -1,
+                const int      showLossEvery = 0,
+                const int      showRegularizerEvery = 0
             )
             :   maxIterations_(maxIterations),
                 n_(n),
@@ -90,7 +92,9 @@ namespace learners{
                 m_(m),
                 verbose_(verbose),
                 nThreads_(nThreads),
-                averagingOrder_(averagingOrder)
+                averagingOrder_(averagingOrder),
+                showLossEvery_(showLossEvery),
+                showRegularizerEvery_(showRegularizerEvery)
             {
             }
             uint64_t maxIterations_;
@@ -100,6 +104,8 @@ namespace learners{
             int      verbose_;
             int      nThreads_;
             int      averagingOrder_;
+            uint64_t showLossEvery_;
+            uint64_t showRegularizerEvery_;
         };
 
         SubGradient(Dataset & dset, const Options & options = Options())
@@ -211,13 +217,35 @@ namespace learners{
                 weightAveraging(weightVector,weightVector);
                 dset.updateWeights(weightVector);
 
+                const auto showRegN  = options_.showRegularizerEvery_;
+                const auto showLossN = options_.showLossEvery_;
 
-                if( iter%10 == 0 ){
-                    std::cout<<"iter "<<iter<<" eps "<<eps<<" av loss"<<dset.averageLoss(inferenceFactory)<<"\n";
+                const bool showLoss = showLossN !=0 && (iter + 1) % showLossN == 0;
+                const bool showReg =  showLoss || (showRegN !=0 && (iter + 1) % showRegN == 0);
+                
+
+
+                if(showReg || showLoss){
+
+                    const auto regVal = dset.evalRegularizer(weightVector);
+                    std::cout<<"i = "<<iter<<"\n";
+           
+                    const auto rString = dset.regularizer().prettyRegularizerString();
+                    std::cout<<"    "<<rString<<" = "<<regVal<<"\n";
+
+                    if(showLoss){
+                        const auto lossVal = dset.totalLoss(inferenceFactory);
+                        const auto cLossVal = dset.regularizer().c()*lossVal;
+                        const auto lString = dset.regularizer().prettyLossSumString();
+                        std::cout<<"    "<<lString<<" = "<<dset.regularizer().c()*cLossVal<<"\n";
+
+                        const auto prettyObjectiveString = dset.regularizer().prettyObjectiveString();
+                        std::cout<<"    "<<prettyObjectiveString<<" = "<< regVal + cLossVal<<"\n";
+
+                    }
+                    std::cout<<"\n";
                 }
-                else{
-                    std::cout<<"iter "<<iter<<" eps "<<eps<<" \n";
-                }
+                
 
                 if(eps<options_.eps_){
                     break;
