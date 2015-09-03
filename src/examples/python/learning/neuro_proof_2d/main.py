@@ -303,7 +303,9 @@ if __name__ == "__main__":
 
 
         if True:
-            dset = inferno.learning.dataset.vectorDataset(mVec, hammings, gts)
+            rType = inferno.learning.L2
+            regularizer = inferno.learning.Regularizer(rType, c=0.01)
+            dset = inferno.learning.dataset.vectorDataset(mVec, hammings, gts, regularizer=regularizer)
             dset.weightConstraints().addBound(fixedWeightIndex, lowerBound=1.0, upperBound=1.0)
             LossAugmentedModel = ParaMcModel.lossAugmentedModelClass('edgeHamming')
 
@@ -312,7 +314,10 @@ if __name__ == "__main__":
             
             
             # make the learner
-            learner = inferno.learning.learners.subGradient(dset, maxIterations=10,n=0.05, c=0.01, m=0.2, nThreads=1)
+            learner = inferno.learning.learners.subGradient(dset,eps=1.0e-8, maxIterations=101,
+                                                            n=1.0, m=0.2, nThreads=1,
+                                                            averagingOrder=-1
+                                                            )
 
             # do the learning
 
@@ -320,16 +325,17 @@ if __name__ == "__main__":
 
             print "the last weight",weightVector[fixedWeightIndex]
             s = 0.0
-            for wi in range(nWeights):
+            for wi in range(nWeights-1):
                 s += weightVector[wi]**2
-            print "sum ",s/nWeights
+            print "sum ",s,numpy.sqrt(s)
 
 
 
 
-        if True:
-
-            dset = inferno.learning.dataset.vectorDataset(mVec, vis, gts)
+        if False:
+            rType = inferno.learning.L2
+            regularizer = inferno.learning.Regularizer(rType, c=1.0, )
+            dset = inferno.learning.dataset.vectorDataset(mVec, vis, gts,regularizer=regularizer)
             dset.weightConstraints().addBound(fixedWeightIndex, lowerBound=1.0, upperBound=1.0)
             factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=1)
             ehcFactory = factory#inferno.inference.ehcFactory(ParaMcModel)
@@ -343,7 +349,7 @@ if __name__ == "__main__":
             nper = 1
             sg = inferno.learning.learners.stochasticGradient
             learner = sg(dset, maxIterations=2, nPertubations=nper, sigma=1.0, seed=42,
-                               n=10.0, alpha=1, c=0.001)
+                               n=10.0)
             learner.learn(ehcFactory, weightVector)
 
      
@@ -351,13 +357,16 @@ if __name__ == "__main__":
             s = 0.0
             for wi in range(nWeights):
                 s += weightVector[wi]**2
-            print "sum ",s/nWeights
+            print "sum ",s,numpy.sqrt(s)
 
-        if True:
+        if False:
 
             # make the test
+
             mVec, hammings, vis, gts, weightVector = makeInfernoDset(h5file=f, samples=testSamples, weightVector=weightVector)
-            dset = inferno.learning.dataset.vectorDataset(mVec, hammings, gts)
+            rType = inferno.learning.L2
+            regularizer = inferno.learning.Regularizer(rType, c=1.0)
+            dset = inferno.learning.dataset.vectorDataset(mVec, hammings, gts, regularizer=regularizer)
             dset.updateWeights(weightVector)
 
             factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=1)

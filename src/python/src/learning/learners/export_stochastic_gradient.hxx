@@ -38,11 +38,9 @@ namespace learners{
         const uint64_t              nPertubations,
         const uint64_t              maxIterations,
         const double                sigma,
-        const double                alpha,
         const int                   verbose,
         const int                   seed,
-        const double                n,
-        const double                c
+        const double                n
     ){
         LEARNER * learner;
         {
@@ -51,11 +49,9 @@ namespace learners{
                 nPertubations,
                 maxIterations,
                 sigma,
-                alpha,
                 verbose,
                 seed,
-                n,
-                c
+                n
             );
             learner = new LEARNER(dataset, options);
         }
@@ -107,11 +103,9 @@ namespace learners{
                 bp::arg("nPertubations") = uint64_t(defaultOptions.nPertubations_) ,
                 bp::arg("maxIterations") = uint64_t(defaultOptions.maxIterations_) ,
                 bp::arg("sigma") = double(defaultOptions.sigma_) ,
-                bp::arg("alpha") = double(defaultOptions.alpha_) ,
                 bp::arg("verbose")= int(defaultOptions.verbose_) ,
                 bp::arg("seed")= int(defaultOptions.seed_),
-                bp::arg("n")= int(defaultOptions.n_),
-                bp::arg("c")= int(defaultOptions.c_)
+                bp::arg("n")= int(defaultOptions.n_)
             ),
             RetValPol< CustWardPost<0,1,NewObj> >()
         );

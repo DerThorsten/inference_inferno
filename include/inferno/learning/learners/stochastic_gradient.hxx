@@ -36,31 +36,25 @@ namespace learners{
                 const uint64_t nPertubations = 100,
                 const uint64_t maxIterations = 10000,
                 const double   sigma = 1.0,
-                const double   alpha  = 1.0,
                 const int      verbose =2,
                 const int      seed = 0,
-                const double   n = 1.0,
-                const double   c = 1.0
+                const double   n = 1.0
             )
             :   nPertubations_(nPertubations),
                 maxIterations_(maxIterations),
                 sigma_(sigma),
-                alpha_(alpha),
                 verbose_(verbose),
                 seed_(seed),
-                n_(n),
-                c_(c)
+                n_(n)
             {
             }
 
             uint64_t nPertubations_;
             uint64_t maxIterations_;
             double   sigma_;
-            double   alpha_;
             int      verbose_;
             int seed_;
             double n_;
-            double c_;
         };
 
         StochasticGradient(Dataset & dset, const Options & options = Options())
@@ -153,7 +147,7 @@ namespace learners{
 
                     WeightVector gradient(weightVector.size(),0);
                     noiseMatrix.weightedSum(losses, gradient);
-                    gradient *= options_.c_/double(options_.nPertubations_);
+                    gradient *= dset.regularizer().c()/double(options_.nPertubations_);
 
     
                     //for(size_t gg=0; gg<10; ++gg){
@@ -176,7 +170,6 @@ namespace learners{
             }                
             weightVector = bestWeight;
             dset.updateWeights(weightVector);
-            std::cout<<"end with "<<dataset_.averageLoss(inferenceFactory)<<"\n";
         }
     private:
 
@@ -201,7 +194,7 @@ namespace learners{
                 WeightVector g=gradient;
                 g*=stepSize;
                 currentWeights -= g;
-                currentWeights *= options_.alpha_;
+                //currentWeights *= options_.alpha_;
 
                 
                 // fix bounded weights

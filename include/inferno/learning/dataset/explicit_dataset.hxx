@@ -96,10 +96,7 @@ namespace dataset{
             }
         }
 
-        template<class CONF>
-        LossType evalLoss(size_t i, CONF & conf)const{
 
-        }
 
         LossType averageLoss(InferenceFactoryBase * inferenceFactory, size_t numThreads=0){
             LossType lossSum = 0;
@@ -156,6 +153,33 @@ namespace dataset{
             */
         }
 
+        LossType totalLoss(InferenceFactoryBase * inferenceFactory){
+            return this->averageLoss(inferenceFactory)*dataset().size();
+        }
+
+
+        /** \brief get the total objective value
+         
+            \param weights Weight for which norm and loss is calculated
+            \param inferenceFactory inferenceFactory which should be used to get argmin
+            \param updateWeights if updateWeights is true, DatasetBase::updateWeights() 
+                is called with the passed weightVector.
+                If and only if (!) the passed weightVector is already the actual weight vector of all
+                the models, updateWeights should be set to false to save runtime.
+                The default is set to 'true' to avoid bugs.
+
+            \returns returns the value  of the total learning objective function for the given weights.
+                The total objective is the 'norm' of the weight vector n plus the 'c' scaled total loss:
+                Therefore the total objective is  'norm' + c* SUM_{all_model} (lossOfModel) 
+        
+           
+        */
+        LossType eval(WeightVector & weights,  InferenceFactoryBase * inferenceFactory, bool updateWeights = true){
+            if(updateWeights){
+                dataset().updateWeights(weights);
+            }
+            return dataset().regularizer().eval(weights, dataset().totalLoss(inferenceFactory) );            
+        }
 
         size_t size()const{
             return dataset().nModels();

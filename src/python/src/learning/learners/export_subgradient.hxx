@@ -36,22 +36,24 @@ namespace learners{
     LEARNER * subGradientFactory(
         typename LEARNER::Dataset & dataset,
         const uint64_t              maxIterations,
-        const double                c,
         const double                n,
+        const double                eps,
         const double                m,
         const int                   verbose,
-        const int                   nThreads
+        const int                   nThreads,
+        const int                   averagingOrder
     ){
         LEARNER * learner;
         {
             ScopedGILRelease allowThreads;
             const auto options = typename LEARNER::Options(
                 maxIterations,
-                c,
                 n,
+                eps,
                 m,
                 verbose,
-                nThreads
+                nThreads,
+                averagingOrder
             );
             learner = new LEARNER(dataset, options);
         }
@@ -120,11 +122,12 @@ namespace learners{
             (
                 bp::arg("dataset"),
                 bp::arg("maxIterations") = uint64_t(defaultOptions.maxIterations_) ,
-                bp::arg("c") = double(defaultOptions.c_) ,
                 bp::arg("n") = double(defaultOptions.n_) ,
+                bp::arg("eps") = double(defaultOptions.eps_) ,
                 bp::arg("m") = double(defaultOptions.m_) ,
                 bp::arg("verbose")= int(defaultOptions.verbose_),
-                bp::arg("nThreads") =int(defaultOptions.nThreads_)
+                bp::arg("nThreads") =int(defaultOptions.nThreads_),
+                bp::arg("averagingOrder") =int(defaultOptions.averagingOrder_)
             ),
             RetValPol< CustWardPost<0,1,NewObj> >()
         );

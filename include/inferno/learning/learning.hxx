@@ -20,40 +20,64 @@ namespace learning{
     class Regularizer{
 
     public:
-       Regularizer(
-           const RegularizerType r = RegularizerType::L1,
-           const ValueType   v       = 1.0
-       )
-       :   regularizer_(r),
-           value_(v){
-       }
+        Regularizer(
+            const RegularizerType r = RegularizerType::L1,
+            const ValueType   _c       = 1.0
+        )
+        :   regularizer_(r),
+            c_(_c){
+        }
 
-        ValueType eval(const WeightVector & weightVector)const{
-              
+        ValueType evalRegularizer(const WeightVector & weightVector)const{  
             if(regularizer_ == RegularizerType::L1){
-                return value_ * weightVector.getNorm(1);
+                return weightVector.getNorm(1);
             }
             else if(regularizer_ == RegularizerType::L2){
-                return value_ * weightVector.getNorm(2);
+                return weightVector.getNorm(2);
             }
             else if(regularizer_ == RegularizerType::ConstL1){
-                return value_ * std::abs(1.0 - weightVector.getNorm(1));
+                return std::abs(1.0 - weightVector.getNorm(1));
             }
             else if(regularizer_ == RegularizerType::ConstL2){
                 const auto d = 1.0 - weightVector.getNorm(2);
-                return value_ * d * d;
-            }
-             
+                return d * d;
+            } 
+        }
+        ValueType eval(const WeightVector & weightVector, const LossType loss)const{   
+            return c_ * loss + this->evalRegularizer(weightVector);
         } 
         RegularizerType regularizer()const{
             return regularizer_;
         }
-        ValueType value()const{
-            return value_;
+        ValueType c()const{
+            return c_;
         }
+
+        std::string prettyRegularizerString()const{
+            if(regularizer_ == RegularizerType::L1){
+                return std::string("‖ω‖¹");
+            }
+            else if(regularizer_ == RegularizerType::L2){
+                return std::string("‖ω‖²");
+            }
+            else if(regularizer_ == RegularizerType::ConstL1){
+                return std::string("|1-‖ω‖¹|");
+            }
+            else if(regularizer_ == RegularizerType::ConstL2){
+                return std::string("|1-‖ω‖²|²");
+            }
+        }
+
+        std::string prettyLossString()const{
+            return std::move(std::string("Δ(y',y)"));
+        }
+        std::string prettyLossSumString()const{
+            return std::move(std::string("C ⋅ Σ Δ(y',y)ₘ"));
+        }
+
    private:
        RegularizerType regularizer_;
-       ValueType value_;
+       ValueType c_;
     };
 
 

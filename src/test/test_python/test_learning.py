@@ -96,14 +96,14 @@ class TestMulticutLearning(unittest.TestCase):
             (mVec,lossFunctions,gts), weightVector = makeDset()
 
 
-
-
-            dset = dataset.vectorDataset(mVec, lossFunctions, gts)
+            rType = inferno.learning.L2
+            regularizer = inferno.learning.Regularizer(rType, c=1.0)
+            dset = dataset.vectorDataset(mVec, lossFunctions, gts, regularizer=regularizer)
             # make the learner
            
             factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)')
             
-            learner = learners.stochasticGradient(dset, nPertubations=20, alpha=0.99,
+            learner = learners.stochasticGradient(dset, nPertubations=20,
                                                   maxIterations=5,
                                                   sigma=30.0)
             learner.learn(factory, weightVector)
@@ -197,7 +197,9 @@ class TestMulticutLearning(unittest.TestCase):
 
 
 
-            dset = dataset.vectorDataset(mVec, lossFunctions, gts)
+            rType = inferno.learning.L2
+            regularizer = inferno.learning.Regularizer(rType, c=1.0)
+            dset = dataset.vectorDataset(mVec, lossFunctions, gts, regularizer=regularizer)
             # make the learner
            
             factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)')
@@ -295,9 +297,11 @@ class TestMulticutLearning(unittest.TestCase):
 
 
 
-            dset = dataset.vectorDataset(mVec, lossFunctions, gts)
+            rType = inferno.learning.L2
+            regularizer = inferno.learning.Regularizer(rType, c=10.0)
+            dset = dataset.vectorDataset(mVec, lossFunctions, gts, regularizer=regularizer)
             # make the learner
-            learner = learners.subGradient(dset, maxIterations=20, c=0.1, m=0)
+            learner = learners.subGradient(dset, maxIterations=20, m=0.2)
 
             factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)')
             LossAugmentedModel = ParaMcModel.lossAugmentedModelClass('edgeHamming')

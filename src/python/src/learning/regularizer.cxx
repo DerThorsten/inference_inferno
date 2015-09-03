@@ -44,7 +44,7 @@ namespace learning{
             bp::init<const RegularizerType, const ValueType>(
                 (
                     bp::arg("regularizerType") = RegularizerType::L2,
-                    bp::arg("value") = 1.0
+                    bp::arg("c") = 1.0
                 ) 
             )
         )

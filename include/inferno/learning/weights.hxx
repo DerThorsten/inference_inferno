@@ -50,7 +50,7 @@ namespace learning{
                     l += std::pow(std::abs(w), normType);
                 }
             }
-            return l;
+            return std::sqrt(l);
         }
     private:
 

@@ -5,6 +5,7 @@
 
 
 #include "inferno/learning/learners/learners.hxx"
+#include "inferno/learning/weights/weight_averaging.hxx"
 #include "inferno/utilities/index_vector.hxx"
 #include "inferno/utilities/line_search/line_search.hxx"
 #include "inferno/inference/base_discrete_inference_factory.hxx"
@@ -13,11 +14,52 @@
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
 
+
+
+    #include <stdio.h>
+    #include <termios.h>
+    #include <unistd.h>
+    #include <fcntl.h>
+
+
 namespace inferno{
 namespace learning{
 namespace learners{
 
 
+
+    #if 0
+    inline int kbhit(void)
+    {
+      struct termios oldt, newt;
+      int ch;
+      int oldf;
+     
+      tcgetattr(STDIN_FILENO, &oldt);
+      newt = oldt;
+      newt.c_lflag &= ~(ICANON | ECHO);
+      tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+      oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+      fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+     
+      ch = getchar();
+     
+      tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+      fcntl(STDIN_FILENO, F_SETFL, oldf);
+     
+      if(ch != EOF)
+      {
+        ungetc(ch, stdin);
+        return 1;
+      }
+     
+      return 0;
+    }
+    #else
+    inline int kbhit(void){
+        return 0;
+    }
+    #endif
 
 
     template<class DATASET>
@@ -35,26 +77,29 @@ namespace learners{
         struct Options{
             Options(
                 const uint64_t maxIterations = 10000,
-                const double   c = 1.0,
                 const double   n = 1.0,
+                const double   eps = 1.0e-10,
                 const double   m = 0.5,
                 const int      verbose = 2,
-                const int      nThreads = 0
+                const int      nThreads = 0,
+                const int      averagingOrder = -1
             )
             :   maxIterations_(maxIterations),
-                c_(c),
                 n_(n),
+                eps_(eps),
                 m_(m),
                 verbose_(verbose),
-                nThreads_(nThreads)
+                nThreads_(nThreads),
+                averagingOrder_(averagingOrder)
             {
             }
             uint64_t maxIterations_;
-            double   c_;
             double   n_;
+            double   eps_;
             double   m_;
             int      verbose_;
             int      nThreads_;
+            int      averagingOrder_;
         };
 
         SubGradient(Dataset & dset, const Options & options = Options())
@@ -72,13 +117,19 @@ namespace learners{
             WeightVector & weightVector,
             InferenceFactoryBase * inferenceFactory = nullptr
         ){
+
+            weights::WeightAveraging weightAveraging(weightVector, options_.averagingOrder_);
+
             auto & dset = dataset();
             WeightVector accFeatureDiff(weightVector.size());
             WeightVector gradient(weightVector.size());
             WeightVector oldGradient(weightVector.size());
+            WeightVector oldWeights = weightVector;
 
             for(size_t iter=0; iter<options_.maxIterations_; ++iter){
 
+                if(kbhit())
+                    break;
                 //if(options_.verbose_ == 2){
                 //    std::cout<<"Iteration "<<iter<<"\n";
                 //
@@ -148,15 +199,29 @@ namespace learners{
                     dset.lock(trainingInstanceIndex);       
                 }
                 
-                const auto normalizationFactor = options_.c_ / dset.size();
+                const auto normalizationFactor = dset.regularizer().c() / dset.size();
                 accFeatureDiff *= normalizationFactor;
-
                 gradient = weightVector;
                 gradient += accFeatureDiff;
 
                 // take gradient step
-                takeGradientStep(inferenceFactory, weightVector, gradient, oldGradient, iter);
+                auto eps = takeGradientStep(inferenceFactory, weightVector,oldWeights, gradient, oldGradient, iter);
                 
+
+                weightAveraging(weightVector,weightVector);
+                dset.updateWeights(weightVector);
+
+
+                if( iter%10 == 0 ){
+                    std::cout<<"iter "<<iter<<" eps "<<eps<<" av loss"<<dset.averageLoss(inferenceFactory)<<"\n";
+                }
+                else{
+                    std::cout<<"iter "<<iter<<" eps "<<eps<<" \n";
+                }
+
+                if(eps<options_.eps_){
+                    break;
+                }
 
             }            
         }
@@ -164,20 +229,20 @@ namespace learners{
 
 
 
-        void takeGradientStep(
+        double takeGradientStep(
             InferenceFactoryBase * inferenceFactory,
             WeightVector & currentWeights,
+            WeightVector & oldWeights,
             WeightVector & gradient,
             WeightVector & oldGradient,
-            const uint64_t iteration
+            const uint64_t iter
         ){
-            const auto iter = (double(iteration+1));
-            const double stepSize = options_.n_/iter;
+            const auto diter = (double(iter+1));
+            const double stepSize = options_.n_/diter;
             //const double stepSize = currentN_;
 
 
 
-            WeightVector oGrad = oldGradient;
             WeightVector wBuffer = currentWeights;
 
             if(iter>0){
@@ -188,6 +253,7 @@ namespace learners{
             else{
                 gradient *= stepSize;
             }
+            oldGradient = gradient;
             currentWeights -= gradient;
 
             // fix bounded weights
@@ -207,16 +273,18 @@ namespace learners{
             dataset_.updateWeights(currentWeights);
 
 
-
+            // compute convergence
+            double dSum = 0;
+            for(size_t wi=0; wi<currentWeights.size(); ++wi){
+                const auto d = currentWeights[wi] - oldWeights[wi];
+                dSum += d*d;
+                oldWeights[wi]  = currentWeights[wi];
+            }
 
             //currentN_*=facs[bestIndex];
                 
-            if( iteration%10 == 0 ){
-                std::cout<<"iteration "<<iteration<<" av loss"<<dataset_.averageLoss(inferenceFactory)<<"\n";
-            }
-            else{
-                std::cout<<"iteration "<<iteration<<" \n";
-            }
+            
+            return dSum;
         }
 
         Dataset & dataset_;
