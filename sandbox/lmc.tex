@@ -79,19 +79,19 @@ With  $\beta_{uv} = w^Tx_{uv}$ we get:
     y_{map} &=   
         \textbf{argmin}_{y} 
                 \sum_{ uv \in E} 
-                    w^Tx_{uv} \cdot \big[ y_u \neq y_v \big] \\
-    y_{map} & =   
-        \textbf{argmin}_{y} 
-                \sum_{ uv \in E} 
-                    w^Tx_{uv} \cdot \big[ y_u \neq y_v \big]
+                    w^Tx_{uv} \cdot \big[ y_u \neq y_v \big] 
 \end{align*}
-Let us define $\textbf{Y}(w)$ as the MAP labeling for a given weight:
+Let us define $\textbf{Y}(w)$ as a function returning the MAP labeling for a given weight:
 \begin{align*}
     \textbf{Y}(w) & =   
         \textbf{argmin}_{y} 
                 \sum_{ uv \in E} 
                     w^Tx_{uv} \cdot \big[ y_u \neq y_v \big]
 \end{align*}
+
+It is easy to see that $\textbf{Y}(w) = \textbf{Y}( \alpha \cdot w) \quad\forall \alpha > 0$ . This means that
+the multicut objective is invariant with respect to scaling of $w$.
+
 
 
 
@@ -105,6 +105,29 @@ We will use $i$ to index a certain training example.
         \sum_{i \in |DS|}  
         \Delta(y^i_{gt},\textbf{Y}^i(w))
 \end{align*}
+
+Weights with a large norm $\norm{w}^2$ are ``usually'' considered as potentially over-fitting.
+A small positive $C$ has the effect that $\norm{w_{opt}}^2$ should be ``small''.
+And  ``usually'' one associates small weights with a low risk of over-fitting.
+But this is not true for the multicut objective.
+Since $\textbf{Y}(w) = \textbf{Y}( \alpha \cdot w) \quad\forall \alpha > 0$ we
+can just take potentially over-fitting weights with a large norm and scale them
+with a small $\alpha$. 
+
+In other words, $C$ does not put any meaningful restrictions on the weights.
+But if we fix a single entry in $w$ to be $1$, let us say the weight which is associated with the ``constant-$1$-feature'',
+we fix that problem.
+
+This is the same as the following objective with \textbf{un-constraint} weights:
+
+\begin{align*}
+    \textbf{Y}(w) & =   
+        \textbf{argmin}_{y} 
+                \sum_{ uv \in E} 
+                    w^Tx_{uv} \cdot \big[ y_u \neq y_v \big] + 1
+\end{align*}
+
+
 
 \subsection{Weight Initialization}
 

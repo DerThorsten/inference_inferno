@@ -302,7 +302,7 @@ if __name__ == "__main__":
 
 
 
-        if True:
+        if False:
             rType = inferno.learning.L2
             regularizer = inferno.learning.Regularizer(rType, c=0.001)
             dset = inferno.learning.dataset.vectorDataset(mVec, hammings, gts, regularizer=regularizer)
@@ -336,7 +336,7 @@ if __name__ == "__main__":
 
         if True:
             rType = inferno.learning.L2
-            regularizer = inferno.learning.Regularizer(rType, c=0.1, )
+            regularizer = inferno.learning.Regularizer(rType, c=0.01, )
             dset = inferno.learning.dataset.vectorDataset(mVec, vis, gts,regularizer=regularizer)
             dset.weightConstraints().addBound(fixedWeightIndex, lowerBound=1.0, upperBound=1.0)
             factory = inferno.inference.multicutFactory(ParaMcModel,workFlow='(TTC)(MTC)(IC)(CC-IFD,TTC-I)',numThreads=1)
@@ -350,7 +350,7 @@ if __name__ == "__main__":
 
             nper = 1
             sg = inferno.learning.learners.stochasticGradient
-            learner = sg(dset, maxIterations=10, nPertubations=nper, sigma=1.0, seed=42,
+            learner = sg(dset, maxIterations=4, nPertubations=nper, sigma=0.1, seed=42,
                                n=10.0)
             learner.learn(ehcFactory, weightVector)
 
@@ -367,7 +367,7 @@ if __name__ == "__main__":
 
             mVec, hammings, vis, gts, weightVector = makeInfernoDset(h5file=f, samples=testSamples, weightVector=weightVector)
             rType = inferno.learning.L2
-            regularizer = inferno.learning.Regularizer(rType, c=1.0)
+            regularizer = inferno.learning.Regularizer(rType, c=0.1)
             dset = inferno.learning.dataset.vectorDataset(mVec, vis, gts, regularizer=regularizer)
             dset.updateWeights(weightVector)
 
