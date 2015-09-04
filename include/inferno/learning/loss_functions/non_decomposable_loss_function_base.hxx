@@ -13,17 +13,15 @@ namespace learning{
 namespace loss_functions{
 
 
-
-    /// \base class for non decomposable loss functions
+    /// \brief  bass loss function class
     template<class MODEL>
-    class NonDecomposableLossFunctionBase{
+    class LossFunctionBase{
 
     public:
         typedef MODEL Model;
         typedef typename Model:: template VariableMap<DiscreteLabel> ConfMap;
-        typedef NoLossAugmentedModel LossAugmentedModel;
 
-        virtual ~NonDecomposableLossFunctionImplBase(){
+        virtual ~LossFunctionBase(){
         }
 
         // pure virtual interface
@@ -43,7 +41,58 @@ namespace loss_functions{
         
     };
 
+
+
+
+    /// \base class for non decomposable loss functions
+    template<class MODEL>
+    class NonDecomposableLossFunctionBase : 
+        public LossFunctionBase<MODEL>
+    {
+
+    public:
+        typedef MODEL Model;
+        typedef typename Model:: template VariableMap<DiscreteLabel> ConfMap;
+        typedef NoLossAugmentedModel LossAugmentedModel;
+
+        virtual ~NonDecomposableLossFunctionImplBase(){
+        }
+
+
+    private:
+        
+    };
+
     
+    /// \base class for decomposable loss functions
+    template<class MODEL, class LOSS_AUGMENTED_MODEL>
+    class DecomposableLossFunctionBase : 
+        public LossFunctionBase<MODEL>
+    {
+
+    public:
+        typedef MODEL Model;
+        typedef typename Model:: template VariableMap<DiscreteLabel> ConfMap;
+        typedef LOSS_AUGMENTED_MODEL LossAugmentedModel;
+
+        virtual ~DecomposableLossFunctionBase(){
+        }
+
+        virtual void makeLossAugmentedModel(
+            const Model & model, 
+            const ConfMap & gt, 
+            LossAugmentedModel & lossAugmentedModel
+        ) const = 0;
+
+
+    private:
+        
+    };
+
+
+
+
+
 
 
 } // end namespace inferno::learning::loss_functions

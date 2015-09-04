@@ -174,7 +174,7 @@ struct ModelMapExporter{
 
 
 
-} // end namespace python
+} // end namespace inferno::python
 } // end namespace inferno
 
 

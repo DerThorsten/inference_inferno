@@ -2,6 +2,7 @@
 
 \usepackage{bbm}
 \usepackage{amsmath}
+\usepackage{hyperref}
 \setlength\parindent{0pt}
 
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
@@ -9,30 +10,30 @@
 \begin{document}
 
 
-\section{Pixel Prediction}
 
-Use either auto-context or CNN predict
-semantic classes and edge probability map
+\section{Dataset}
+A sample from the Drosophila medulla prepared using FIB-SEM imaging.
+The dataset is from \url{https://github.com/janelia-flyem/neuroproof_examples}.
+It contains precomputed super-voxels and dense ground truth.
 
+For fast experimentation I extracted 2D slices from the 3D data.
 
 \section{Boundary/Face Prediction}
 
-Use pixel prediction results and a
-handful of filter results to accumulate
-features for each face.
+Use a handful of filters results to accumulate
+statistics for each face / edge.
 
-The filters will / should be simple blockwise callable filters as:
+The filters are :
 \begin{itemize}
 \item hessian of gaussian eigenvalues
 \item structure tensor eigenvalues
 \item$ \ldots$
 \end{itemize}
 
-Use a default random forest to predict boundary
-probability map.
 
-
-
+With these features a unstructured random 
+forest is trained to predict a ``merge/not-merge''
+probability for each edge.
 
 
 
@@ -42,12 +43,16 @@ normalization of the raw features
 which have been used for the unstructured learning.
 The result should be features in -1,1 or 0,1.
 
-The random forest face probabilities should also be used
+The random forest probabilities should also be used
 as a feature. No normalization is needed here.
 
 To make the features more powerful, we try
 to emulate the kernel trick by approximating an
-rbf kernel or a polynomial kernel
+rbf kernel or a polynomial kernel.
+Currently I am using hand chosen products
+between normalized features and random forest probabilities.
+In the future I want to try the following:
+
 \begin{itemize}
 \item Nystroem Approximation of kernel
 \end{itemize}
@@ -124,12 +129,40 @@ This is the same as the following objective with \textbf{un-constraint} weights:
     \textbf{Y}(w) & =   
         \textbf{argmin}_{y} 
                 \sum_{ uv \in E} 
-                    w^Tx_{uv} \cdot \big[ y_u \neq y_v \big] + 1
+                    ( w^Tx_{uv} + 1)\cdot \big[ y_u \neq y_v \big] 
 \end{align*}
 
 
 
 \subsection{Weight Initialization}
 
+I use a sub-gradient ssvm with hamming loss on the edges to
+initialize the weights.
+Even without such an initialization I can minimize the structured loss
+functions.
+
+\subsection{Structured Loss Functions}
+I did most experiments with 
+variation of information (\url{https://en.wikipedia.org/wiki/Variation_of_information})
+and rand index (\url{https://en.wikipedia.org/wiki/Rand_index}).
+But I also tried f-score (\url{https://en.wikipedia.org/wiki/F1_score}).
+
+\subsection{(stochastic) Gradient Decent Algorithm}
+
+I am using the ``first'' algorithm again.
+\begin{itemize}
+\item iterate over dataset in random order
+\item get perturbed weights and remember the noise added in each perturbation
+\item compute loss for each perturbation
+\item Compute weighted sum between added noise and loss
+and use that as gradient
+\end{itemize}
+
+\subsection{Momentum}
+
+Momentum means, in each gradient step we add a bit of the
+old gradient to the current gradient (
+\url{http://www.willamette.edu/~gorr/classes/cs449/momrate.html} ).
+Using momentum this is not needed at all(!).
 
 \end{document}

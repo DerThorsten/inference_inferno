@@ -10,7 +10,7 @@
 #include <limits>
 
 #include "inferno/inferno.hxx"
-#include "inferno/utilities/shape_walker.hxx"
+#include "inferno/utilities/linear_constraint.hxx"
 #include "inferno/value_tables/value_table_utilities.hxx"
     
 namespace inferno{
@@ -55,15 +55,15 @@ public:
 
 class DiscreteValueTableIndicatorVariable{
 public:
-    typedef typename MODEL::VariableDescriptor VariableDescriptor;
+
 private:
     std::vector<ArityType>      valueTableVars_;
-    std::Vector<DiscreteLabel>  valueTableLabels_;
+    std::vector<DiscreteLabel>  valueTableLabels_;
 };
 
 
 using DiscreteValueTableIndicatorVariableConstraint = utilities::LinearConstraint<
-    DiscreteValueTableIndicatorVariable<MODEL>, double, double  
+    DiscreteValueTableIndicatorVariable, double, double  
 >;
 
 
@@ -72,19 +72,19 @@ class LinearConstraintDiscreteValueTableBase : public ConstraintDiscreteValueTab
 {
 public:
     typedef DiscreteValueTableIndicatorVariableConstraint IndicatorVariableConstraint;
-    typedef std::vector<IndicatorVarConstraint>  IndicatorVariableConstraintVector;
+    typedef std::vector<IndicatorVariableConstraint>  IndicatorVariableConstraintVector;
 
     LinearConstraintDiscreteValueTableBase()
     :   ConstraintDiscreteValueTableBase(){
     }
-    virtual ~ConstraintDiscreteValueTableBase(){
+    virtual ~LinearConstraintDiscreteValueTableBase(){
     }
 
     
-    virtual = violatedConstraints(
+    virtual void violatedConstraints(
         const DiscreteLabel * conf,
         IndicatorVariableConstraintVector & violatedConstraints
-    ) const = 0
+    ) const = 0;
 
     // with default impl
     virtual bool isFeasible(const DiscreteLabel * conf) const override{
