@@ -22,8 +22,8 @@
 #include "inferno/inferno.hxx"
 #include "inferno/inferno_python.hxx"
 
-#include "inferno/model/general_discrete_model.hxx"
-#include "inferno/model/parametrized_multicut_model.hxx"
+#include "inferno/python/model/general_discrete_model.hxx"
+#include "inferno/python/model/parametrized_multicut_model.hxx"
 #include "inferno/learning/dataset/explicit_dataset.hxx"
 #include "inferno/learning/loss_functions/loss_functions.hxx"
 #include "inferno/learning/loss_functions/edge_hamming.hxx"
@@ -71,7 +71,7 @@ BOOST_PYTHON_MODULE_INIT(learners) {
     /////////////////////////////////////////////////////
     {
         using namespace inferno;
-        typedef models::GeneralDiscreteModel Model;
+        typedef models::PyGeneralDiscreteModel Model;
 
         {
             typedef learning::loss_functions::VariationOfInformation<Model> LossFunction;
@@ -97,10 +97,7 @@ BOOST_PYTHON_MODULE_INIT(learners) {
     /////////////////////////////////////////////////////
     {
         using namespace inferno;
-        typedef models::ParametrizedMulticutModel<
-            models::detail_python::EdgeArray, 
-            models::detail_python::FeatureArray
-        > Model;
+        typedef models::PyParametrizedMulticutModel Model;
 
         {
             typedef learning::loss_functions::VariationOfInformation<Model> LossFunction;

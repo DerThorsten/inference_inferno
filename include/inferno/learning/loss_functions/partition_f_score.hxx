@@ -12,20 +12,20 @@
 // inferno
 #include "inferno/inferno.hxx"
 #include "inferno/learning/loss_functions/loss_functions.hxx"
-
+#include "inferno/learning/loss_functions/loss_function_base.hxx"
 
 namespace inferno{
 namespace learning{
 namespace loss_functions{
 
     template<class MODEL>
-    class PartitionFScore : public NonDecomposableLossFunctionImplBase<MODEL>{
+    class PartitionFScore : public NonDecomposableLossFunctionBase<MODEL>{
 
     public:
-        typedef NonDecomposableLossFunctionImplBase<MODEL> Base;
-        typedef typedef typename Base::Model Model;
-        typedef typedef typename Base::ConfMap ConfMap;
-        typedef typedef typename Base::LossAugmentedModel LossAugmentedModel;
+        typedef NonDecomposableLossFunctionBase<MODEL> Base;
+        typedef typename Base::Model Model;
+        typedef typename Base::ConfMap ConfMap;
+        typedef typename Base::LossAugmentedModel LossAugmentedModel;
 
         // specific typedef for fscore
         typedef typename Model:: template FactorMap<double> FactorWeightMap;
@@ -76,8 +76,6 @@ namespace loss_functions{
             for(const auto fac : model.factorDescriptors()){
                 const auto factor = model.factor(fac);
 
-
-
                 if(factor->arity() == 2){
                     const auto u = factor->variable(0);
                     const auto v = factor->variable(1);
@@ -103,10 +101,6 @@ namespace loss_functions{
                     }
                 }
             }
-            //std::cout<<"tp "<<truePositive<<"\n";
-            //std::cout<<"tn "<<trueNegative<<"\n";
-            //std::cout<<"fp "<<falsePositive<<"\n";
-            //std::cout<<"fn "<<falseNegative<<"\n";
 
             auto score =  (1.0 + sB) * truePositive  /
             ( (1.0+sB)*truePositive + sB*falseNegative + falsePositive);

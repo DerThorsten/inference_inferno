@@ -1,11 +1,5 @@
-/** \file explicit_dataset.hxx 
-    \deprecated will be removed soon
-*/
-#ifndef INFERNO_LEARNING_LEARNERS_EXPLICIT_DATASET_HXX
-#define INFERNO_LEARNING_LEARNERS_EXPLICIT_DATASET_HXX
-
-// std
-#include <vector>
+#ifndef INFERNO_LEARNING_LEARNERS_DATASET_BASE
+#define INFERNO_LEARNING_LEARNERS_DATASET_BASE
 
 // boost
 #include <boost/concept_check.hpp>
@@ -14,6 +8,7 @@
 // inferno
 #include "inferno/inferno.hxx"
 #include "inferno/learning/learning.hxx"
+#include "inferno/learning/dataset/training_instance.hxx"
 #include "inferno/utilities/parallel/pool.hxx"
 #include "inferno/learning/weights.hxx"
 #include "inferno/learning/weight_constraints.hxx"
@@ -24,45 +19,9 @@ namespace learning{
 namespace dataset{
 
 
-    template<class LOSS_FUNCTION>
-    class TrainingInstance{
-    public:
-        typedef LOSS_FUNCTION LossFunction;
-        typedef typename LossFunction::Model Model;
-        typedef typename Model:: template VariableMap<DiscreteLabel> GroundTruth;
-        TrainingInstance(){
-        }
-        TrainingInstance(Model & m, LossFunction & l, const GroundTruth & g)
-        :   model_(&m),
-            lossFunction_(&l),
-            gt_(&g){
-
-        }
-
-        Model & model() {
-            return *model_;
-        }
-
-        LossFunction & lossFunction() {
-            return *lossFunction_;
-        }
-
-        const GroundTruth & groundTruth() {
-            return *gt_;
-        }
-
-    private:
-        Model * model_;
-        LossFunction * lossFunction_;
-        const GroundTruth * gt_;
-    };
-    
-
-
-
 
     template<class DATASET, class LOSS_FUNCTION>
-    class DatasetBase{
+    class NewDatasetBase{
 
     public:
         //typedef typename LOSS_FUNCTION::Model MODEL;
@@ -84,17 +43,17 @@ namespace dataset{
         }
 
         value_type operator[](const size_t i){
-            auto & ds = dataset();
-            auto & model = ds.model(i);
-            auto & lossFunction = ds.lossFunction(i);
-            auto & groundTruth = ds.groundTruth(i);
+            auto ds = dataset();
+            auto model = ds.model(i);
+            auto lossFunction = ds.lossFunction(i);
+            auto groundTruth = ds.groundTruth(i);
             return value_type(model, lossFunction, groundTruth);
         }
 
         void updateWeights(const WeightVector & weights){
             for(size_t i=0; i<dataset().size(); ++i){
                 dataset().unlock(i);
-                dataset().model(i).updateWeights(weights);
+                dataset().model(i)->updateWeights(weights);
                 dataset().lock(i);
             }
         }
@@ -111,9 +70,9 @@ namespace dataset{
             for(size_t i=0; i<dataset().size(); ++i){
                 dataset().unlock(i);
 
-                auto & model =  dataset().model(i);
-                auto & lossFunction =  dataset().lossFunction(i);
-                const auto & groundTruth =  dataset().groundTruth(i);
+                auto & model =  *dataset().model(i);
+                auto * lossFunction =  dataset().lossFunction(i);
+                const auto & groundTruth =  *dataset().groundTruth(i);
 
                 auto inf = inferenceFactory->create(model);
                 inf->infer();
@@ -121,7 +80,7 @@ namespace dataset{
                 C argMinConf(model);
                 inf->conf(argMinConf);
 
-                lossSum += lossFunction.eval(model, groundTruth, argMinConf);
+                lossSum += lossFunction->eval(model, groundTruth, argMinConf);
 
                 dataset().lock(i);
             }
@@ -232,71 +191,6 @@ namespace dataset{
 
 
 
-    template<class LOSS_FUNCTION>
-    class VectorDataset : 
-        public DatasetBase< VectorDataset<LOSS_FUNCTION>,LOSS_FUNCTION> 
-    {
-    public:
-        typedef LOSS_FUNCTION LossFunction;
-        typedef typename LossFunction::Model Model;
-        typedef typename Model:: template VariableMap<DiscreteLabel> GroundTruth;
-
-        //static_assert(boost::DefaultConstructible<LOSS_FUNCTION>::value,"fofo");
-
-        BOOST_CONCEPT_ASSERT((boost::DefaultConstructible<Model>));
-        BOOST_CONCEPT_ASSERT((boost::DefaultConstructible<LossFunction>));
-        BOOST_CONCEPT_ASSERT((boost::DefaultConstructible<GroundTruth>));
-
-
-
-        VectorDataset(
-            std::vector<Model>         & models,
-            std::vector<LossFunction>  & lossFunctions,
-            const std::vector<GroundTruth>   & gts,
-            const Regularizer & regularizer = Regularizer()
-        )
-        :   models_(models),
-            lossFunctions_(lossFunctions),
-            gts_(gts),
-            regularizer_(regularizer)
-        {
-
-        }
-
-        void resize(const size_t i){
-            models_.resize(i);
-            lossFunctions_.resize(i);
-            gts_.resize(i);
-        }
-
-        size_t nModels()const{
-            return models_.size();
-        }
-        Model & model(size_t i){
-            return models_[i];
-        }
-        LossFunction & lossFunction(size_t i){
-            return lossFunctions_[i];
-        }
-        const GroundTruth & groundTruth(size_t i){
-            return gts_[i];
-        }
-
-        const Regularizer & regularizer()const{
-            return regularizer_;
-        }
-
-        WeightConstraints & weightConstraints(){
-            return weightConstraints_;
-        }
-
-        std::vector<Model>         & models_;
-        std::vector<LossFunction>  & lossFunctions_;
-        const std::vector<GroundTruth>   & gts_;
-        Regularizer regularizer_;
-        WeightConstraints weightConstraints_;
-    };
-
 
  
 
@@ -304,4 +198,4 @@ namespace dataset{
 } // end namespace inferno::learning
 } // end namespace inferno
 
-#endif /*INFERNO_LEARNING_LEARNERS_EXPLICIT_DATASET_HXX*/
+#endif /*INFERNO_LEARNING_LEARNERS_DATASET_BASE*/

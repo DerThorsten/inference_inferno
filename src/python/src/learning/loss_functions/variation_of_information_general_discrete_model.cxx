@@ -4,7 +4,7 @@
 
 // boost python related
 #include "export_variation_of_information.hxx"
-#include "inferno/model/general_discrete_model.hxx"
+#include "inferno/python/model/general_discrete_model.hxx"
 
 namespace inferno{
 namespace learning{

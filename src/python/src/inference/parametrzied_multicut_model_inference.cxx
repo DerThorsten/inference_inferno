@@ -13,7 +13,7 @@
 #include "exportInference.hxx"
 
 // model type
-#include "inferno/model/parametrized_multicut_model.hxx"
+#include "inferno/python/model/parametrized_multicut_model.hxx"
 
 // solvers
 //#include "inferno/inference/icm.hxx"

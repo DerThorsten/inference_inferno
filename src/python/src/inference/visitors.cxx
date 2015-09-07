@@ -14,8 +14,8 @@
 
 // inferno related
 #include "inferno/inferno.hxx"
-#include "inferno/model/general_discrete_model.hxx"
-#include "inferno/model/parametrized_multicut_model.hxx"
+#include "inferno/python/model/general_discrete_model.hxx"
+#include "inferno/python/model/parametrized_multicut_model.hxx"
 #include "inferno/inference/discrete_inference_base.hxx"
 #include "inferno/inference/visitors.hxx"
 

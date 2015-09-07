@@ -9,7 +9,7 @@
 #include "inferno/inferno_python.hxx"
 #include "inferno/learning/loss_functions/loss_functions.hxx"
 #include "inferno/learning/loss_functions/edge_hamming.hxx"
-#include "inferno/model/general_discrete_model.hxx"
+#include "inferno/python/model/general_discrete_model.hxx"
 
 #include "export_vector_dataset.hxx"
 

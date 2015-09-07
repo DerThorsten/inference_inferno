@@ -25,8 +25,8 @@
 #include "inferno/learning/loss_functions/loss_functions.hxx"
 #include "inferno/learning/loss_functions/edge_hamming.hxx"
 
-
-
+#include "inferno/python/model/general_discrete_model.hxx"
+#include "inferno/python/model/parametrized_multicut_model.hxx"
 
 namespace inferno{
 namespace learning{

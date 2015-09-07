@@ -33,86 +33,9 @@
 #include "inferno/inferno.hxx"
 //#include "inferno/model/parametrized_multicut_model.hxx"
 #include "inferno/model/general_discrete_model.hxx"
-
+#include "inferno/python/model/models.hxx"
 namespace inferno{
 
-
-
-    namespace models{
-
-        // forward declaration
-        template<class EDGES, class FEATURES>
-        class ParametrizedMulticutModel;
-
-        
-
-        namespace detail_python{
-            typedef vigra::MultiArray<1, vigra::TinyVector<uint64_t,2> > EdgeArray;
-            typedef vigra::MultiArray<2, ValueType>                      FeatureArray;
-        }   
-        typedef ParametrizedMulticutModel<
-            detail_python::EdgeArray, 
-            detail_python::FeatureArray
-        > PyParametrizedMulticutModel;
-
-        typedef GeneralDiscreteModel  PyGeneralDiscreteModel;
-
-        //template<class MODEL>
-        //std::string name()const{
-        //}
-
-        template<class MODEL>
-        struct ModelName;
-
-        template<>
-        struct ModelName<PyGeneralDiscreteModel>{
-            static std::string name(){
-                return "GeneralDiscreteModel";
-            }
-        };
-        template<>
-        struct ModelName<PyParametrizedMulticutModel>{
-            static std::string name(){
-                return "ParametrizedMulticutModel";
-            }
-        };
-
-        
-
-        /*
-        template<class MODEL>
-        class ModelNumpyArrayConverter{
-        public:
-
-            template<class T>
-            struct NodeMap{
-                typedef vigra::NumpyArray<T, 1>                     NumpyArrayType;
-                typedef vigra::MultiArray<T, 1>                     MultiArrayType;
-                typedef vigra::MultiArrayView<T, 1>                 MultiArrayViewType;
-                typedef typename  MODEL:: template VariableMap<T>   NativeType;
-
-
-                static void fromPython(const MODEL & m &,
-                                       MultiArrayViewType view & , 
-                                       NativeType & native){
-                    for(auto var : m.variables()){
-                        native[var] = view[var];
-                    }
-                };            
-            };
-
-        };
-        */
-
-
-    }
-
-    namespace learing{
-        namespace dataset{
-
-
-        }
-    }
 
 
 

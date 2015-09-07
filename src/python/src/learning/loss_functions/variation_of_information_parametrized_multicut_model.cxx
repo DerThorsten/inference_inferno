@@ -4,7 +4,7 @@
 
 // boost python related
 #include "export_variation_of_information.hxx"
-#include "inferno/model/parametrized_multicut_model.hxx"
+#include "inferno/python/model/parametrized_multicut_model.hxx"
 
 namespace inferno{
 namespace learning{

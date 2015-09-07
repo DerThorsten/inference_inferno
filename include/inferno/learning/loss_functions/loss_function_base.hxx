@@ -1,12 +1,13 @@
-#ifndef INFERNO_LEARNING_LOSS_FUNCTIONS_F_SCORE
-#define INFERNO_LEARNING_LOSS_FUNCTIONS_F_SCORE
+#ifndef INFERNO_LEARNING_LOSS_FUNCTIONS_BASE_HXX
+#define INFERNO_LEARNING_LOSS_FUNCTIONS_BASE_HXX
 
 // boost
 #include <boost/concept_check.hpp>
 
 // inferno
 #include "inferno/inferno.hxx"
-#include "inferno/learning/loss_functions/non_decomposable_loss_function_base.hxx"
+#include "inferno/learning/loss_functions/loss_functions.hxx"
+
 
 namespace inferno{
 namespace learning{
@@ -55,7 +56,7 @@ namespace loss_functions{
         typedef typename Model:: template VariableMap<DiscreteLabel> ConfMap;
         typedef NoLossAugmentedModel LossAugmentedModel;
 
-        virtual ~NonDecomposableLossFunctionImplBase(){
+        virtual ~NonDecomposableLossFunctionBase(){
         }
 
 

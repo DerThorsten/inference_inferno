@@ -9,21 +9,14 @@
 #include "inferno/model/parametrized_multicut_model.hxx"
 #include "inferno/learning/dataset/explicit_dataset.hxx"
 #include "inferno/learning/loss_functions/edge_hamming.hxx"
+#include "inferno/python/model/parametrized_multicut_model.hxx"
 
 namespace inferno{
 namespace learning{
 namespace learners{
 
-    //////////////////////////////////////////////////////
-    // ParametrizedMulticutModel
-    //
-    //
-    //////////////////////////////////////////////////////
-    typedef models::ParametrizedMulticutModel<
-            models::detail_python::EdgeArray, 
-            models::detail_python::FeatureArray
-    > Model;
 
+    typedef models::PyParametrizedMulticutModel Model;
     typedef loss_functions::EdgeHamming<Model> EdgeHammingLoss;
     typedef dataset::VectorDataset<EdgeHammingLoss>  EdgeHammingDataset;
 
