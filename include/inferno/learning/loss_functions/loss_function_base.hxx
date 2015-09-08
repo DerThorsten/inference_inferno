@@ -27,6 +27,8 @@ namespace loss_functions{
 
         // pure virtual interface
         virtual std::string name() const = 0;
+
+        // eval the loss
         virtual LossType eval(
             const Model & model, 
             const ConfMap & confGt, 
@@ -34,6 +36,8 @@ namespace loss_functions{
         ) const = 0 ;
 
         // with default implementation
+
+        // get the maximum loss
         virtual LossType maximumLoss()const {
             return infVal();
         }
@@ -58,8 +62,6 @@ namespace loss_functions{
 
         virtual ~NonDecomposableLossFunctionBase(){
         }
-
-
     private:
         
     };
@@ -79,13 +81,12 @@ namespace loss_functions{
         virtual ~DecomposableLossFunctionBase(){
         }
 
+        // make the loss augmented model
         virtual void makeLossAugmentedModel(
             const Model & model, 
             const ConfMap & gt, 
             LossAugmentedModel & lossAugmentedModel
         ) const = 0;
-
-
     private:
         
     };

@@ -1,5 +1,5 @@
-#ifndef INFERNO_PYTHON_LEARNING_LOSS_FUNCTIONS_EXPORT_PARTITION_F_SCORE
-#define INFERNO_PYTHON_LEARNING_LOSS_FUNCTIONS_EXPORT_PARTITION_F_SCORE
+#ifndef INFERNO_PYTHON_LEARNING_LOSS_FUNCTIONS_EXPORT_RAND_INDEX_HXX
+#define INFERNO_PYTHON_LEARNING_LOSS_FUNCTIONS_EXPORT_RAND_INDEX_HXX
 
 // boost
 #include <boost/python/def_visitor.hpp>
@@ -11,7 +11,7 @@
 
 // inferno 
 #include "inferno/python/learning/loss_functions/export_loss_functions.hxx"
-#include "inferno/learning/loss_functions/partition_f_score.hxx"
+#include "inferno/learning/loss_functions/rand_index.hxx"
 
 
 namespace inferno{
@@ -28,19 +28,19 @@ namespace loss_functions{
 
 
     template<class MODEL>
-    struct ExportPartitonFScore{
+    struct ExportRandIndex{
         typedef MODEL Model;
         typedef NonDecomposableLossFunctionBase<Model> Base;
         typedef NonDecomposableLossFunctionBaseWrap<Model> BaseWrap;
-        typedef PartitionFScore<Model> LossFunction;
+        typedef RandIndex<Model> LossFunction;
         typedef std::auto_ptr<Base> BasePtrType;
         typedef std::auto_ptr<LossFunction> PtrType;
-        typedef typename LossFunction::FactorWeightMap FactorWeightMap;
+        typedef typename LossFunction::VariableSizeMap VariableSizeMap;
 
         static void exportLossFunction(const std::string modelClsName){
 
             const auto baseClsName = modelClsName + 
-               std::string("PartitionFScore");
+               std::string("RandIndex");
 
 
             // the class
@@ -54,16 +54,16 @@ namespace loss_functions{
             //bp::register_ptr_to_python< std::unique_ptr<Base> >();
 
             // the factories
-            bp::def("partitionFScore",&factory,
+            bp::def("randIndex",&factory,
                 (
                     bp::arg("model"),
-                    bp::arg("factorWeightMap"),
+                    bp::arg("variableSizeMap"),
                     bp::arg("beta") = 0.5,
                     bp::arg("useIgnoreLabel") = false,
                     bp::arg("ignoreLabel") = -1
                 )
             );
-            bp::def("partitionFScore",&factoryWithoutFactorWeightMap,
+            bp::def("randIndex",&factoryWithoutVariableSizeMap,
                 (
                     bp::arg("model"),
                     bp::arg("beta") = 0.5,
@@ -76,21 +76,21 @@ namespace loss_functions{
 
         static PtrType factory(
             const Model & model,
-            const FactorWeightMap & factorWeightMap,
+            const VariableSizeMap & variableSizeMap,
             const double beta,
             const bool useIgnoreLabel,
             const DiscreteLabel ignoreLabel
         ){
-            return PtrType(new LossFunction(model, beta, useIgnoreLabel, ignoreLabel, factorWeightMap));
+            return PtrType(new LossFunction(model, useIgnoreLabel, ignoreLabel, variableSizeMap));
         }
 
-        static BasePtrType factoryWithoutFactorWeightMap(
+        static BasePtrType factoryWithoutVariableSizeMap(
             const Model & model,
             const double beta,
             const bool useIgnoreLabel,
             const DiscreteLabel ignoreLabel
         ){
-            Base * basePtr =  new LossFunction(model, beta, useIgnoreLabel, ignoreLabel);
+            Base * basePtr =  new LossFunction(model, useIgnoreLabel, ignoreLabel);
             return BasePtrType(basePtr);
         }
     };
@@ -102,4 +102,4 @@ namespace loss_functions{
 } // end namespace inferno
 
 
-#endif /* INFERNO_PYTHON_LEARNING_LOSS_FUNCTIONS_EXPORT_PARTITION_F_SCORE */
+#endif /* INFERNO_PYTHON_LEARNING_LOSS_FUNCTIONS_EXPORT_RAND_INDEX_HXX */

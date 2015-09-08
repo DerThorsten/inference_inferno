@@ -54,7 +54,9 @@ namespace loss_functions{
             const FactorWeightMap & factorWeightMap
         )
         :   factorWeightMap_(model),
-            beta_(beta){
+            beta_(beta),
+            useIgnoreLabel_(useIgnoreLabel),
+            ignoreLabel_(ignoreLabel){
             for(const auto fac : model.factorDescriptors())
                 factorWeightMap_[fac] = factorWeightMap[fac];
         }

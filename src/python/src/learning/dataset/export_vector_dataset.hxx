@@ -15,7 +15,6 @@
 #include <vigra/numpy_array_converters.hxx>
 #include <boost/python/exception_translator.hpp>
 
-// standart c++ headers (whatever you need (string and vector are just examples))
 #include <string>
 #include <vector>
 
