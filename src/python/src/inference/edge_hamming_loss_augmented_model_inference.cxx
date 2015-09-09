@@ -14,8 +14,8 @@
 
 // model type
 #include "inferno/learning/loss_functions/edge_hamming.hxx"
-#include "inferno/model/general_discrete_model.hxx"
-#include "inferno/model/parametrized_multicut_model.hxx"
+#include "inferno/python/model/general_discrete_model.hxx"
+#include "inferno/python/model/parametrized_multicut_model.hxx"
 
 // solvers
 //#include "inferno/inference/icm.hxx"

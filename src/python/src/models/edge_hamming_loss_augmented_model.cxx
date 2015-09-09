@@ -11,12 +11,6 @@
 #include <boost/python/def_visitor.hpp>
 
 
-// vigra numpy array converters
-#include <vigra/numpy_array.hxx>
-#include <vigra/numpy_array_converters.hxx>
-#include <boost/python/exception_translator.hpp>
-
-
 // export helper
 #include "exportModels.hxx"
 
@@ -25,11 +19,12 @@
 #include <vector>
 
 // inferno relatex
+#include "inferno/python/model/parametrized_multicut_model.hxx"
+#include "inferno/python/model/general_discrete_model.hxx"
+
 #include "inferno/inferno_python.hxx"
-#include "inferno/model/general_discrete_model.hxx"
-#include "inferno/model/parametrized_multicut_model.hxx"
 #include "inferno/learning/loss_functions/edge_hamming.hxx"
-#include "inferno/learning/weights.hxx"
+
 
 
 namespace inferno{
@@ -55,8 +50,8 @@ namespace models{
     }
 
     void exportEdgeHammingLossAugmentedModel(){
-        exportEdgeHammingLossAugmentedModelT<inferno::models::PyGeneralDiscreteModel>();
-        exportEdgeHammingLossAugmentedModelT<inferno::models::PyParametrizedMulticutModel>();
+        exportEdgeHammingLossAugmentedModelT<PyGeneralDiscreteModel>();
+        exportEdgeHammingLossAugmentedModelT<PyParametrizedMulticutModel>();
     }
 
 } // end namespace inferno::models  

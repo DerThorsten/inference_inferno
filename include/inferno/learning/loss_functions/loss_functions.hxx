@@ -38,6 +38,30 @@ namespace loss_functions{
     };
 
 
+
+    template<
+        class MODEL,
+        class CONF,
+        class LABEL_COUNT_MAP,
+        class LABEL_PAIR_COUNT_MAP,
+        class SIZE_MAP
+    >
+    double  pairwiseLabelCounts(
+        const MODEL &        model,
+        const CONF &         confA,
+        const CONF &         confB,
+        LABEL_COUNT_MAP &    countsA,
+        LABEL_COUNT_MAP &    countsB,
+        LABEL_PAIR_COUNT_MAP countsAB,
+        const bool useIgnoreLabel = false,
+        const DiscreteLabel ignoreLabel = -1
+    ){
+
+    }
+
+
+
+
     template<class MODEL, class VARIABLE_MULTIPLIER, class LABEL_CONFUSION_COST>
     class UnstructuredLoss{
     public:

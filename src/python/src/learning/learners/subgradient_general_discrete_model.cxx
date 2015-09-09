@@ -6,21 +6,16 @@
 #include "export_subgradient.hxx"
 
 
-#include "inferno/model/general_discrete_model.hxx"
 #include "inferno/learning/dataset/explicit_dataset.hxx"
 #include "inferno/learning/loss_functions/edge_hamming.hxx"
+#include "inferno/python/model/general_discrete_model.hxx"
 
 namespace inferno{
 namespace learning{
 namespace learners{
 
-    //////////////////////////////////////////////////////
-    // General Discrete Model
-    //
-    //
-    //////////////////////////////////////////////////////
-    typedef models::GeneralDiscreteModel Model;
 
+    typedef models::PyGeneralDiscreteModel Model;
     typedef loss_functions::EdgeHamming<Model> EdgeHammingLoss;
     typedef dataset::VectorDataset<EdgeHammingLoss>  EdgeHammingDataset;
 

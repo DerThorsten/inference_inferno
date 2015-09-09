@@ -21,8 +21,8 @@
 // inferno relatex
 #include "inferno/inferno.hxx"
 #include "inferno/inferno_python.hxx"
-
-
+#include "inferno/python/model/parametrized_multicut_model.hxx"
+#include "inferno/python/model/general_discrete_model.hxx"
 
 
 
@@ -37,6 +37,9 @@ namespace loss_functions{
 
     template<class MODEL>
     void exportEdgeHamming();
+
+
+    void exportLossFunctionsParametrizedMulticutModel();
        
 }
 }
@@ -58,6 +61,8 @@ BOOST_PYTHON_MODULE_INIT(loss_functions) {
     // No not change 4 line above
 
     namespace lf = inferno::learning::loss_functions;
+
+    lf::exportLossFunctionsParametrizedMulticutModel();
 
     // variation of information
     lf::exportVariationOfInformation<inferno::models::PyGeneralDiscreteModel>();

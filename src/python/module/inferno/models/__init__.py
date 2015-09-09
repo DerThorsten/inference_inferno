@@ -51,11 +51,6 @@ def _extendMapCls(modelCls, mapCls):
 def _extendModelClass(modelCls, classStr):
     ##inject some methods in the point foo
     class moreModel(injectorClass(modelCls), modelCls):
-        def __repr__(self):
-            return 'hi i am a gm'
-
-
-
 
         def factorMap(self, dtype, initValue=None):
             ownName = self.__class__.__name__
@@ -121,7 +116,17 @@ def _extendModelClass(modelCls, classStr):
             lossVecClsName = lossClsName + ownName + "Vector"
             lossVecCls = learning.loss_functions.__dict__[lossVecClsName]
 
-            return lossVecCls(size) 
+            return lossVecCls(size)
+
+
+        @classmethod
+        def lossFunctionVector2(cls, lossName, size):
+            assert lossName in ['partitionFScore', 'variationOfInformation2','randIndex']
+
+            if lossName in ['partitionFScore', 'variationOfInformation2','randIndex']:
+                vecClsName = '%sNonDecomposableLossFunctionBaseVector'%cls.__name__
+                vecCls = learning.loss_functions.__dict__[vecClsName]
+            return vecCls(size)
 
         @classmethod
         def lossAugmentedModelClass(cls, lossName):

@@ -6,20 +6,18 @@
 #include "export_stochastic_gradient.hxx"
 
 
-#include "inferno/model/parametrized_multicut_model.hxx"
+
 #include "inferno/learning/dataset/explicit_dataset.hxx"
 #include "inferno/learning/loss_functions/loss_functions.hxx"
+#include "inferno/python/model/parametrized_multicut_model.hxx"
 
 namespace inferno{
 namespace learning{
 namespace learners{
 
 
-    typedef models::ParametrizedMulticutModel<
-            models::detail_python::EdgeArray, 
-            models::detail_python::FeatureArray
-    > PModel;
-    typedef loss_functions::VariationOfInformation<PModel> PLossFunction;
+    typedef models::PyParametrizedMulticutModel Model;
+    typedef loss_functions::VariationOfInformation<Model> PLossFunction;
     typedef dataset::VectorDataset<PLossFunction>  PDataset;
 
     template void 

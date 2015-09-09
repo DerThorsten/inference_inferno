@@ -25,7 +25,7 @@
 
 // inferno relatex
 #include "inferno/inferno_python.hxx"
-#include "inferno/model/parametrized_multicut_model.hxx"
+#include "inferno/python/model/parametrized_multicut_model.hxx"
 #include "inferno/learning/weights.hxx"
 
 namespace inferno{

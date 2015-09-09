@@ -1,12 +1,13 @@
-#ifndef INFERNO_LEARNING_LOSS_FUNCTIONS_F_SCORE
-#define INFERNO_LEARNING_LOSS_FUNCTIONS_F_SCORE
+#ifndef INFERNO_LEARNING_LOSS_FUNCTIONS_BASE_HXX
+#define INFERNO_LEARNING_LOSS_FUNCTIONS_BASE_HXX
 
 // boost
 #include <boost/concept_check.hpp>
 
 // inferno
 #include "inferno/inferno.hxx"
-#include "inferno/learning/loss_functions/non_decomposable_loss_function_base.hxx"
+#include "inferno/learning/loss_functions/loss_functions.hxx"
+
 
 namespace inferno{
 namespace learning{
@@ -26,6 +27,8 @@ namespace loss_functions{
 
         // pure virtual interface
         virtual std::string name() const = 0;
+
+        // eval the loss
         virtual LossType eval(
             const Model & model, 
             const ConfMap & confGt, 
@@ -33,6 +36,8 @@ namespace loss_functions{
         ) const = 0 ;
 
         // with default implementation
+
+        // get the maximum loss
         virtual LossType maximumLoss()const {
             return infVal();
         }
@@ -55,10 +60,8 @@ namespace loss_functions{
         typedef typename Model:: template VariableMap<DiscreteLabel> ConfMap;
         typedef NoLossAugmentedModel LossAugmentedModel;
 
-        virtual ~NonDecomposableLossFunctionImplBase(){
+        virtual ~NonDecomposableLossFunctionBase(){
         }
-
-
     private:
         
     };
@@ -78,13 +81,12 @@ namespace loss_functions{
         virtual ~DecomposableLossFunctionBase(){
         }
 
+        // make the loss augmented model
         virtual void makeLossAugmentedModel(
             const Model & model, 
             const ConfMap & gt, 
             LossAugmentedModel & lossAugmentedModel
         ) const = 0;
-
-
     private:
         
     };
