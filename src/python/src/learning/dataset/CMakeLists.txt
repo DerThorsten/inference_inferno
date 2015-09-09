@@ -2,6 +2,7 @@ SET(MOD_SRC
     dataset.cxx 
     vector_dataset_general_discrete_model.cxx
     vector_dataset_parametrized_multicut_model.cxx
+    default_dataset_parametrized_multicut_model.cxx
 )
 
 SET(MOD_EXTRA_LIBS "" )

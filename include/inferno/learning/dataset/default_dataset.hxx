@@ -14,18 +14,23 @@ namespace learning{
 namespace dataset{
 
 
-    template<class LOSS_FUNCTION_BASE>
+    template<
+        class LOSS_FUNCTION_BASE_VECTOR,
+        class MODEL_VECTOR,
+        class GT_VECTOR
+    >
     class DefaultDataset{
     public:
 
-        typedef LOSS_FUNCTION_BASE LossFunctionBase;
+
+        typedef typename std::remove_pointer< typename LOSS_FUNCTION_BASE_VECTOR::value_type>::type LossFunctionBase;
         typedef typename LossFunctionBase::Model Model;
         typedef typename LossFunctionBase::ConfMap ConfMap;
 
         DefaultDataset(
-            std::vector<Model>  & models,
-            const std::vector<LossFunctionBase * > lossFunctionPtrs,
-            const std::vector<ConfMap> & gts,
+            MODEL_VECTOR & models,
+            const LOSS_FUNCTION_BASE_VECTOR & lossFunctionPtrs,
+            const GT_VECTOR & gts,
             const WeightConstraints & weightConstraints,     
             const Regularizer regularizer
               

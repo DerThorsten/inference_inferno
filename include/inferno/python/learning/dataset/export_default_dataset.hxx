@@ -4,6 +4,7 @@
 // boost
 #include <boost/python/return_value_policy.hpp>
 // inferno 
+#include "inferno/utilities/owning_ptr_vector.hxx"
 #include "inferno/learning/dataset/default_dataset.hxx"
 
 
@@ -21,9 +22,13 @@ namespace dataset{
         typedef LOSS_FUNCTION_BASE LossFunctionBase;
         typedef typename LossFunctionBase::Model Model;
         typedef typename LossFunctionBase::ConfMap ConfMap;
-        typedef DefaultDataset<LossFunctionBase> Dataset;
+        typedef DefaultDataset<
+            utilities::OwningPtrVector<LossFunctionBase>,
+            std::vector<Model>,
+            std::vector<ConfMap>
+        > Dataset;
 
-        static void exportDefaultDataset(
+        static void exportDataset(
             const std::string & datasetName 
         ){
             // the class
@@ -32,7 +37,7 @@ namespace dataset{
 
             // the factory
             bp::def("defaultDataset",
-                &vectorDatasetFactory<LossFunction>,
+                &factory,
                 (
                     bp::arg("models"),
                     bp::arg("lossFunctions"),
@@ -54,9 +59,9 @@ namespace dataset{
             );
         }
 
-        Dataset * factor(
+        static Dataset * factory(
             std::vector<Model>  & models,
-            const std::vector<LossFunctionBase * > lossFunctionPtrs,
+            const utilities::OwningPtrVector<LossFunctionBase> & lossFunctionPtrs,
             const std::vector<ConfMap> & gts,
             const WeightConstraints & weightConstraints,
             const Regularizer & regularizer   

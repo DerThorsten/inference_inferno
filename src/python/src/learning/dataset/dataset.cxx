@@ -36,7 +36,9 @@ namespace dataset{
 
     template<class LOSS_FUNCTION>
     void exportVectorDataset(const std::string & lossFunctionClsName);
-       
+    
+
+    void exportDefaultDatasetParametrizedMulticutModel();
 }
 }
 }
@@ -55,6 +57,20 @@ BOOST_PYTHON_MODULE_INIT(dataset) {
     bp::numeric::array::set_module_and_type("numpy", "ndarray");
     bp::docstring_options docstringOptions(true,true,false);
     // No not change 4 line above
+
+
+    
+    namespace ds = inferno::learning::dataset;
+
+
+    // NEW
+    ds::exportDefaultDatasetParametrizedMulticutModel();
+
+
+
+    // OLD
+
+
 
 
     // General discrete model
