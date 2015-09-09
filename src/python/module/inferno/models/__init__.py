@@ -102,6 +102,10 @@ def _extendModelClass(modelCls, classStr):
             return cls.confMapVectorCls(size)
 
         @classmethod
+        def groundTruthVector(cls, size):
+            return cls.confMapVectorCls(size)
+
+        @classmethod
         def lossFunctionVector(cls, lossName, size):
             ownName = cls.__name__
             lossClsName = None
@@ -121,10 +125,14 @@ def _extendModelClass(modelCls, classStr):
 
         @classmethod
         def lossFunctionVector2(cls, lossName, size):
-            assert lossName in ['partitionFScore', 'variationOfInformation2','randIndex']
+            assert lossName in ['partitionFScore', 'variationOfInformation2',\
+                                'randIndex','partitionHamming']
 
             if lossName in ['partitionFScore', 'variationOfInformation2','randIndex']:
                 vecClsName = '%sNonDecomposableLossFunctionBaseVector'%cls.__name__
+                vecCls = learning.loss_functions.__dict__[vecClsName]
+            elif lossName == 'partitionHamming':
+                vecClsName = '%sPartitionHammingDecomposableLossFunctionBaseVector'%cls.__name__
                 vecCls = learning.loss_functions.__dict__[vecClsName]
             return vecCls(size)
 
@@ -141,6 +149,19 @@ def _extendModelClass(modelCls, classStr):
             lossAugmentedModelClsName = lossClsName + "LossAugmented" + ownName
             return  models.__dict__[lossAugmentedModelClsName]
 
+        @classmethod
+        def lossAugmentedModelClass2(cls, lossName):
+            ownName = cls.__name__
+            lossClsName = None
+            allowedLossNames = ['partitionHamming']
+
+            if lossName == allowedLossNames[0]:
+                lossClsName = 'EdgeHamming'
+            else:
+                raise RuntimeError('lossName must be in %s'%str(allowedLossNames))
+            
+            lossAugmentedModelClsName = lossClsName + "LossAugmented" + ownName
+            return  models.__dict__[lossAugmentedModelClsName]
 
 def _extendModels():
     rawModelClasses = [

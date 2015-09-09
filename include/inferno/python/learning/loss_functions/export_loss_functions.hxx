@@ -55,7 +55,7 @@ namespace loss_functions{
             const ConfMap & confGt, 
             LossAugmentedModel & lossAugmentedModel
         ) const {
-            return this->get_override("makeLossAugmentedModel")(
+            this->get_override("makeLossAugmentedModel")(
                 model, confGt, lossAugmentedModel
             );
         }
@@ -154,18 +154,19 @@ namespace loss_functions{
 
     template<class MODEL, class LOSS_AUGMENTED_MODEL>
     void exportDecomposableLossFunctionBase(
-        const std::string modelClsName
+        const std::string modelClsName,
+        const std::string lossAugmentedModelClsName
     ){
         typedef MODEL Model;
         typedef LOSS_AUGMENTED_MODEL LossAugmentedModel;
         typedef DecomposableLossFunctionBase<Model, LossAugmentedModel> Base;
         typedef DecomposableLossFunctionBaseWrap<Model, LossAugmentedModel> BaseWrap;
 
-        const auto baseClsName = modelClsName + 
+        const auto baseClsName = modelClsName + lossAugmentedModelClsName +
             std::string("DecomposableLossFunctionBase");
 
         // the class
-        bp::class_<BaseWrap, boost::noncopyable, Base * >(baseClsName.c_str())
+        bp::class_<BaseWrap, boost::noncopyable>(baseClsName.c_str())
             .def("eval", 
                 bp::pure_virtual(&Base::eval)
             )

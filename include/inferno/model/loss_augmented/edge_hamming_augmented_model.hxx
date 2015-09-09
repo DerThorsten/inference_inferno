@@ -143,8 +143,8 @@ namespace models{
     public:
         typedef LOSSLESS_MODEL LosslessModel;
         typedef typename LosslessModel:: template VariableMap<DiscreteLabel> GtMap;
-        typedef learning::loss_functions::EdgeHamming<LosslessModel> LossFunction;
-        typedef typename LossFunction::FactorWeightMap LossFactorWeightMap;
+        //typedef learning::loss_functions::EdgeHamming<LosslessModel> LossFunction;
+        typedef typename LosslessModel:: template FactorMap<double> LossFactorWeightMap;
 
 
         typedef EdgeHammingLossAugmentedModelFactor<Self> FactorType;
@@ -169,7 +169,7 @@ namespace models{
         }
 
         EdgeHammingLossAugmentedModel(
-            LosslessModel & losslessModel,
+            const LosslessModel & losslessModel,
             const LossFactorWeightMap & edgeLossWeightMap,
             const GtMap & gt,
             const double rescale,
@@ -198,7 +198,7 @@ namespace models{
         }
 
         void assign(
-            LosslessModel & losslessModel,
+            const LosslessModel & losslessModel,
             const LossFactorWeightMap & edgeLossWeightMap,
             const GtMap & gt,
             const double rescale,
@@ -283,7 +283,7 @@ namespace models{
         mutable typename LosslessModel:: template FactorMap<ValueType> betas_;
         const LossFactorWeightMap * edgeLossWeightMap_;
 
-        LosslessModel * losslessModel_;
+        const LosslessModel * losslessModel_;
         const GtMap   * gt_;
         double rescale_;
         double underseg_;

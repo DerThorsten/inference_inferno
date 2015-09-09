@@ -157,9 +157,9 @@ namespace learners{
                     // unlock model
                     dset.unlock(trainingInstanceIndex);
 
-                    auto & model = dset.model(trainingInstanceIndex);
-                    const auto & gt = dset.groundTruth(trainingInstanceIndex);
-                    auto & lossFunction = dset.lossFunction(trainingInstanceIndex);
+                    auto & model = *dset.model(trainingInstanceIndex);
+                    const auto & gt = *dset.groundTruth(trainingInstanceIndex);
+                    auto  lossFunction = dset.lossFunction(trainingInstanceIndex);
 
 
 
@@ -167,7 +167,7 @@ namespace learners{
                     
                     // get the loss augmented model
                     LossAugmentedModel lossAugmentedModel;
-                    lossFunction.makeLossAugmentedModel(model, gt, lossAugmentedModel);
+                    lossFunction->makeLossAugmentedModel(model, gt, lossAugmentedModel);
 
 
                     // compute argmin

@@ -68,108 +68,109 @@ namespace learners{
 
         void learn(InferenceFactoryBase * inferenceFactory, WeightVector & weightVector){
 
-            // get dataset
-            auto & dset = dataset();
-            //auto & weights = weightVector;
+            try{
+                // get dataset
+                auto & dset = dataset();
+                //auto & weights = weightVector;
 
-            bestLoss_  = dataset_.averageLoss(inferenceFactory);
-            WeightVector bestWeight = weightVector;
+                bestLoss_  = dataset_.averageLoss(inferenceFactory);
+                WeightVector bestWeight = weightVector;
 
-            // multiple weight-vectors stacked as matrix
-            WeightMatrix            noiseMatrix(weightVector,options_.nPertubations_);
-            WeightMatrix            weightMatrix(weightVector,options_.nPertubations_);   
-            std::vector<LossType>   losses(options_.nPertubations_);
+                // multiple weight-vectors stacked as matrix
+                WeightMatrix            noiseMatrix(weightVector,options_.nPertubations_);
+                WeightMatrix            weightMatrix(weightVector,options_.nPertubations_);   
+                std::vector<LossType>   losses(options_.nPertubations_);
 
-            // random gen
-            boost::mt19937 rng(options_.seed_); // I don't seed it on purpouse (it's not relevant)
-            boost::normal_distribution<> nd(0.0, options_.sigma_);
-            boost::variate_generator<boost::mt19937&, boost::normal_distribution<> > normalDist(rng, nd);
+                // random gen
+                boost::mt19937 rng(options_.seed_); // I don't seed it on purpouse (it's not relevant)
+                boost::normal_distribution<> nd(0.0, options_.sigma_);
+                boost::variate_generator<boost::mt19937&, boost::normal_distribution<> > normalDist(rng, nd);
 
-            for(int ii=0; ii<10; ++ii){
-                std::cout<<normalDist()<<"  ";
+
+
+                // indices
+                utilities::IndexVector< > indices(dset.size());
+
+
+                const auto & weightConstraints =  dset.weightConstraints();
+
+                for(size_t i=0; i<options_.maxIterations_; ++i){
+                    
+                    indices.randomShuffle();
+                    // FIXME indices.randomShuffle(rng);
+
+                    for(const auto trainingInstanceIndex : indices){
+
+                        // unlock model
+                        dset.unlock(trainingInstanceIndex);
+
+                        //std::cout<<"fetch "<<trainingInstanceIndex<<"\n";
+                        // get model, gt, and loss-function
+                        auto & model = *dset.model(trainingInstanceIndex);
+                        const auto & gt = *dset.groundTruth(trainingInstanceIndex);
+                        const auto  lossFunction = dset.lossFunction(trainingInstanceIndex);
+
+                        // pertubate (and remember noise matrix)
+
+                        weightMatrix.pertubate(weightVector,noiseMatrix,weightConstraints, normalDist);
+
+                        // to remember arg mins
+                        //std::cout<<"conf assign \n";
+                        ConfMapVector confMapVector(options_.nPertubations_);
+                        for(auto & cmap : confMapVector){
+                            cmap.assign(model);
+                        }
+
+                        // argmin for perturbed model
+                        auto cc=0;
+                        for(const auto & perturbedWeightVector : weightMatrix){
+                            // set perturbed weights
+                            model.updateWeights(perturbedWeightVector);
+
+                            // get argmin 
+                            auto inference = inferenceFactory->create(model);
+                            inference->infer();
+                            inference->conf(confMapVector[cc]); 
+
+
+                    
+                            const auto l = lossFunction->eval(model, gt, confMapVector[cc]);
+                            losses[cc] = l;
+                            ++cc;
+                        }
+
+                        WeightVector gradient(weightVector.size(),0);
+                        noiseMatrix.weightedSum(losses, gradient);
+                        gradient *= dset.regularizer().c()/double(options_.nPertubations_);
+
+        
+                        //for(size_t gg=0; gg<10; ++gg){
+                        //    std::cout<<gradient[gg]<<"   ";
+                        //}
+                        //std::cout<<"\n";
+                        // reset the weights to the current weights
+                        model.updateWeights(weightVector);
+
+
+                        takeGradientStep(inferenceFactory, weightVector, gradient,bestWeight, i);
+
+
+                        dset.updateWeights(weightVector);
+                        
+
+                        // lock
+                        dset.lock(trainingInstanceIndex);
+                    }
+                }                
+                weightVector = bestWeight;
+                dset.updateWeights(weightVector);
             }
-            std::cout<<" \n";
-
-            // indices
-            utilities::IndexVector< > indices(dset.size());
-
-
-            const auto & weightConstraints =  dset.weightConstraints();
-
-            for(size_t i=0; i<options_.maxIterations_; ++i){
-                
-                indices.randomShuffle();
-                // FIXME indices.randomShuffle(rng);
-
-                for(const auto trainingInstanceIndex : indices){
-
-                    //std::cout<<"model "<<trainingInstanceIndex<<"\n";
-
-                    // unlock model
-                    dset.unlock(trainingInstanceIndex);
-
-                    //std::cout<<"fetch "<<trainingInstanceIndex<<"\n";
-                    // get model, gt, and loss-function
-                    auto & model = dset.model(trainingInstanceIndex);
-                    const auto & gt = dset.groundTruth(trainingInstanceIndex);
-                    auto & lossFunction = dset.lossFunction(trainingInstanceIndex);
-
-                    //std::cout<<"pertube \n";
-                    // pertubate (and remember noise matrix)
-
-                    weightMatrix.pertubate(weightVector,noiseMatrix,weightConstraints, normalDist);
-
-                    // to remember arg mins
-                    //std::cout<<"conf assign \n";
-                    ConfMapVector confMapVector(options_.nPertubations_);
-                    for(auto & cmap : confMapVector){
-                        cmap.assign(model);
-                    }
-
-                    // std::cout<<"solve loop \n";
-                    // argmin for perturbed model
-                    auto cc=0;
-                    for(const auto & perturbedWeightVector : weightMatrix){
-                        // set perturbed weights
-                        model.updateWeights(perturbedWeightVector);
-
-                        // get argmin 
-                        auto inference = inferenceFactory->create(model);
-                        inference->infer();
-                        inference->conf(confMapVector[cc]); 
-
-
-                
-                        const auto l = lossFunction.eval(model, gt, confMapVector[cc]);
-                        losses[cc] = l;
-                        ++cc;
-                    }
-
-                    WeightVector gradient(weightVector.size(),0);
-                    noiseMatrix.weightedSum(losses, gradient);
-                    gradient *= dset.regularizer().c()/double(options_.nPertubations_);
-
-    
-                    //for(size_t gg=0; gg<10; ++gg){
-                    //    std::cout<<gradient[gg]<<"   ";
-                    //}
-                    //std::cout<<"\n";
-                    // reset the weights to the current weights
-                    model.updateWeights(weightVector);
-
-                    takeGradientStep(inferenceFactory, weightVector, gradient,bestWeight, i);
-
-
-                    
-                    dset.updateWeights(weightVector);
-                    
-
-                    // lock
-                    dset.lock(trainingInstanceIndex);
-                }
-            }                
-            weightVector = bestWeight;
-            dset.updateWeights(weightVector);
+            catch( const std::exception &e) { 
+                throw RuntimeError(std::string("an Error happened in StochasticGradient:\n") + e.what());
+            }
+            catch(...){
+                throw; //RuntimeError("an Error happened in StochasticGradient:\n");
+            }
         }
     private:
 
@@ -261,7 +262,6 @@ namespace learners{
                 const double ss = effectiveStepSize*fracs[bestIndex];
                 takeStep(ss, false, false);
             }
-            std::cout<<"iter "<<iteration<<" current average loss "<<currentLoss<<" frac "<<fracs[bestIndex]<<"\n";
         }
 
         Dataset & dataset_;

@@ -74,14 +74,16 @@ namespace loss_functions{
         }
 
 
-        static PtrType factory(
+        static BasePtrType factory(
             const Model & model,
             const FactorWeightMap & factorWeightMap,
             const double beta,
             const bool useIgnoreLabel,
             const DiscreteLabel ignoreLabel
         ){
-            return PtrType(new LossFunction(model, beta, useIgnoreLabel, ignoreLabel, factorWeightMap));
+
+            Base * basePtr =  new LossFunction(model, beta, useIgnoreLabel, ignoreLabel, factorWeightMap);
+            return BasePtrType(basePtr);
         }
 
         static BasePtrType factoryWithoutFactorWeightMap(

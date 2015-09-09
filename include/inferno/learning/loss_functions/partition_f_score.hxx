@@ -81,7 +81,9 @@ namespace loss_functions{
                 if(factor->arity() == 2){
                     const auto u = factor->variable(0);
                     const auto v = factor->variable(1);
+                    //std::cout<<"get weight\n";
                     const auto fWeight = factorWeightMap_[fac];
+                    //std::cout<<"next step\n";
                     const auto gtU = confGt[u];
                     const auto gtV = confGt[v];
                     const auto cU = conf[u];
@@ -103,10 +105,14 @@ namespace loss_functions{
                     }
                 }
             }
-
-            auto score =  (1.0 + sB) * truePositive  /
-            ( (1.0+sB)*truePositive + sB*falseNegative + falsePositive);
-            return 1.0 - score;
+            if(falseNegative <= 0.00000000001 && falsePositive <= 0.00000000001 ){
+                return 1.0;
+            }
+            else{
+                auto score =  (1.0 + sB) * truePositive  /
+                ( (1.0+sB)*truePositive + sB*falseNegative + falsePositive);
+                return 1.0 - score;
+            }
         }
 
         virtual LossType maximumLoss()const override{

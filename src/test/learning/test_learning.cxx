@@ -17,7 +17,11 @@
 BOOST_AUTO_TEST_CASE(TestLearning_1)
 {
     using namespace inferno;
+    auto weightVector = inferno::learning::WeightVector(10);
 
+    BOOST_CHECK_EQUAL(weightVector.size(), 10);
+    weightVector = 0;
+    //BOOST_CHECK_EQUAL(weightVector.size(), 10);
 }
 
 

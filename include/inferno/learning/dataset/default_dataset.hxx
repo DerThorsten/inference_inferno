@@ -19,13 +19,27 @@ namespace dataset{
         class MODEL_VECTOR,
         class GT_VECTOR
     >
-    class DefaultDataset{
+    class DefaultDataset
+    : public
+    NewDatasetBase<
+        DefaultDataset<
+            LOSS_FUNCTION_BASE_VECTOR,
+            MODEL_VECTOR,
+            GT_VECTOR
+        >,
+        typename std::remove_pointer< typename LOSS_FUNCTION_BASE_VECTOR::value_type>::type
+    >
+
+
+    {
     public:
 
 
         typedef typename std::remove_pointer< typename LOSS_FUNCTION_BASE_VECTOR::value_type>::type LossFunctionBase;
+        typedef LossFunctionBase LossFunction;
         typedef typename LossFunctionBase::Model Model;
         typedef typename LossFunctionBase::ConfMap ConfMap;
+        typedef ConfMap GroundTruth;
 
         DefaultDataset(
             MODEL_VECTOR & models,
@@ -44,6 +58,13 @@ namespace dataset{
 
         }
 
+        uint64_t nModels()const{
+            return models_.size();
+        }
+
+        uint64_t size()const{
+            return models_.size();
+        }
 
         Model * model(const uint64_t i) {
             return &models_[i];
@@ -51,11 +72,11 @@ namespace dataset{
         const Model * model(const uint64_t i)const{
             return &models_[i];
         }
-        const ConfMap * gt(const uint64_t i){
-            return &models_[i];
+        const ConfMap * groundTruth(const uint64_t i){
+            return &gts_[i];
         }
-        const ConfMap * gt(const uint64_t i)const{
-            return &models_[i];
+        const ConfMap * groundTruth(const uint64_t i)const{
+            return &gts_[i];
         }
 
         const LossFunctionBase * lossFunction(const uint64_t i){
@@ -63,6 +84,14 @@ namespace dataset{
         }
         const LossFunctionBase * lossFunction(const uint64_t i)const{
             return lossFunctionPtrs_[i];
+        }
+
+        const WeightConstraints & weightConstraints()const{
+            return weightConstraints_;
+        }
+
+        const Regularizer &  regularizer()const{
+            return regularizer_;
         }
 
     private:

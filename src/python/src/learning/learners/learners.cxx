@@ -36,6 +36,9 @@ namespace learners{
 
     namespace bp = boost::python;
 
+    // new
+    void exportLearnersParametrizedMulticutModel();
+
     template<class DATASET>
     void exportStochasticGradient(const std::string & );
 
@@ -44,6 +47,9 @@ namespace learners{
 
     template<class DATASET>
     void exportIgo(const std::string & );
+
+
+
        
 }
 }
@@ -66,6 +72,10 @@ BOOST_PYTHON_MODULE_INIT(learners) {
 
     namespace ll = inferno::learning::learners;
 
+    // new
+    ll::exportLearnersParametrizedMulticutModel();
+
+    #if 0
     /////////////////////////////////////////////////////
     // general discrete model
     /////////////////////////////////////////////////////
@@ -117,5 +127,5 @@ BOOST_PYTHON_MODULE_INIT(learners) {
             );
         }
     }
-
+    #endif
 }

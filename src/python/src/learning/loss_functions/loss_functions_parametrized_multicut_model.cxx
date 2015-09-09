@@ -9,6 +9,8 @@
 #include "inferno/python/learning/loss_functions/export_partition_f_score.hxx"
 #include "inferno/python/learning/loss_functions/export_variation_of_information.hxx"
 #include "inferno/python/learning/loss_functions/export_rand_index.hxx"
+#include "inferno/python/learning/loss_functions/export_partition_hamming.hxx"
+
 namespace inferno{
 namespace learning{
 namespace loss_functions{
@@ -32,6 +34,16 @@ namespace loss_functions{
         ExportVariationOfInformation2<Model>::exportLossFunction(modelName);
         //  rand index
         ExportRandIndex<Model>::exportLossFunction(modelName);
+
+
+
+        // export the base for partition hamming
+        exportDecomposableLossFunctionBase<
+            Model,
+            typename PartitionHamming<Model>::LossAugmentedModel 
+        >(modelName,"PartitionHamming");
+        ExportPartitionHamming<Model>::exportLossFunction(modelName);
+
     }
 }
 }
