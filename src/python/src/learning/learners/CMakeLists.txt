@@ -1,12 +1,5 @@
 SET(MOD_SRC 
-
     learners_parametrized_multicut_model.cxx
-    #stochastic_gradient_general_discrete_model.cxx
-    #stochastic_gradient_parametrized_multicut_model.cxx
-    #subgradient_general_discrete_model.cxx
-    #subgradient_parametrized_multicut_model.cxx
-    #igo_general_discrete_model.cxx
-    #igo_parametrized_multicut_model.cxx
     learners.cxx
 )
 
