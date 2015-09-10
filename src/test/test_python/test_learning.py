@@ -554,9 +554,6 @@ class TestMulticutLearning(unittest.TestCase):
         view[7] = 4
         view[8] = 4
 
-
-
-
     def test_learning(self):
 
         Model = inferno.models.ParametrizedMulticutModel
@@ -622,4 +619,3 @@ class TestMulticutLearning(unittest.TestCase):
         stGradFscore.learn(factory, weightVector)
         subGradHamming.learn(lossAugmentedFactory, weightVector, factory)
 
-        print "learning done"

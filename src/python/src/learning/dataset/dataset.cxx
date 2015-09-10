@@ -33,11 +33,6 @@ namespace learning{
 namespace dataset{
 
     namespace bp = boost::python;
-
-    template<class LOSS_FUNCTION>
-    void exportVectorDataset(const std::string & lossFunctionClsName);
-    
-
     void exportDefaultDatasetParametrizedMulticutModel();
 }
 }
@@ -61,46 +56,7 @@ BOOST_PYTHON_MODULE_INIT(dataset) {
 
     
     namespace ds = inferno::learning::dataset;
-
-
-    // NEW
     ds::exportDefaultDatasetParametrizedMulticutModel();
-
-
-
-    // OLD
-
-
-
-
-    // General discrete model
-    inferno::learning::dataset::exportVectorDataset<
-        inferno::learning::loss_functions::VariationOfInformation<
-            inferno::models::PyGeneralDiscreteModel
-        >
-    >(std::string("VariationOfInformation"));
-
-    inferno::learning::dataset::exportVectorDataset<
-        inferno::learning::loss_functions::EdgeHamming<
-            inferno::models::PyGeneralDiscreteModel
-        >
-    >(std::string("EdgeHamming"));
-
-
-
-    // parametrized multicut model
-    inferno::learning::dataset::exportVectorDataset<
-        inferno::learning::loss_functions::VariationOfInformation<
-            inferno::models::PyParametrizedMulticutModel
-        >
-    >(std::string("VariationOfInformation"));
-
-    inferno::learning::dataset::exportVectorDataset<
-        inferno::learning::loss_functions::EdgeHamming<
-            inferno::models::PyParametrizedMulticutModel
-        >
-    >(std::string("EdgeHamming"));
-
 
 
 }
