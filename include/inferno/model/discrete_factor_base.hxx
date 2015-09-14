@@ -243,6 +243,10 @@ public:
         return factor()->valueTable()->weightGradient(factorsWeightIndex, conf);
     }
 
+    bool isConstraint()const{
+        return factor()->valueTable()->isConstraint();
+    }
+
 
 private:
     const FACTOR * factor()const{

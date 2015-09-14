@@ -43,6 +43,8 @@ public:
         return unary()->variable();
     }
 
+
+
 private:
     const UNARY * unary()const{
         return static_cast<const UNARY *>(this);

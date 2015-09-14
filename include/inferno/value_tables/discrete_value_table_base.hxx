@@ -1049,6 +1049,35 @@ public:
 
 
 
+
+
+
+
+    /// for constraints and  lp
+
+    virtual bool isConstraint()const {
+        return false;
+    }
+
+    virtual bool isLinear(ValueType & coefficient)const{
+        if(this->arity() == 1){
+            if( isFloatZero(this->eval( DiscreteLabel(0)  ))){
+                const DiscreteLabel nLabels = this->size();
+
+                const ValueType cCoeff = this->eval(nLabels-1)/ValueType(nLabels-1);
+                for(size_t l = 1; l < nLabels-1; ++l){
+                    const ValueType c = this->eval(l)/ValueType(l);
+                    if(!floatEqual(cCoeff, c)){
+                        return false;
+                    }
+                }
+
+            }
+        }
+        return false;
+    }
+
+
 };
 
 

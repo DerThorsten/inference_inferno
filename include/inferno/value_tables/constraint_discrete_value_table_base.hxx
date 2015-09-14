@@ -48,6 +48,10 @@ public:
     virtual ValueType evalSoft(const DiscreteLabel * conf, const ValueType softInf)const{
         return isFeasible(conf) ? 0.0 : softInf;
     }
+
+    virtual bool isConstraint() const final {
+        return true;
+    } 
 };
 
 
@@ -80,23 +84,55 @@ public:
     virtual ~LinearConstraintDiscreteValueTableBase(){
     }
 
-    
+    /**
+     * @brief      find violated constraints
+     *   
+     *
+     * @param[in]  conf                        configuration to evaluate
+     * @param[in]  maximumViolatedConstraints  for how many violated constraints
+     *  should be search for.
+     *   -1 means all violated constraints should be added (if tractable), 0 means it's up 
+     *   to the value table to decide how many should be added, any other number 
+     *   sets the maximum number of added constraints to that particular number.
+     *   
+     * @param[out] violatedConstraints      stores the violated constraints
+     * 
+     */
     virtual void violatedConstraints(
         const DiscreteLabel * conf,
+        const int64_t maximumViolatedConstraints,
         IndicatorVariableConstraintVector & violatedConstraints
     ) const = 0;
 
     // with default impl
     virtual bool isFeasible(const DiscreteLabel * conf) const override{
         IndicatorVariableConstraintVector vc;
-        this->violatedConstraints(conf, vc);
+        this->violatedConstraints(conf, 0, vc);
         return vc.empty();
     }
 private:
-
-
 };
 
+
+
+template<class MODEL>
+class GlobalLinearConstraintDiscreteValueTableBase :
+    public LinearConstraintDiscreteValueTableBase
+{
+public:
+    using LinearConstraintDiscreteValueTableBase::violatedConstraints;
+    typedef typename MODEL:: template VariableMap<DiscreteLabel> ConfMap;
+
+
+    virtual void violatedConstraints(
+        ConfMap & confMap,
+        const int64_t maximumViolatedConstraints,
+        IndicatorVariableConstraintVector & violatedConstraints
+    )const = 0;
+    
+private:
+
+};
 
 
 

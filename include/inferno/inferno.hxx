@@ -272,7 +272,18 @@ inline ValueType infVal(){
     return std::numeric_limits<ValueType>::infinity();
 }
 
+template<class T>
+inline bool floatEqual(T x, T y)
+{
+  const T epsilon =  2*std::numeric_limits<T>::epsilon();
+  return std::abs(x - y) <= epsilon;
+  // see Knuth section 4.2.2 pages 217-218
+}
 
+template<class T>
+inline bool isFloatZero(T x){
+    return floatEqual(x, T(0));
+}
 
 
 /**  \brief Default inferno exception

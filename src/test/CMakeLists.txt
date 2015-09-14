@@ -20,6 +20,6 @@ include_directories(test_include)
 #-------------------------------------------------------------------------------------------------------------------
 add_subdirectory(model)
 add_subdirectory(utilities)
-#add_subdirectory(inference)
+add_subdirectory(inference)
 add_subdirectory(value_tables)
 add_subdirectory(learning)

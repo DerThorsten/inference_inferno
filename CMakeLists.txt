@@ -121,11 +121,32 @@ if(WITH_CPLEX)
     else()
         SET(CPLEX_AND_AUX_LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${CPLEX_LIBRARIES} )
     endif()
-
-
 else()
    message(STATUS "build without CPLEX interface")
 endif()
+
+
+
+
+OPTION(WITH_GUROBI "Include GUROBI" OFF)
+if(WITH_GUROBI)
+    message(STATUS "build with GUROBI interface")
+    find_package(GUROBI REQUIRED)
+    include_directories(${GUROBI_INCLUDE_DIR})
+    SET(GUROBI_AND_AUX_LIBRARIES ${GUROBI_LIBRARY} ${GUROBI_CXX_LIBRARY})
+else()
+   message(STATUS "build without GUROBI interface")
+endif()
+
+
+
+
+
+
+
+
+
+
 
 file(GLOB_RECURSE headers ${INFERNO_EXTERNALS_INCLUDE_DIR})
 include_directories(${headers})

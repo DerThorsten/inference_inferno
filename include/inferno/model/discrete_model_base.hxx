@@ -721,6 +721,28 @@ public:
     }
 
 
+    // constraints
+    bool hasConstraints() const{
+        for(const auto factor : model().factors()){
+            if(factor->isConstraint()){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool onlyConstraints() const{
+        for(const auto factor : model().factors()){
+            if(!factor->isConstraint()){
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+
+
 private:
    
     const MODEL & constModel()const{
