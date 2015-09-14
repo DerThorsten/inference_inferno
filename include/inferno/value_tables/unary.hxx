@@ -1,12 +1,12 @@
-#ifndef INFERNO_VALUE_TABLES_UNARY_HXX
-#define INFERNO_VALUE_TABLES_UNARY_HXX
+#ifndef INFERNO_VALUE_TABLES_UNARY_UNARY_HXX
+#define INFERNO_VALUE_TABLES_UNARY_UNARY_HXX
 
 #include <cstdint>
 #include <vector>
 
 
 #include "inferno/inferno.hxx"
-#include "inferno/value_tables/discrete_value_table_base.hxx"
+#include "inferno/value_tables/discrete_unary_value_table_base.hxx"
 #include "inferno/utilities/small_vector.hxx"
 #include "inferno/utilities/marray_wrap.hxx"
 namespace inferno{
@@ -21,35 +21,30 @@ namespace value_tables{
     \ingroup value_tables
     \ingroup discrete_value_tables
 */
-class  UnaryValueTable : public DiscreteValueTableBase{
+class  UnaryValueTable : public DiscreteUnaryValueTableBase{
 public:
-    using DiscreteValueTableBase::eval;
+  
     
     UnaryValueTable(const LabelType l)
-    :   DiscreteValueTableBase(),
+    :   DiscreteUnaryValueTableBase(),
         values_(size_t(l)){
     }
     template<class ITER>
     UnaryValueTable(ITER valBegin, ITER valEnd)
-    :   DiscreteValueTableBase(),
+    :   DiscreteUnaryValueTableBase(),
         values_(valBegin, valEnd){
     }
     template<class T>
     UnaryValueTable(std::initializer_list<T> values)
-    :   DiscreteValueTableBase(),
+    :   DiscreteUnaryValueTableBase(),
         values_(values.begin(), values.end()){
     }
-    ValueType eval(const LabelType * conf)const{
-        return values_[*conf];
-    }
-    ValueType eval(const LabelType l1)const{
+
+    ValueType eval(const DiscreteLabel l1)const{
         return values_[l1];
     }
-    LabelType shape(const uint32_t d) const{
+    DiscreteLabel shape() const{
         return values_.size();
-    }
-    uint32_t  arity()const{
-        return 1;
     }
 private:
     const std::vector<ValueType> values_;
@@ -63,28 +58,20 @@ private:
     \ingroup value_tables
     \ingroup discrete_value_tables
 */
-class  UnaryViewValueTable : public DiscreteValueTableBase{
+class  UnaryViewValueTable : public DiscreteUnaryValueTableBase{
 public:
 
-
-    using DiscreteValueTableBase::eval; // D::m is public
-
     UnaryViewValueTable(const DiscreteLabel nLabels, const ValueType * data)
-    :   DiscreteValueTableBase(),
+    :   DiscreteUnaryValueTableBase(),
         nLabels_(nLabels),
         data_(data){
     }
-    ValueType eval(const LabelType * conf)const {
-        return 0.0; //data_[*conf];
-    }
+
     virtual ValueType eval(const LabelType l1)const {
         return 0.0; //data_[l1];
     }
-    LabelType shape(const uint32_t d) const{
+    DiscreteLabel shape() const{
         return nLabels_;
-    }
-    uint32_t  arity()const{
-        return 1;
     }
 private:
     const DiscreteLabel nLabels_;
@@ -96,4 +83,4 @@ private:
 } // end namespace value_tables
 } // end namespace inferno
 
-#endif /*INFERNO_VALUE_TABLES_UNARY_HXX*/
+#endif /*INFERNO_VALUE_TABLES_UNARY_UNARY_HXX*/

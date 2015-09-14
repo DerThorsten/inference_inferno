@@ -33,6 +33,24 @@ namespace learning{
 
         }
 
+        // assignment operators
+        Weights & operator = (const Weights & other){
+            if(&other != this){
+                this->reshape(other.shape());
+                for(uint64_t i=0; i<other.shape(0); ++i){
+                    (*this)[i] = other[i];
+                }
+            }
+            return *this;
+        }
+        Weights & operator = (const WeightType & scalar){
+            for(uint64_t i=0; i<this->shape(0); ++i){
+                (*this)[i] = scalar;
+            }
+            return *this;
+        }
+
+
         template<class WEIGHT_CONSTRAINTS>
         WeightType getNorm(
             size_t normType,

@@ -9,7 +9,7 @@
 
 #include "inferno/model/general_discrete_model.hxx"
 #include "inferno/value_tables/potts.hxx"
-#include "inferno/value_tables/new_unary.hxx"
+#include "inferno/value_tables/unary.hxx"
 
 
 

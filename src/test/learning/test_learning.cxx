@@ -9,7 +9,7 @@
 
 #include "inferno/model/general_discrete_model.hxx"
 #include "inferno/value_tables/potts.hxx"
-#include "inferno/value_tables/new_unary.hxx"
+#include "inferno/value_tables/unary.hxx"
 
 
 
@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(TestLearning_1)
 
     BOOST_CHECK_EQUAL(weightVector.size(), 10);
     weightVector = 0;
-    //BOOST_CHECK_EQUAL(weightVector.size(), 10);
+    BOOST_CHECK_EQUAL(weightVector.size(), 10);
 }
 
 

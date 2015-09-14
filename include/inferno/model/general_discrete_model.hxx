@@ -14,8 +14,14 @@
 #include "inferno/inferno.hxx"
 #include "inferno/value_tables/discrete_value_table_base.hxx"
 #include "inferno/value_tables/discrete_unary_value_table_base.hxx"
+#include "inferno/constraint_tables/discrete_constraint_table_base.hxx"
+
+
+
 #include "inferno/model/discrete_factor_base.hxx"
 #include "inferno/model/discrete_unary_base.hxx"
+#include "inferno/model/discrete_constraint_base.hxx"
+
 #include "inferno/model/discrete_model_base.hxx"
 #include "inferno/model/simple_discrete_model_base.hxx"
 #include "inferno/model/maps/model_maps.hxx"
@@ -129,6 +135,73 @@ private:
     VariableDescriptor var_;
 
 };
+
+
+
+
+
+
+/** \brief Factor class for the GeneralDiscreteModel
+*/
+template<class MODEL>
+class GeneralDiscreteGraphicalModelConstraint :
+public DiscreteConstraintBase<GeneralDiscreteGraphicalModelConstraint<MODEL>, MODEL> {
+public:
+
+    typedef typename MODEL::VariableDescriptor VariableDescriptor;
+
+
+
+    GeneralDiscreteGraphicalModelConstraint()
+    :   model_(NULL),
+        ct_(NULL),
+        arity_(0),
+        visOffset_(0){
+
+    }
+
+
+    GeneralDiscreteGraphicalModelConstraint(const MODEL * model ,
+                                        const constraint_tables::DiscreteConstaintTableBase * ct,
+                                        const uint64_t visOffset, 
+                                        const size_t arity)
+    :   model_(model),
+        ct_(ct),
+        visOffset_(visOffset),
+        arity_(arity){
+
+    }
+    const constraint_tables::DiscreteConstaintTableBase * constraintTable()const{
+        return ct_;
+    }   
+    LabelType shape(const ArityType d)const{
+        return model_->facShape(visOffset_, d);
+    }
+
+    VariableDescriptor variable(const ArityType d)const{
+        return model_->facVis(visOffset_, d);
+    }
+
+private:
+    const MODEL * model_;
+    const constraint_tables::DiscreteConstaintTableBase * ct_;
+    uint64_t visOffset_;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -313,8 +386,10 @@ private:
     const uint64_t nVar_;
     std::vector<LabelType>              numberOfLabels_;
 
-    std::vector<value_tables::DiscreteValueTableBase * >  valueTables_;
-    std::vector<value_tables::DiscreteUnaryValueTableBase * >  unaryValueTables_;
+    std::vector<value_tables::DiscreteValueTableBase * >            valueTables_;
+    std::vector<value_tables::DiscreteUnaryValueTableBase * >       unaryValueTables_;
+    std::vector<constraint_tables::DiscreteConstaintTableBase * >    constraintTables_;
+
 
     std::vector<GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel> > factors_;
     std::vector<GeneralDiscreteGraphicalModelUnary<GeneralDiscreteModel> > unaries_;
