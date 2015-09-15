@@ -10,6 +10,8 @@
 #include <ilcplex/ilocplex.h>
 #include <gurobi_c++.h>
 
+
+
 namespace inferno{
 namespace inference{
 namespace lp{
@@ -30,7 +32,7 @@ namespace lp{
             const bool minimize = true
         )
         : minimize_(minimize){
-            
+
         }
     public:
 

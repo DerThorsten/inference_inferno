@@ -162,7 +162,7 @@ public:
 
 
     GeneralDiscreteGraphicalModelConstraint(const MODEL * model ,
-                                        const constraint_tables::DiscreteConstaintTableBase * ct,
+                                        const constraint_tables::DiscreteConstraintTableBase * ct,
                                         const uint64_t visOffset, 
                                         const size_t arity)
     :   model_(model),
@@ -171,7 +171,7 @@ public:
         arity_(arity){
 
     }
-    const constraint_tables::DiscreteConstaintTableBase * constraintTable()const{
+    const constraint_tables::DiscreteConstraintTableBase * constraintTable()const{
         return ct_;
     }   
     LabelType shape(const ArityType d)const{
@@ -184,7 +184,7 @@ public:
 
 private:
     const MODEL * model_;
-    const constraint_tables::DiscreteConstaintTableBase * ct_;
+    const constraint_tables::DiscreteConstraintTableBase * ct_;
     uint64_t visOffset_;
 };
 
@@ -388,7 +388,7 @@ private:
 
     std::vector<value_tables::DiscreteValueTableBase * >            valueTables_;
     std::vector<value_tables::DiscreteUnaryValueTableBase * >       unaryValueTables_;
-    std::vector<constraint_tables::DiscreteConstaintTableBase * >    constraintTables_;
+    std::vector<constraint_tables::DiscreteConstraintTableBase * >    constraintTables_;
 
 
     std::vector<GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel> > factors_;

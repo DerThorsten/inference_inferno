@@ -35,8 +35,8 @@ public:
         WEIGHT_INDEX_ITER weightIndicesBegin,
         WEIGHT_INDEX_ITER weightIndicesEnd,
         COEFFICIENT_INDEX_ITER coefficientsBegin,
-        const ValueType lowerBound = -1.0*std::numeric_limits<BOUND>::infinity(),
-        const ValueType upperBound = std::numeric_limits<BOUND>::infinity()
+        const BOUND lowerBound = -1.0*std::numeric_limits<BOUND>::infinity(),
+        const BOUND upperBound = std::numeric_limits<BOUND>::infinity()
     )
     :   indicesAndCoefficients_(),
         lowerBound_(lowerBound),
