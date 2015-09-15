@@ -139,6 +139,7 @@ namespace models{
         typedef EdgeHammingLossAugmentedModel<LOSSLESS_MODEL> Self;
         typedef DeadCodeUnary<Self> UnaryImpl;
         typedef EdgeHammingLossAugmentedModelFactor<Self> FactorImpl;
+
         //typedef 
     public:
         typedef LOSSLESS_MODEL LosslessModel;
@@ -152,7 +153,7 @@ namespace models{
 
         typedef UnaryImpl UnaryProxy;
         typedef FactorImpl FactorProxy;
-
+        typedef typename LOSSLESS_MODEL::ConstraintProxy  ConstraintProxy;
 
 
         EdgeHammingLossAugmentedModel(
@@ -219,12 +220,16 @@ namespace models{
             this->makeBetas(); 
         }
 
-        FactorProxy factor(typename Self::FactorDescriptor fac)const{
+        FactorProxy factor(const typename Self::FactorDescriptor fac)const{
             return FactorImpl(betas_[fac],this->baseModel(), fac);
         }
 
-        UnaryProxy unary(typename Self::UnaryDescriptor unary)const{
+        UnaryProxy unary(const typename Self::UnaryDescriptor unary)const{
             return UnaryImpl();
+        }
+
+        ConstraintProxy constraint(const typename Self::ConstraintDescriptor c)const{
+            return losslessModel_->constraint(c);
         }
 
         LosslessModel & baseModel() {

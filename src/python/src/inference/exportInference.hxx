@@ -1,6 +1,8 @@
 #ifndef  INFERNO_SRC_PYTHON_INFERENCE_EXPORT_INFERENCE_HXX
 #define INFERNO_SRC_PYTHON_INFERENCE_EXPORT_INFERENCE_HXX
 
+
+#include <memory>
 #include <cctype>
 
 #include <boost/python/def_visitor.hpp> 
@@ -10,11 +12,17 @@
 #include "inferno/inference/discrete_inference_base.hxx"
 #include "inferno/inference/base_discrete_inference_factory.hxx"
 
+#include <boost/version.hpp>
+#include <boost/config.hpp>
+
 
 #define INFERNO_EXPORT_INFERENCE(MODEL, modelName, INF, infName) \
-    boost::python::class_< INF,boost::python::bases< DiscreteInferenceBase<MODEL>   >,boost::noncopyable > \
+    boost::python::class_< INF,boost::python::bases< DiscreteInferenceBase<MODEL>  >,boost::noncopyable > \
     (( std::string(infName) + modelName ).c_str(),boost::python::no_init) \
         .def(ExportInferenecAPI<INF>(modelName, infName)) 
+
+
+
 
 
 
@@ -28,6 +36,22 @@ namespace inference{
     }
 
     namespace bp = boost::python;
+
+
+
+        #if BOOST_VERSION < 105300 || defined BOOST_NO_CXX11_SMART_PTR
+
+            template<class T> const T* get_pointer(const std::shared_ptr<T>& ptr) 
+            {
+                return ptr.get();
+            }
+
+            template<class T> T* get_pointer(std::shared_ptr<T>& ptr)
+            {
+                return ptr.get();
+            }
+        #endif
+
 
 
     template<class INF>
@@ -47,11 +71,12 @@ namespace inference{
             std::string fName = clsName;
             fName[0] = std::tolower(fName[0]);
 
+            #if 1
             bp::class_<InfFactory, bp::bases<BaseInfFactory>,  boost::noncopyable> 
             (
                 clsName.c_str(),bp::no_init
             );
-
+            #endif
             bp::def(fName.c_str(), &pyFactoryFactory );
 
         }
@@ -118,7 +143,7 @@ namespace inference{
         
         // VIRTUAL FUNCTIONS WITH DEFAULT IMPL
 
-        #if 0 
+
         // get results
         ValueType lowerBound(){
             return this->get_override("lowerBound")();
@@ -134,7 +159,6 @@ namespace inference{
         bool isPartialOptimal(const Vi vi){
             return this->get_override("isPartialOptimal")(vi);
         }
-        # endif
     };
 
 
@@ -168,6 +192,7 @@ namespace inference{
     void exportDiscreteInferenceBase(const std::string modelName){
 
         // register the shared ptr
+        typedef std::shared_ptr<  DiscreteInferenceBase<MODEL> > DiscreteInferenceBaseSharedPtr;
         bp::register_ptr_to_python< std::shared_ptr<  DiscreteInferenceBase<MODEL> > >();
         bp::register_ptr_to_python< std::shared_ptr<  BaseDiscreteInferenceFactory<MODEL> > >();
         // the  base inference factory class
@@ -178,6 +203,7 @@ namespace inference{
             .def("create", bp::pure_virtual( &BaseInfFactory::create),CustWardPostEnd< 0,1 >()  )
         ;
 
+        #if 1
         // the actual base inference class
         const std::string baseClsName = std::string("DiscreteInferenceBase") + modelName;
         typedef DiscreteInferenceBase<MODEL> BaseInf;
@@ -193,6 +219,7 @@ namespace inference{
             .def("model", bp::pure_virtual(&BaseInf::model),bp::return_internal_reference<>())
             .def("stopInference", bp::pure_virtual(&BaseInf::stopInference))
         ;
+        #endif
     }
 
     // this export "visitor" is called for
@@ -217,10 +244,10 @@ namespace inference{
         void visit(classT& c) const
         {   
            
-            c
-                //add_property("nVariables", &Model::nVariables)
-                //.add_property("nFactors", &Model::nFactors)
-            ;
+            //c
+            //    //add_property("nVariables", &Model::nVariables)
+            //    //.add_property("nFactors", &Model::nFactors)
+            //;
 
             std::string facFuncName = inferenceName_;
             facFuncName[0] = std::tolower(facFuncName[0]);

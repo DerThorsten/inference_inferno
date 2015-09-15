@@ -24,8 +24,7 @@ namespace lp{
         Integer
     }; 
 
-    using LpValueType = double ;
-
+   
 
     class LpOptions{
         LpOptions(

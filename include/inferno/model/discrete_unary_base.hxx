@@ -79,7 +79,7 @@ public:
     }
 
     VariableDescriptor variable()const{
-        VariableDescriptor();
+        return VariableDescriptor();
     }
 private:
     value_tables::DeadCodeUnaryValueTable * vt_;

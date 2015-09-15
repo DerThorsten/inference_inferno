@@ -155,7 +155,6 @@ public:
     GeneralDiscreteGraphicalModelConstraint()
     :   model_(NULL),
         ct_(NULL),
-        arity_(0),
         visOffset_(0){
 
     }
@@ -163,12 +162,10 @@ public:
 
     GeneralDiscreteGraphicalModelConstraint(const MODEL * model ,
                                         const constraint_tables::DiscreteConstraintTableBase * ct,
-                                        const uint64_t visOffset, 
-                                        const size_t arity)
+                                        const uint64_t visOffset)
     :   model_(model),
         ct_(ct),
-        visOffset_(visOffset),
-        arity_(arity){
+        visOffset_(visOffset){
 
     }
     const constraint_tables::DiscreteConstraintTableBase * constraintTable()const{
@@ -230,6 +227,9 @@ public:
     typedef const GeneralDiscreteGraphicalModelFactor<Self> * FactorProxy;
     typedef FactorProxy FactorProxyRef;
 
+    typedef const GeneralDiscreteGraphicalModelConstraint<Self> * ConstraintProxy;
+    typedef ConstraintProxy ConstraintProxyRef;
+
 
     GeneralDiscreteModel(const GeneralDiscreteModel&) = delete;
     GeneralDiscreteModel& operator=(const GeneralDiscreteModel&) = delete;
@@ -255,6 +255,9 @@ public:
     uint64_t nUnaries()const{
         return unaries_.size();
     } 
+    uint64_t nConstraints()const{
+        return constraints_.size();
+    }
 
     template<class CONFIG>
     double eval(const CONFIG  & conf)const{
@@ -309,6 +312,11 @@ public:
     UnaryProxy unary(const UnaryDescriptor unaryDescriptor)const{
         return &unaries_[unaryDescriptor];
     }
+    ConstraintProxy constraint(const ConstraintDescriptor constraintDescriptor)const{
+        return &constraints_[constraintDescriptor];
+    }
+
+
 
     LabelType nLabels(const VariableDescriptor variableDescriptor)const{
         return variableDescriptor >= numberOfLabels_.size() ? numberOfLabels_[0] : numberOfLabels_[variableDescriptor]; 
@@ -391,8 +399,9 @@ private:
     std::vector<constraint_tables::DiscreteConstraintTableBase * >    constraintTables_;
 
 
-    std::vector<GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel> > factors_;
-    std::vector<GeneralDiscreteGraphicalModelUnary<GeneralDiscreteModel> > unaries_;
+    std::vector<GeneralDiscreteGraphicalModelFactor<GeneralDiscreteModel> >      factors_;
+    std::vector<GeneralDiscreteGraphicalModelUnary<GeneralDiscreteModel> >       unaries_;
+    std::vector<GeneralDiscreteGraphicalModelConstraint<GeneralDiscreteModel> >  constraints_;
 
     typedef std::vector<VariableDescriptor> FacVarStorage;
     FacVarStorage facVarDesc_;

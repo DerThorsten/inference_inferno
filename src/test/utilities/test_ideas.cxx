@@ -24,14 +24,14 @@
 
 BOOST_AUTO_TEST_CASE(TestMove)
 {
-    using namespace inferno;
-    using namespace inferno::keywords;
-
-    typedef std::tuple<
-        tag::temperature
-    > Tuple;
-
-    std::cout<<tag::temperature::keyword_name<<"\n";
+    //using namespace inferno;
+    //using namespace inferno::keywords;
+//
+    //typedef std::tuple<
+    //    tag::temperature
+    //> Tuple;
+//
+    //std::cout<<tag::temperature::keyword_name<<"\n";
 
     
 }

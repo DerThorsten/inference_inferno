@@ -38,16 +38,17 @@ class StructureViewModelBase :
 public:
 
     typedef BASE_MODEL BaseModel;
-    typedef typename BaseModel::FactorDescriptor    FactorDescriptor;
-    typedef typename BaseModel::VariableDescriptor  VariableDescriptor;
-    typedef typename BaseModel::UnaryDescriptor     UnaryDescriptor;
+    typedef typename BaseModel::FactorDescriptor     FactorDescriptor;
+    typedef typename BaseModel::VariableDescriptor   VariableDescriptor;
+    typedef typename BaseModel::UnaryDescriptor      UnaryDescriptor;
+    typedef typename BaseModel::ConstraintDescriptor ConstraintDescriptor;
 
     typedef typename BaseModel::FactorDescriptorIter    FactorDescriptorIter;
     typedef typename BaseModel::VariableDescriptorIter  VariableDescriptorIter;
     typedef typename BaseModel::UnaryDescriptorIter     UnaryDescriptorIter;
+    typedef typename BaseModel::ConstraintDescriptorIter     ConstraintDescriptorIter;
 
-
-     /** \brief container which can store an instance
+    /** \brief container which can store an instance
     of T for any variable descriptor.
 
     \warning changing the number of the variables in
@@ -179,6 +180,48 @@ public:
         BaseModelMap map_;
     };
 
+    template<class T>
+    class ConstraintMap {
+    private:
+        typedef typename BASE_MODEL:: template ConstraintMap<T> BaseModelMap;
+
+        typedef typename BaseModelMap::value_type        value_type;
+        typedef typename BaseModelMap::reference         reference;
+        typedef typename BaseModelMap::const_reference   const_reference;
+
+    public:
+        ConstraintMap()
+        :   model_(nullptr),
+            map_(){
+        }
+        ConstraintMap(const MODEL & m, const T & val = T())
+        :   model_(&m),
+            map_(m.baseModel(), val){
+        }
+
+        void assign(const MODEL & m, const T & val = T()){
+            model_ = &m;
+            map_.assign(m.baseModel(), val);
+        }
+
+        const MODEL & model()const{
+            return *model_;
+        }
+        template<class D>
+        reference operator[](const D & d){
+            return map_[d];
+        }
+
+        template<class D>
+        const_reference operator[](const D & d)const{
+            return map_[d];
+        }
+
+    private:
+        const MODEL * model_;
+        BaseModelMap map_;
+    };
+
 
 
     DiscreteLabel nLabels(const VariableDescriptor var)const{
@@ -205,6 +248,13 @@ public:
         return model().baseModel().variableDescriptorsEnd();
     }
 
+    ConstraintDescriptorIter constraintDescriptorsBegin()const{
+        return model().baseModel().constraintDescriptorsBegin();
+    }
+    ConstraintDescriptorIter constraintDescriptorsEnd()const{
+        return model().baseModel().constraintDescriptorsEnd();
+    }
+
     // convert between id's and descriptors
 
     /// \brief convert factor descriptor into factor id
@@ -223,6 +273,15 @@ public:
         return model().baseModel().variableId(variableDescriptor);
     }
 
+
+    /// \brief convert constraint descriptor into constraint id
+    ///
+    /// For this type of graphical model, constraint ids and descriptors
+    /// are equivalent
+    Ci constraintId(const ConstraintDescriptor constraintDescriptor)const{
+        return model().baseModel().constraintId(constraintDescriptor);
+    }
+
     /// \brief convert factor id into factor descriptor
     ///
     /// For this type of graphical model, factor ids and descriptors
@@ -239,6 +298,13 @@ public:
         return model().baseModel().variableDescriptor(vi);
     }
 
+    /// \brief convert factor id into factor descriptor
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    ConstraintDescriptor constraintDescriptor(const Ci ci)const{
+        return model().baseModel().constraintDescriptor(ci);
+    }
 
     uint64_t nVariables()const{
         return model().baseModel().nVariables();

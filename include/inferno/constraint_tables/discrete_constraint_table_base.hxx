@@ -13,8 +13,7 @@
 #include "inferno/inferno.hxx"
 #include "inferno/utilities/utilities.hxx"
 #include "inferno/utilities/shape_walker.hxx"
-
-
+#include "inferno/utilities/linear_constraint.hxx"
 
     
 
@@ -57,6 +56,16 @@ namespace constraint_tables{
         }
 
 
+        uint64_t size()const{
+            uint64_t s = 1;
+            const auto a = this->arity();
+            for(size_t i=0; i<a; ++i){
+                s += this->shape(i);
+            }
+            return s;
+        }
+
+
         /**
          * @brief      lower bound of number of feasible solutions  
          *
@@ -83,7 +92,7 @@ namespace constraint_tables{
 
         // void repairRandomized() const {    
         // }
-    };
+};
 
 
 
@@ -94,16 +103,16 @@ namespace constraint_tables{
         using DiscreteConstraintTableBase::feasible;
 
         typedef std::pair<ArityType, DiscreteLabel> IndicatorVariable;
-        typedef LinearConstraint<IndicatorVariable, LpValueType, LpValueType> LinearConstraint;
+        typedef utilities::LinearConstraint<IndicatorVariable, LpValueType, LpValueType> LinearConstraint;
         typedef std::vector<LinearConstraint> LinearConstraints;
 
 
         virtual void initalConstraints(LinearConstraints & constraints) const = 0;
-        virtual void violatedConstraints(const Discreteabel * conf, LinearConstraints & constraints) const = 0;
+        virtual void violatedConstraints(const DiscreteLabel * conf, LinearConstraints & constraints) const = 0;
         virtual void isLazy() const = 0;
         virtual bool feasible(const DiscreteLabel *conf) const override {
             LinearConstraints constraints;
-            this->violatedConstraints(constraints);
+            this->violatedConstraints(conf, constraints);
             return constraints.size() == 0;
         }
     };

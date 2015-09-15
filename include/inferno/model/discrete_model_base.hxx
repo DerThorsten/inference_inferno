@@ -142,6 +142,28 @@ private:
     const MODEL & model_;
 };
 
+/** \brief Proxy class to use range based loop
+    for models unary descriptors
+*/
+template<class MODEL>
+class ModelsConstraintDescriptors{
+public:
+    ModelsConstraintDescriptors(const MODEL & model) 
+    :   model_(model){
+
+    }//
+    typedef typename MODEL::ConstraintDescriptorIter const_iterator;
+    const_iterator begin()const{
+        return model_.constraintDescriptorsBegin();
+    }
+    const_iterator end()const{
+        return model_.constraintDescriptorsEnd();
+    }
+private:
+    const MODEL & model_;
+};
+
+
 /// \cond
 template<class MODEL>
 struct FactorDescriptorToId{
@@ -216,6 +238,20 @@ struct UnaryDescriptorToUnaryProxy{
     }
     const MODEL * model_;
 };
+
+template<class MODEL>
+struct ConstraintDescriptorToConstraintProxy{
+    typedef typename MODEL::ConstraintProxy result_type;
+    typedef typename MODEL::ConstraintDescriptor ConstraintDescriptor;
+    ConstraintDescriptorToConstraintProxy(const MODEL & model)
+    : model_(&model){
+
+    }//
+    result_type operator()(const ConstraintDescriptor c)const{
+        return model_->constraint(c);
+    }
+    const MODEL * model_;
+};
 /// \endcond
 
 /** \brief Proxy class to use range based loop
@@ -261,6 +297,34 @@ public:
     }
     const_iterator end()const{
         return boost::make_transform_iterator(model_.unaryDescriptorsEnd(), UnaryFunction(model_));
+    }
+private:
+    const MODEL & model_;
+};
+
+
+
+
+
+/** \brief Proxy class to use range based loop
+    for models unaries
+*/
+template<class MODEL>
+class ModelsConstraints{
+public:
+    ModelsConstraints(const MODEL & model) 
+    :   model_(model){
+
+    }//ConstraintDescriptorIter
+    typedef typename MODEL::ConstraintDescriptorIter ConstraintDescriptorIter;
+    typedef ConstraintDescriptorToConstraintProxy<MODEL> UnaryFunction;
+    typedef boost::transform_iterator<UnaryFunction, ConstraintDescriptorIter> const_iterator;
+
+    const_iterator begin()const{
+        return boost::make_transform_iterator(model_.constraintDescriptorsBegin(), UnaryFunction(model_));
+    }
+    const_iterator end()const{
+        return boost::make_transform_iterator(model_.constraintDescriptorsEnd(), UnaryFunction(model_));
     }
 private:
     const MODEL & model_;
@@ -330,13 +394,26 @@ public:
 
 
     */
-    size_t maxArity()const{
+    ArityType maxArity()const{
+        return std::max(model().maxFactorAirty(), model().maxConstraintArity());
+    }
+
+    ArityType maxFactorAirty()const{
         ArityType maxArity = 0;
         for(auto factor : model().factors()){
             maxArity = std::max(factor->arity(), maxArity);
         }
         return maxArity;
     }
+    ArityType maxConstraintArity()const{
+        ArityType maxArity = 0;
+        for(auto c : model().constraints()){
+            maxArity = std::max(c->arity(), maxArity);
+        }
+        return maxArity;
+    }
+
+
 
     /** \brief check if all variables have the same number of labels
 
@@ -401,9 +478,13 @@ public:
     }
 
 
+    /// \brief number of factors in the graphical model
+    uint64_t nConstraints() const {
+        return std::distance(model().constraintsDescriptorsBegin(), model().constraintsDescriptorsEnd());
+    }
 
     /** \brief get the minimal variable id in the model
-
+`
         \warning 
         - if the graphical model has no variables,
             calling this function will have undefined behavior.
@@ -526,11 +607,18 @@ public:
     ModelsUnaryDescriptors<MODEL> unaryDescriptors() const{
         return ModelsUnaryDescriptors<MODEL>(model());
     }
+    ModelsConstraintDescriptors<MODEL> constraintDescriptors() const{
+        return ModelsConstraintDescriptors<MODEL>(model());
+    }
+
     ModelsFactors<MODEL> factors() const{
         return ModelsFactors<MODEL>(model());
     }
     ModelsUnaries<MODEL> unaries() const{
         return ModelsUnaries<MODEL>(model());
+    }
+    ModelsConstraints<MODEL> constraints() const{
+        return ModelsConstraints<MODEL>(model());
     }
 
     /// at least for one semantic class allow cuts within must 

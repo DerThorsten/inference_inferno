@@ -5,7 +5,7 @@
 
 #include "inferno/inferno.hxx"
 #include "inferno/utilities/utilities.hxx"
-#include "inferno/value_tables/discrete_value_table_base.hxx"
+#include "inferno/constraint_tables/discrete_constraint_table_base.hxx"
 #include "inferno/utilities/shape_walker.hxx"
 
 namespace inferno{
@@ -37,10 +37,9 @@ public:
     bool feasible(const DiscreteLabel *conf) const {
         return costr()->constraintTable()->feasible(conf);
     }
-
     ValueType feasible(const DiscreteLabel l0)const{
         return costr()->constraintTable()->feasible(l0);
-    }
+    }   
     ValueType feasible(const DiscreteLabel l0, const DiscreteLabel l1)const{
         return costr()->constraintTable()->feasible(l0, l1);
     }
@@ -57,6 +56,11 @@ public:
                        const DiscreteLabel l4)const{
         return costr()->constraintTable()->feasible(l0, l1, l2, l3, l4);
     }
+
+    const CONSTRAINT * operator ->()const{
+        return static_cast<const CONSTRAINT *>(this); 
+    }
+
 private:
     const CONSTRAINT * costr()const{
         return static_cast<const CONSTRAINT *>(this);
@@ -65,6 +69,26 @@ private:
         return static_cast<CONSTRAINT *>(this);
     }
 };
+
+
+
+template<class MODEL>
+class DeadCodeConstraint :
+public DiscreteConstraintBase< DeadCodeConstraint<MODEL>,   MODEL>
+{
+public:
+    typedef typename MODEL::VariableDescriptor VariableDescriptor;
+    const constraint_tables::DiscreteConstraintTableBase * constraintTable() const{\
+        return base_;
+    }
+    VariableDescriptor  variable(ArityType i) const{
+        return VariableDescriptor();
+    }
+
+private:
+    constraint_tables::DiscreteConstraintTableBase * base_;
+};
+
 
 
 

@@ -43,7 +43,7 @@ public:
         return this->shape();
     }
     virtual ValueType eval(const DiscreteLabel * l) const final{
-        this->eval(*l);
+        return this->eval(*l);
     }
 
     

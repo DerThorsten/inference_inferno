@@ -25,6 +25,12 @@ namespace maps{
                 return m.nUnaries();
             }
         };
+        struct ConstraintHelper{
+            template<class MODEL>
+            static uint64_t size(const MODEL & m){
+                return m.nConstraints();
+            }
+        };
 
         template<class MODEL, class T, class SIZE_HELPER>
         class SimpleMapBase :
@@ -90,6 +96,18 @@ namespace maps{
         :   Base(){
         }
         SimpleUnaryMap(const MODEL & model, const T val = T())
+        : Base(model, val){
+        }
+    };
+
+    template<class MODEL, class T>
+    class SimpleConstraintMap : public detail_maps::SimpleMapBase<MODEL, T, detail_maps::ConstraintHelper>{
+        typedef detail_maps::SimpleMapBase<MODEL, T, detail_maps::ConstraintHelper> Base;
+    public:
+        SimpleConstraintMap()
+        :   Base(){
+        }
+        SimpleConstraintMap(const MODEL & model, const T val = T())
         : Base(model, val){
         }
     };

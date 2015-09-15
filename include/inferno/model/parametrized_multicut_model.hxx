@@ -7,8 +7,11 @@
 #include "inferno/value_tables/discrete_value_table_base.hxx"
 #include "inferno/value_tables/potts_value_table_base.hxx"
 #include "inferno/value_tables/discrete_unary_value_table_base.hxx"
+#include "inferno/constraint_tables/discrete_constraint_table_base.hxx"
+
 #include "inferno/model/discrete_factor_base.hxx"
 #include "inferno/model/discrete_unary_base.hxx"
+#include "inferno/model/discrete_constraint_base.hxx"
 #include "inferno/model/simple_discrete_model_base.hxx"
 
 namespace inferno{
@@ -126,6 +129,7 @@ namespace models{
        
         typedef ParametrizedMulticutModelFactor<Self> FactorImpl;
         typedef DeadCodeUnary<Self> UnaryImpl;
+        typedef DeadCodeConstraint<Self> ConstraintImp;
     public:
 
         typedef ParametrizedMulticutModelFactor<Self> FactorType;
@@ -133,7 +137,7 @@ namespace models{
 
         typedef FactorImpl FactorProxy;
         typedef UnaryImpl UnaryProxy;
-
+        typedef ConstraintImp ConstraintProxy;
 
 
         ParametrizedMulticutModel()
@@ -184,6 +188,9 @@ namespace models{
         UnaryProxy unary(const typename ParametrizedMulticutModel::UnaryDescriptor unaryDescriptor)const{
             return UnaryProxy();
         }
+        ConstraintProxy constraint(const typename ParametrizedMulticutModel::ConstraintDescriptor c)const{
+            return ConstraintProxy();
+        }
 
 
         // overloads / specializations
@@ -208,6 +215,10 @@ namespace models{
             return betas_.size();
         }
         uint64_t nUnaries()const{
+            return 0;
+        }
+
+        uint64_t nConstraints()const{
             return 0;
         }
 

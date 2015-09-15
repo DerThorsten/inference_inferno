@@ -46,6 +46,10 @@ namespace learning{
                 const auto d = 1.0 - weightVector.getNorm(2, weightConstraints);
                 return d * d;
             } 
+            else{
+                throw RuntimeError("wrong regularzier");
+                return 0;
+            }
         }
         template<class WEIGHT_CONSTRAINTS>
         ValueType eval(
@@ -74,6 +78,10 @@ namespace learning{
             }
             else if(regularizer_ == RegularizerType::ConstL2){
                 return std::move(std::string("|1-‖ω‖²|²"));
+            }
+            else{
+                throw RuntimeError("wrong regularzier");
+                return std::move(std::string("error"));
             }
         }
 

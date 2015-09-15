@@ -36,11 +36,13 @@ public:
 
     // 
     typedef Fi       FactorDescriptor;
+    typedef Ci       ConstraintDescriptor;
     typedef Vi       VariableDescriptor;
     typedef Vi       UnaryDescriptor;
 
     typedef boost::counting_iterator<Vi>       UnaryDescriptorIter;
     typedef boost::counting_iterator<Fi>       FactorDescriptorIter;
+    typedef boost::counting_iterator<Ci>       ConstraintDescriptorIter;
     typedef boost::counting_iterator<Vi>       VariableDescriptorIter;
 
 
@@ -87,13 +89,13 @@ public:
     this model will invalidate any instance of this class.
     */
     template<class T>
-    class UnaryMap : public  maps::SimpleUnaryMap<MODEL, T>{
-        typedef maps::SimpleUnaryMap<MODEL, T> Base;
+    class ConstraintMap : public  maps::SimpleConstraintMap<MODEL, T>{
+        typedef maps::SimpleConstraintMap<MODEL, T> Base;
     public:
-        UnaryMap()
+        ConstraintMap()
         :   Base(){
         }
-        UnaryMap(const MODEL & m, const T & val = T())
+        ConstraintMap(const MODEL & m, const T & val = T())
         :   Base(m, val){
         }
     };
@@ -110,6 +112,12 @@ public:
     }
     UnaryDescriptorIter unaryDescriptorsEnd()const{
         return UnaryDescriptorIter(model().nUnaries());
+    }
+    ConstraintDescriptorIter constraintDescriptorsBegin()const{
+        return ConstraintDescriptorIter(0);
+    }
+    ConstraintDescriptorIter constraintDescriptorsEnd()const{
+        return ConstraintDescriptorIter(model().nConstraints());
     }
     VariableDescriptorIter variableDescriptorsBegin()const{
         return VariableDescriptorIter(0);
@@ -136,7 +144,15 @@ public:
         return variableDescriptor;
     }
 
-    /// \brief convert factor id into factor descriptor
+    /// \brief convert constraint descriptor into variable id
+    ///
+    /// For this type of graphical model, constraint ids and descriptors
+    /// are equivalent
+    Ci constraintId(const ConstraintDescriptor constraintDescriptor)const{
+        return constraintDescriptor;
+    }
+
+    /// \brief convert factor id into a factor descriptor
     ///
     /// For this type of graphical model, factor ids and descriptors
     /// are equivalent
@@ -144,12 +160,20 @@ public:
         return fi;
     }
 
-    /// \brief convert factor id into factor descriptor
+    /// \brief convert factor id into a factor descriptor
     ///
     /// For this type of graphical model, factor ids and descriptors
     /// are equivalent
     VariableDescriptor variableDescriptor(const Vi vi)const{
         return vi;
+    }
+
+    /// \brief convert constraint id into a constraint descriptor
+    ///
+    /// For this type of graphical model, factor ids and descriptors
+    /// are equivalent
+    ConstraintDescriptor constraintDescriptor(const Ci ci)const{
+        return ci;
     }
 
 
@@ -165,6 +189,14 @@ public:
     Fi maxFactorId()const{
         return model().nFactors()-1;
     }
+
+    Ci minConstraintId()const{
+        return 0;
+    }
+    Ci maxConstraintId()const{
+        return model().nConstraints()-1;
+    }
+
 
 private:
    

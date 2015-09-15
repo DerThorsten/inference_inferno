@@ -1,6 +1,8 @@
 #define PY_ARRAY_UNIQUE_SYMBOL inferno_models_PyArray_API
 #define NO_IMPORT_ARRAY
 
+// inferno relatex
+#include "inferno/inferno.hxx"
 
 // boost python related
 #include <boost/python/detail/wrap_python.hpp>
@@ -24,8 +26,7 @@
 #include <string>
 #include <vector>
 
-// inferno relatex
-#include "inferno/inferno.hxx"
+
 
 
 #include "inferno/inferno.hxx"

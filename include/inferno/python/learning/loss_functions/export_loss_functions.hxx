@@ -67,7 +67,7 @@ namespace loss_functions{
             if(possibleOverride)
                 return possibleOverride();
             else
-                Base::maximumLoss();
+                return Base::maximumLoss();
 
         }
 
@@ -112,7 +112,7 @@ namespace loss_functions{
             if(possibleOverride)
                 return possibleOverride();
             else
-                Base::maximumLoss();
+                return Base::maximumLoss();
 
         }
 

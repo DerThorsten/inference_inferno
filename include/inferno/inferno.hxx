@@ -13,6 +13,7 @@
 #ifndef INFERNO_INFERNO_HXX
 #define INFERNO_INFERNO_HXX
 
+
 #include <boost/iterator/counting_iterator.hpp>
 
 #include "inferno/utilities/utilities.hxx"
@@ -238,6 +239,7 @@ typedef int64_t LabelType;
 typedef uint32_t ArityType;
 typedef int64_t Vi;
 typedef int64_t Fi;
+typedef int64_t Ci;
 typedef int64_t Vti;
 typedef int64_t WeightIndex;
 
@@ -250,6 +252,7 @@ typedef double    WeightType;
 typedef double    JointFeaturesValueType;
 typedef double    WeightGradientType;
 typedef double    LossType;
+typedef double    LpValueType;
 
 typedef std::vector<DiscreteLabel > DiscreteLabelVec;
 typedef std::vector<ContinousLabel > ContinousLabelVec;
