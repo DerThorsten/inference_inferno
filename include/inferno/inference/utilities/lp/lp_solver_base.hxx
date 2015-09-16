@@ -75,6 +75,15 @@ namespace lp{
             const LpValueType * lowerBounds,
             const LpValueType * upperBounds
         ) = 0;
+        
+        virtual void addConstraints(
+            const uint64_t nConstraints,
+            const uint64_t * constraintSizes,
+            const int64_t  * variables,
+            const LpValueType * coefficients,
+            const LpValueType * lowerBounds,
+            const LpValueType * upperBounds
+        ) = 0;
 
 
 

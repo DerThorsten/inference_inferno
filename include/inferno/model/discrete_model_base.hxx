@@ -809,14 +809,43 @@ public:
     }
 
 
-    // constraints
-    bool hasConstraints() const{
+    // constraints and LP stuff
+
+    uint64_t maximumFactorSize()const{
+        uint64_t s = 0 ;
         for(const auto factor : model().factors()){
-            if(factor->isConstraint()){
-                return true;
-            }
+            s = std::max(s, uint64_t(factor->size()));
         }
-        return false;
+        return s;
+    }
+
+    uint64_t nVariableIndicatorVariables()const{
+        uint64_t c = 0;
+        for(const auto var : model().variableDescriptors()){
+            c += model.nLabels(var);
+        }
+        return c;
+    }
+
+    template<class VAR_MAP>
+    uint64_t nVariableIndicatorVariables(VAR_MAP & varMap)const{
+        uint64_t c = 0;
+        for(const auto var : model().variableDescriptors()){
+            varMap[var] = c;
+            c += model.nLabels(var);
+        }
+        return c;
+    }
+
+    uint64_t nFactorIndicatorVariables() const {
+        uint64_t c = 0;
+        for(const auto factor : model().factors()){
+            c += factor->size();
+        }
+    }
+
+    bool hasConstraints() const{
+        return model().nConstraints() > 0;
     }
 
     bool onlyConstraints() const{

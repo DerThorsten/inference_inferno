@@ -194,6 +194,14 @@ public:
         factor()->valueTable()->bufferShape(buffer);
     }
 
+
+    template<class T>
+    void bufferValueTable(T * buffer)const{
+        std::vector<ValueType> tmp(factor()->size());
+        factor()->bufferValueTable(tmp.data());
+        std::copy(tmp.begin(),tmp.end(), buffer);
+    }
+
     void bufferValueTable(ValueType * buffer)const{
         factor()->valueTable()->bufferValueTable(buffer);
     }
