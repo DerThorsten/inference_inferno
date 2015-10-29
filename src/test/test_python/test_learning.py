@@ -459,7 +459,6 @@ class TestMulticutLearning(unittest.TestCase):
 
         # assign loss function
         sizeMap = model.variableMap('float64', 1.0)
-
         # make gt
         gt.assign(model)
         view = gt.view()
@@ -583,7 +582,11 @@ class TestMulticutLearning(unittest.TestCase):
 
         # assign loss functions
         fScoreVec[0]  = inferno.learning.loss_functions.partitionFScore(modelVec[0], beta=0.5)
-        viVec[0]      = inferno.learning.loss_functions.variationOfInformation2(modelVec[0])
+
+        sizeMap = modelVec[0].variableMap('float64', 1.0)
+        viVec[0]      = inferno.learning.loss_functions.variationOfInformation2(model=modelVec[0],variableSizeMap=sizeMap)
+
+
         riVec[0]      = inferno.learning.loss_functions.randIndex(modelVec[0])
         hammingVec[0] = inferno.learning.loss_functions.partitionHamming(modelVec[0],rescale=1.0, overseg=1.0, underseg=1.0)
 
@@ -618,4 +621,6 @@ class TestMulticutLearning(unittest.TestCase):
         stGradRi.learn(factory, weightVector)
         stGradFscore.learn(factory, weightVector)
         subGradHamming.learn(lossAugmentedFactory, weightVector, factory)
+
+
 

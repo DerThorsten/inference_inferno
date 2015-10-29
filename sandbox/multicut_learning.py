@@ -49,10 +49,10 @@ def makeDset():
         gt = dset.groundTruth(i)
         gtt.assign(model)
         gt.assign(model)
-        gt.idMap[0] = 0
-        gt.idMap[1] = 1
-        gt.idMap[2] = 0
-        gt.idMap[3] = 1
+        gt.i][0] = 0
+        gt.i][1] = 1
+        gt.i][2] = 0
+        gt.i][3] = 1
 
     return dset, weightVector
 

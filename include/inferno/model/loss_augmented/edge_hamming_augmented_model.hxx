@@ -264,13 +264,13 @@ namespace models{
                             // CONF   BETA    LOSS
                             // (a,a) = 0   -    0
                             // (a,b) = beta -  lossWeight*overseg
-                            betas_[fac] = beta - lossWeight*overseg_;
+                            betas_[fac] = beta -  lossWeight*overseg_;
                         }
                         else{ //=> (lu != lv)
                             // nodes SHOULD NOT(!) be merged
                             // CONF   BETA    LOSS
-                            // (a,a) = 0   -   lossWeight*underseg
-                            // (a,b) = beta -  0
+                            // (a,a) = 0   -   lossWeight*underseg | +  lossWeight*underseg 
+                            // (a,b) = beta -  0                   | +  lossWeight*underseg 
                             //
                             // => add 'lossWeight' to both confs
                             // 
